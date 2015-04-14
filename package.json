@@ -1,0 +1,17 @@
+{
+  "name": "cheminot.org",
+  "version": "0.1.0",
+  "author": "Sebastien Renault (https://github.com/srenault)",
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/srenault/cheminot.org"
+  },
+  "description": "Compile stylus",
+  "devDependencies": {
+    "gulp": "latest",
+    "stylus": "latest",
+    "gulp-stylus": "latest",
+    "nib": "latest",
+    "del": "latest"
+  }
+}

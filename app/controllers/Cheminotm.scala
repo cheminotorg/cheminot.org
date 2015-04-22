@@ -13,7 +13,7 @@ import models.Config
 object Cheminotm extends Controller {
 
   def init = Action.async {
-    cheminotm.CheminotcActor.init(Config.cheminotDbPath, Config.calendardatesPath, Config.graphPath) map { meta =>
+    cheminotm.CheminotcActor.init(Config.cheminotDbPath, Config.graphPath, Config.calendardatesPath) map { meta =>
       Ok(meta)
     }
   }

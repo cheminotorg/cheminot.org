@@ -3,5 +3,6 @@ node_modules
 project/project
 project/target
 public/stylesheets
+public/javascripts
 public/app
 target

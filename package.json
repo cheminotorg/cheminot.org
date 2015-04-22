@@ -9,9 +9,16 @@
   "description": "Compile stylus",
   "devDependencies": {
     "gulp": "latest",
-    "stylus": "latest",
     "gulp-stylus": "latest",
+    "gulp-browserify": "latest",
+    "gulp-util": "latest",
     "nib": "latest",
-    "del": "latest"
+    "del": "latest",
+    "watchify": "latest",
+    "vinyl-source-stream": "latest"
+  },
+  "dependencies": {
+    "browserify": "6.3.4",
+    "qstart": "0.2.0"
   }
 }

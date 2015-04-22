@@ -16,7 +16,7 @@ body {
     background: dark-blue
 }
 
-.iphone {
+.phone {
     position: relative
     background: #202020
     width: 320px
@@ -24,6 +24,10 @@ body {
     padding-top: 630px
     margin: 0 auto
     border-radius: 1.5em
+
+    * {
+      cursor: url("../images/touch-cursor.png"), pointer;
+    }
 
     .mask {
       position: absolute
@@ -98,5 +102,24 @@ body {
         border-radius: .3em
         width: 45%
         height: 45%
+    }
+
+    .buttons {
+        padding: 16px 4px
+
+        button {
+            border: none
+            background: none
+            outline: none
+            font-size: 0
+        }
+
+        .back::before {
+            font-family: 'Cheminot'
+            display: inline-block
+            content: '\F00E'
+            color: rgba(255, 255, 255, 0.73)
+            font-size: 20px
+        }
     }
 }

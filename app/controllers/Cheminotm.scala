@@ -75,4 +75,8 @@ object Cheminotm extends Controller {
       case _ => BadRequest
     }
   }
+
+  def app(file: String) = Action.async { request =>
+    ExternalAssets.at(Config.cheminotmAppPath, file)(request)
+  }
 }

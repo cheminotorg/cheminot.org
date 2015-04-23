@@ -39,4 +39,9 @@ object Config {
 
   def maxTasks(implicit app: Application): Int =
     Play.configuration(app).getInt("tasks.max") getOrElse 10
+
+  def cheminotmAppPath(implicit app: Application): String =
+    Play.configuration(app).getString("cheminotm.app.path").getOrElse {
+      app.getFile("/data/app").getAbsolutePath
+    }
 }

@@ -5,4 +5,5 @@ project/target
 public/stylesheets
 public/javascripts
 public/app
+data/bucket
 target

@@ -7,18 +7,24 @@ import play.api.libs.EventSource
 import play.api.Play.current
 import play.api.data._
 import play.api.data.Forms._
-import models.Config
+import models.{ Config, CheminotDb }
 //import play.api.libs.json._
 
 object Cheminotm extends Controller {
 
-  def init = Action.async {
-    cheminotm.CheminotcActor.init(Config.cheminotDbPath, Config.graphPath, Config.calendardatesPath) map { meta =>
-      Ok(meta)
+  def init = Common.WithMaybeCtx { implicit request =>
+    val sessionId = request.maybeCtx map(_.sessionId) getOrElse CheminotDb.Id.next
+    cheminotm.CheminotcActor.init(sessionId, Config.graphPath, Config.calendardatesPath) map {
+      case Right(meta) =>
+        val result = Ok(meta)
+        request.maybeCtx map (_ => result) getOrElse {
+          result.withCookies(Common.Session.create(sessionId))
+        }
+      case _ => BadRequest
     }
   }
 
-  def lookForBestTrip = Action.async { implicit request =>
+  def lookForBestTrip = Common.WithCtx { implicit request =>
     Form(tuple(
       "vsId" -> nonEmptyText,
       "veId" -> nonEmptyText,
@@ -29,14 +35,15 @@ object Cheminotm extends Controller {
       error => Future successful BadRequest,
       {
         case (vsId, veId, at, te, max) =>
-          cheminotm.CheminotcActor.lookForBestTrip(Config.cheminotDbPath, vsId, veId, at.toInt, te.toInt, max.toInt) map { trip =>
-            Ok(trip)
+          cheminotm.CheminotcActor.lookForBestTrip(request.ctx.sessionId, vsId, veId, at.toInt, te.toInt, max.toInt) map {
+            case Right(trip) => Ok(trip)
+            case _ => BadRequest
           }
       }
     )
   }
 
-  def lookForBestDirectTrip = Action.async { implicit request =>
+  def lookForBestDirectTrip = Common.WithCtx { implicit request =>
     Form(tuple(
       "vsId" -> nonEmptyText,
       "veId" -> nonEmptyText,
@@ -48,21 +55,24 @@ object Cheminotm extends Controller {
       },
       {
         case (vsId, veId, at, te) =>
-          cheminotm.CheminotcActor.lookForBestDirectTrip(Config.cheminotDbPath, vsId, veId, at.toInt, te.toInt) map { trip =>
-            Ok(trip)
+          cheminotm.CheminotcActor.lookForBestDirectTrip(request.ctx.sessionId, vsId, veId, at.toInt, te.toInt) map {
+            case Right(trip) => Ok(trip)
+            case _ => BadRequest
           }
       }
     )
   }
 
-  def abort = Action.async {
-    cheminotm.CheminotcActor.abort(Config.cheminotDbPath) map { _ =>
+  def abort = Common.WithCtx { implicit request =>
+    cheminotm.CheminotcMonitorActor.abort(request.ctx.sessionId) map { _ =>
       Ok
     }
   }
 
-  def trace = Action {
-    val enumerator = cheminotm.CheminotcActor.trace(Config.cheminotDbPath)
-    Ok.chunked(enumerator &> EventSource()).as( "text/event-stream")
+  def trace = Common.WithCtx { implicit request =>
+    cheminotm.CheminotcMonitorActor.trace(request.ctx.sessionId) map {
+      case Right(enumerator) => Ok.chunked(enumerator &> EventSource()).as( "text/event-stream")
+      case _ => BadRequest
+    }
   }
 }

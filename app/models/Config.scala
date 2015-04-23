@@ -1,6 +1,7 @@
 package models
 
 import play.api.{ Play, Application }
+import scala.concurrent.duration._
 
 object Config {
 
@@ -23,4 +24,19 @@ object Config {
     Play.configuration(app).getString("cheminotdb.path").getOrElse {
       app.getFile("/data/cheminot.db").getAbsolutePath
     }
+
+  def bucketPath(implicit app: Application): String =
+    Play.configuration(app).getString("bucket.path").getOrElse {
+      app.getFile("/data/bucket").getAbsolutePath
+    }
+
+  def sessionDuration(implicit app: Application): FiniteDuration = {
+    val duration = Play.configuration(app).getLong("session.duration").getOrElse {
+      (3600 / 2).toLong
+    }
+    duration seconds
+  }
+
+  def maxTasks(implicit app: Application): Int =
+    Play.configuration(app).getInt("tasks.max") getOrElse 10
 }

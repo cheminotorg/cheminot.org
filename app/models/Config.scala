@@ -2,6 +2,7 @@ package models
 
 import play.api.{ Play, Application }
 import scala.concurrent.duration._
+import play.api.Logger
 
 object Config {
 
@@ -40,8 +41,22 @@ object Config {
   def maxTasks(implicit app: Application): Int =
     Play.configuration(app).getInt("tasks.max") getOrElse 10
 
-  def cheminotmAppPath(implicit app: Application): String =
-    Play.configuration(app).getString("cheminotm.app.path").getOrElse {
+  def cheminotmPath(implicit app: Application): String =
+    Play.configuration(app).getString("cheminotm.path").getOrElse {
       app.getFile("/data/app").getAbsolutePath
     }
+
+  def print(implicit app: Application) {
+    Logger.info("---------------------------")
+    Logger.info("[CONFIGURATION]")
+    Logger.info("cheminotc.path: " + cheminotcPath)
+    Logger.info("calendartes.path: " + calendardatesPath)
+    Logger.info("graph.path: " + graphPath)
+    Logger.info("cheminotdb.path: " + cheminotDbPath)
+    Logger.info("bucket.path: " + bucketPath)
+    Logger.info("session.duration: " + sessionDuration)
+    Logger.info("tasks.max: " + maxTasks)
+    Logger.info("cheminotm.path: " + cheminotmPath)
+    Logger.info("---------------------------")
+  }
 }

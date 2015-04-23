@@ -6,7 +6,7 @@ qstart.then(function() {
     var backBtn = document.querySelector('.phone .back');
     backBtn.addEventListener('click', function() {
       var phone = document.querySelector('.phone iframe');
-      if(phone.contentWindow.location.hash != '#/') {
+      if(phone.contentWindow.location.hash && phone.contentWindow.location.hash != '#/') {
         phone.contentWindow.history.back();
       }
     });

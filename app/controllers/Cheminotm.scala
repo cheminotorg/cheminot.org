@@ -76,7 +76,12 @@ object Cheminotm extends Controller {
     }
   }
 
-  def app(file: String) = Action.async { request =>
-    ExternalAssets.at(Config.cheminotmAppPath, file)(request)
+  def app(file: String) = Action{ request =>
+    val fileToServe = new java.io.File(Config.cheminotmPath, file)
+    if(fileToServe.exists) {
+      Ok.sendFile(fileToServe, inline = true)
+    } else {
+      NotFound
+    }
   }
 }

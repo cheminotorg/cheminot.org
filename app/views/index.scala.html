@@ -7,11 +7,15 @@
         <title>cheminot.org</title>
         <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
         <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
-        <script src="/assets/javascripts/main.js"></script>
+        <link href="https://api.tiles.mapbox.com/mapbox.js/v2.1.6/mapbox.css" rel="stylesheet"/>
+        <script src="https://api.tiles.mapbox.com/mapbox.js/v2.1.6/mapbox.js"></script>
     </head>
     <body>
+      <div id="map"></div>
       @phone() {
         <iframe src="@routes.Cheminotm.app("index.html")"></iframe>
       }
+
+      <script src="/assets/javascripts/main.js"></script>
     </body>
 </html>

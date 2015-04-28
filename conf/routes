@@ -7,6 +7,7 @@ GET     /                           controllers.Application.index
 
 
 # Cheminotm
+GET     /cheminotm/splashscreen      controllers.Cheminotm.splashscreen
 GET     /cheminotm/init              controllers.Cheminotm.init
 POST    /cheminotm/besttrip          controllers.Cheminotm.lookForBestTrip
 POST    /cheminotm/bestdirecttrip    controllers.Cheminotm.lookForBestDirectTrip

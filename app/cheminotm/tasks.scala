@@ -3,7 +3,7 @@ package cheminotm
 import java.io.File
 import play.api.Application
 import play.api.libs.concurrent.Akka
-import akka.actor.{ Actor, ActorRef, Props, Cancellable }
+import akka.actor.{ Actor, ActorRef, Props, Cancellable, PoisonPill }
 import scala.concurrent.duration._
 import play.api.libs.iteratee. { Concurrent, Enumerator, Input }
 import akka.pattern.ask
@@ -30,8 +30,8 @@ object CheminotcActor {
   val actors = TrieMap.empty[String, ActorRef]
 
   object Messages {
+
     sealed trait Event
-    case object Shutdown extends Event
     case class Init(sessionId: String, graphPath: String, calendardatesPath: String) extends Event
     case class LookForBestTrip(vsId: String, veId: String, at: Int, te: Int, max: Int) extends Event
     case class LookForBestDirectTrip(vsId: String, veId: String, at: Int, te: Int) extends Event
@@ -39,7 +39,7 @@ object CheminotcActor {
 
   def ref(sessionId: String)(implicit app: Application) = {
     actors.get(sessionId).getOrElse {
-      val r = Akka.system.actorOf(prop(sessionId))
+      val r = Akka.system.actorOf(prop(sessionId), s"cheminotc-${sessionId}")
       actors += sessionId -> r
       r
     }
@@ -52,6 +52,7 @@ object CheminotcActor {
     implicit val timeout = Timeout(30 seconds)
     if(actors.size < Config.maxTasks) {
       (ref(sessionId) ? Messages.Init(sessionId, graphPath, calendardatesPath)).mapTo[String].map { meta =>
+        println("init")
         CheminotcMonitorActor.init(sessionId)
         Right(meta)
       }(Tasks.executionContext)
@@ -66,7 +67,7 @@ object CheminotcActor {
   }
 
   def lookForBestTrip(sessionId: String, vsId: String, veId: String, at: Int, te: Int, max: Int)(implicit app: Application): Future[Either[Status, String]] = {
-    implicit val timeout = Timeout(30 seconds)
+    implicit val timeout = Timeout(2 minutes)
     (ref(sessionId) ? Messages.LookForBestTrip(vsId, veId, at, te, max)).mapTo[Either[Status, String]]
   }
 }
@@ -82,13 +83,23 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor {
 
   var meta: Option[String] = None;
 
+  var cancellableShutdown: Option[Cancellable] = None
+
+  var cheminotcMonitor: Option[ActorRef] = None
+
+  def scheduleShutdown() {
+    // cancellableShutdown.foreach(_.cancel)
+    // val cancellable = Akka.system(app).scheduler.scheduleOnce(Config.sessionDuration(app), self, PoisonPill)(Tasks.executionContext)
+    // cancellableShutdown = Some(cancellable)
+  }
+
   def idle: Receive = {
 
     case Init(sessionId, graphPath, calendardatesPath) =>
       misc.Files.copy(Config.cheminotDbPath(app), dbPath)
       val metadata = m.cheminot.plugin.jni.CheminotLib.init(dbPath, graphPath, calendardatesPath)
       meta = Some(metadata)
-      Akka.system(app).scheduler.scheduleOnce(Config.sessionDuration(app), self, Shutdown)(Tasks.executionContext)
+      scheduleShutdown()
       context become busy
       sender ! metadata
 
@@ -98,18 +109,17 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor {
 
   def busy: Receive = {
 
-    case Shutdown =>
-      CheminotcActor.actors -= sessionId
-      context.stop(self)
-
-    case Init(sessionId, graphPath, calendardatesPath) =>
+    case m: Init =>
+      scheduleShutdown()
       sender ! meta.getOrElse("null")
 
     case LookForBestTrip(vsId, veId, at, te, max) =>
+      scheduleShutdown()
       val trip = m.cheminot.plugin.jni.CheminotLib.lookForBestTrip(vsId, veId, at, te, max)
       sender ! Right(trip)
 
     case LookForBestDirectTrip(vsId, veId, at, te) =>
+      scheduleShutdown()
       val trip = m.cheminot.plugin.jni.CheminotLib.lookForBestDirectTrip(vsId, veId, at, te)
       sender ! Right(trip)
   }
@@ -123,7 +133,8 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor {
 
   override def postStop(): Unit = {
     Logger.info(s"[CheminotcActor] Shutting down ${sessionId}")
-    models.CheminotDb.del(sessionId)(app)
+    CheminotcActor.actors -= sessionId
+    CheminotcMonitorActor.stop(sessionId)
   }
 }
 
@@ -145,11 +156,14 @@ object CheminotcMonitorActor {
 
   def ref(sessionId: String)(implicit app: Application) = {
     actors.get(sessionId).getOrElse {
-      val r = Akka.system.actorOf(prop(sessionId))
+      val r = Akka.system.actorOf(prop(sessionId), s"cheminotcMonitor-${sessionId}")
       actors += sessionId -> r
       r
     }
   }
+
+  def stop(sessionId: String) =
+    actors.get(sessionId).foreach(_ ! PoisonPill)
 
   def init(sessionId: String)(implicit app: Application) {
     ref(sessionId) ! Messages.Init
@@ -175,43 +189,57 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor {
   val dbPath = models.CheminotDb.dbPath(sessionId)(app)
 
   var enumerator: Option[Enumerator[String]] = None
-  var cancellableScheduller: Option[Cancellable] = None
+
+  def abort(sender: ActorRef) {
+    m.cheminot.plugin.jni.CheminotLib.abort()
+    sender ! Right(Unit)
+  }
+
+  def trace(sender: ActorRef) {
+    val stream = enumerator.getOrElse {
+      val (producer, channel) = Concurrent.broadcast[String]
+      enumerator = Some(producer)
+      Akka.system(app).scheduler.schedule(0 milliseconds, 0.2 seconds, self, TracePulling(channel))(Tasks.executionContext)
+      producer
+    }
+    sender ! Right(stream)
+  }
 
   def idle: Receive = {
 
     case Init =>
-      Akka.system(app).scheduler.scheduleOnce(Config.sessionDuration(app), self, Shutdown)(Tasks.executionContext)
-      context become busy
-
+      context become waiting
 
     case _ =>
       sender ! Left(NotInitialized)
   }
 
-  def busy: Receive = {
+  def pulling: Receive = {
 
-    case Shutdown =>
-      CheminotcMonitorActor.actors -= sessionId
-      context.stop(self)
+    case TracePulling(_) =>
 
     case Trace =>
-      val stream = enumerator.getOrElse {
-        val (producer, channel) = Concurrent.broadcast[String]
-        enumerator = Some(producer)
-        val cancellable = Akka.system(app).scheduler.schedule(0 milliseconds, 1 seconds, self, TracePulling(channel))(Tasks.executionContext)
-        cancellableScheduller = Some(cancellable)
-        producer
-      }
-      sender ! Right(stream)
-
-    case TracePulling(channel) =>
-      val trace = m.cheminot.plugin.jni.CheminotLib.trace();
-      channel.push(trace)
+      trace(sender)
 
     case Abort =>
-      m.cheminot.plugin.jni.CheminotLib.abort()
-      cancellableScheduller.foreach(_.cancel)
-      sender ! Right(Unit)
+      abort(sender)
+  }
+
+  def waiting: Receive = {
+
+    case Trace =>
+      trace(sender)
+
+    case TracePulling(channel) =>
+      context become pulling
+      val trace = m.cheminot.plugin.jni.CheminotLib.trace();
+      if(trace != "[]") {
+        channel.push(trace)
+      }
+      context become waiting
+
+    case Abort =>
+      abort(sender)
   }
 
   def receive = idle
@@ -223,6 +251,7 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor {
 
   override def postStop(): Unit = {
     Logger.info(s"[CheminotcMonitorActor] Shutting down ${sessionId}")
+    CheminotcMonitorActor.actors -= sessionId
     models.CheminotDb.del(sessionId)(app)
   }
 }

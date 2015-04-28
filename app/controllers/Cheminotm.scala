@@ -8,11 +8,15 @@ import play.api.Play.current
 import play.api.data._
 import play.api.data.Forms._
 import models.{ Config, CheminotDb }
-//import play.api.libs.json._
 
 object Cheminotm extends Controller {
 
+  def splashscreen = Action {
+    Ok(views.html.splashscreen())
+  }
+
   def init = Common.WithMaybeCtx { implicit request =>
+    println("init")
     val sessionId = request.maybeCtx map(_.sessionId) getOrElse CheminotDb.Id.next
     cheminotm.CheminotcActor.init(sessionId, Config.graphPath, Config.calendardatesPath) map {
       case Right(meta) =>
@@ -25,6 +29,7 @@ object Cheminotm extends Controller {
   }
 
   def lookForBestTrip = Common.WithCtx { implicit request =>
+    println("lookForBestTrip")
     Form(tuple(
       "vsId" -> nonEmptyText,
       "veId" -> nonEmptyText,
@@ -44,6 +49,7 @@ object Cheminotm extends Controller {
   }
 
   def lookForBestDirectTrip = Common.WithCtx { implicit request =>
+    println("lookForBestDirectTrip")
     Form(tuple(
       "vsId" -> nonEmptyText,
       "veId" -> nonEmptyText,
@@ -64,12 +70,14 @@ object Cheminotm extends Controller {
   }
 
   def abort = Common.WithCtx { implicit request =>
+    println("abort")
     cheminotm.CheminotcMonitorActor.abort(request.ctx.sessionId) map { _ =>
       Ok
     }
   }
 
   def trace = Common.WithCtx { implicit request =>
+    println("trace")
     cheminotm.CheminotcMonitorActor.trace(request.ctx.sessionId) map {
       case Right(enumerator) => Ok.chunked(enumerator &> EventSource()).as( "text/event-stream")
       case _ => BadRequest

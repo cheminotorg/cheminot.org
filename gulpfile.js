@@ -11,6 +11,7 @@ var Assets = {
   styl: {
     src: {
       main: './assets/styl/main.styl',
+      splashscreen: './assets/styl/splashscreen.styl',
       files: ['assets/styl/**/*.styl']
     },
     dest: {
@@ -36,8 +37,8 @@ function buildScripts() {
     .pipe(gulp.dest(Assets.js.dest.dir));
 }
 
-function buildStyl() {
-  return gulp.src(Assets.styl.src.main)
+function buildStyl(src) {
+  return gulp.src(src)
     .pipe(stylus({
       use: nib(),
       compress: true
@@ -46,15 +47,23 @@ function buildStyl() {
 }
 
 gulp.task('clean:styl', function(cb) {
-  del([Assets.styl.dest.dir], cb);
+  return del([Assets.styl.dest.dir], cb);
 });
 
 gulp.task('clean:js', function(cb) {
-  del([Assets.js.dest.dir], cb);
+  return del([Assets.js.dest.dir], cb);
 });
 
-gulp.task('styl', ['clean:styl'], function() {
-  return buildStyl();
+gulp.task('styl:main', function() {
+  return buildStyl(Assets.styl.src.main);
+});
+
+gulp.task('styl:splashscreen', function() {
+  return buildStyl(Assets.styl.src.splashscreen);
+});
+
+gulp.task('styl', ['clean:styl', 'styl:main', 'styl:splashscreen'], function() {
+  return buildStyl(Assets.styl.src.main);
 });
 
 gulp.task('js', ['clean:js'], function() {

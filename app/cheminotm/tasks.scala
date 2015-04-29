@@ -3,7 +3,7 @@ package cheminotm
 import java.io.File
 import play.api.Application
 import play.api.libs.concurrent.Akka
-import akka.actor.{ Actor, ActorRef, Props, Cancellable, PoisonPill }
+import akka.actor.{ Actor, ActorRef, Props, Cancellable, PoisonPill, ActorSystem }
 import scala.concurrent.duration._
 import play.api.libs.iteratee. { Concurrent, Enumerator, Input }
 import akka.pattern.ask
@@ -12,6 +12,8 @@ import akka.event.Logging
 import scala.collection.concurrent.TrieMap
 import scala.concurrent.Future
 import models.Config
+import akka.dispatch.UnboundedPriorityMailbox
+import akka.dispatch.PriorityGenerator
 
 sealed trait Status
 case object NotInitialized extends Status
@@ -52,7 +54,6 @@ object CheminotcActor {
     implicit val timeout = Timeout(30 seconds)
     if(actors.size < Config.maxTasks) {
       (ref(sessionId) ? Messages.Init(sessionId, graphPath, calendardatesPath)).mapTo[String].map { meta =>
-        println("init")
         CheminotcMonitorActor.init(sessionId)
         Right(meta)
       }(Tasks.executionContext)
@@ -145,7 +146,6 @@ object CheminotcMonitorActor {
     case object Init extends Event
     case object Abort extends Event
     case object Trace extends Event
-    case object Shutdown extends Event
     case class TracePulling(channel: Concurrent.Channel[String]) extends Event
   }
 
@@ -156,7 +156,7 @@ object CheminotcMonitorActor {
 
   def ref(sessionId: String)(implicit app: Application) = {
     actors.get(sessionId).getOrElse {
-      val r = Akka.system.actorOf(prop(sessionId), s"cheminotcMonitor-${sessionId}")
+      val r = Akka.system.actorOf(prop(sessionId).withDispatcher("cheminotcmonitor-dispatcher"), s"cheminotcMonitor-${sessionId}")
       actors += sessionId -> r
       r
     }
@@ -178,6 +178,17 @@ object CheminotcMonitorActor {
     implicit val timeout = Timeout(30 seconds)
     (ref(sessionId) ? Messages.Trace).mapTo[Either[Status, Enumerator[String]]]
   }
+
+  class CheminotcMonitorMailbox(settings: ActorSystem.Settings, config: com.typesafe.config.Config) extends UnboundedPriorityMailbox(
+    PriorityGenerator {
+
+      case Messages.Init | Messages.Abort | PoisonPill => 0
+
+      case Messages.Trace => 3
+
+      case _ => 1
+    }
+  )
 }
 
 class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor {

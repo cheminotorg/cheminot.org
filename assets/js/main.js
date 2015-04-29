@@ -10,11 +10,24 @@ qstart.then(function() {
 
       var phone = document.querySelector('.phone iframe');
 
-      phone.contentWindow.postMessage('cheminotm.backbutton', window.location.origin);
+      phone.contentWindow.postMessage('cheminot:back', window.location.origin);
 
     });
 
   })();
+
+  window.addEventListener("message", function(message) {
+
+    if(message.data == 'cheminot:ready' && message.origin == window.location.origin) {
+
+      Stream();
+
+      var screen = document.querySelector('.phone .screen');
+
+      screen.classList.add('loaded');
+    }
+
+  });
 
   (function StartDemo() {
 
@@ -36,14 +49,14 @@ qstart.then(function() {
 
   })();
 
-  (function Map() {
+  if(window.L) {
 
-    if(window.L) {
+    L.mapbox.accessToken = 'pk.eyJ1Ijoic3JlbmF1bHQiLCJhIjoiNGRHRzgxWSJ9.pawb4Qw10gD_8dbE-_Qrvw';
 
-      L.mapbox.accessToken = 'pk.eyJ1Ijoic3JlbmF1bHQiLCJhIjoiNGRHRzgxWSJ9.pawb4Qw10gD_8dbE-_Qrvw';
+    var map = L.mapbox.map('map', 'srenault.ljcc52c6', { zoomControl: false }).setView([46.822616668804926, 2.4884033203125], 7);
+  }
 
-      var map = L.mapbox.map('map', 'srenault.ljcc52c6', { zoomControl: false }).setView([46.822616668804926, 2.4884033203125], 7);
-    }
+  function Stream() {
 
     var baseURL = 'http://localhost:9000';
 
@@ -113,6 +126,6 @@ qstart.then(function() {
       console.log(event);
     };
 
-  })();
+  };
 
 });

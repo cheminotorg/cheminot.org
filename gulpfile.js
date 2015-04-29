@@ -11,7 +11,6 @@ var Assets = {
   styl: {
     src: {
       main: './assets/styl/main.styl',
-      splashscreen: './assets/styl/splashscreen.styl',
       files: ['assets/styl/**/*.styl']
     },
     dest: {
@@ -46,27 +45,23 @@ function buildStyl(src) {
     .pipe(gulp.dest(Assets.styl.dest.dir));
 }
 
-gulp.task('clean:styl', function(cb) {
+gulp.task('styl:clean', function(cb) {
   return del([Assets.styl.dest.dir], cb);
 });
 
-gulp.task('clean:js', function(cb) {
+gulp.task('js:clean', function(cb) {
   return del([Assets.js.dest.dir], cb);
 });
 
-gulp.task('styl:main', function() {
+gulp.task('styl:main', ['styl:clean'], function() {
   return buildStyl(Assets.styl.src.main);
 });
 
-gulp.task('styl:splashscreen', function() {
-  return buildStyl(Assets.styl.src.splashscreen);
-});
-
-gulp.task('styl', ['clean:styl', 'styl:main', 'styl:splashscreen'], function() {
+gulp.task('styl', ['styl:main'], function() {
   return buildStyl(Assets.styl.src.main);
 });
 
-gulp.task('js', ['clean:js'], function() {
+gulp.task('js', ['js:clean'], function() {
   return buildScripts();
 });
 

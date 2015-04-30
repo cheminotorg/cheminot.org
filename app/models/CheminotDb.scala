@@ -15,8 +15,12 @@ object CheminotDb {
     FileUtils.deleteDirectory(new File(models.Config.bucketPath(app)))
   }
 
-  def del(sessionId: String)(implicit app: Application) =
-    FileUtils.deleteDirectory(new File(models.Config.bucketPath + "/" + sessionId))
+  def del(sessionId: String)(implicit app: Application) = {
+    val dir = new File(models.Config.bucketPath + "/" + sessionId)
+    if(dir.exists) {
+      FileUtils.deleteDirectory(dir)
+    }
+  }
 
   def dbPath(sessionId: String)(implicit app: Application): String =
     Config.bucketPath + "/" + sessionId + "/cheminot.db"

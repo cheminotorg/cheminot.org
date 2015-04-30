@@ -1,6 +1,7 @@
 package controllers
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.mvc.{ Session => PlaySession, _ }
 import models.Config
 
@@ -24,6 +25,16 @@ object Common {
       case Some(sessionId) => block(RequestWithMaybeCtx(Some(Ctx(sessionId)), req))
       case _ => block(RequestWithMaybeCtx(None, req))
     }
+  }
+
+  def Public(block: RequestHeader => Future[Result]) = WithMaybeCtx { req =>
+    val eventuallyResult = Session.get(req) match {
+      case Some(sessionId) =>
+        req.maybeCtx map(_.sessionId) foreach cheminotm.Tasks.shutdown
+        block(req)
+      case _ => block(req)
+    }
+    eventuallyResult map (_.withCookies(Common.Session.clear))
   }
 
   object Session {

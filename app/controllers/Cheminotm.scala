@@ -8,6 +8,7 @@ import play.api.Play.current
 import play.api.data._
 import play.api.data.Forms._
 import models.{ Config, CheminotDb }
+import play.api.libs.json._
 
 object Cheminotm extends Controller {
 
@@ -19,9 +20,13 @@ object Cheminotm extends Controller {
         request.maybeCtx map (_ => result) getOrElse {
           result.withCookies(Common.Session.create(sessionId))
         }
-      case _ => BadRequest
+
+      case Left(cheminotm.Tasks.Full) =>
+        BadRequest(Json.obj("error" -> "full"))
+
+      case _ =>
+        BadRequest(Json.obj("error" -> "unknown"))
     }
-    //Future successful Ok
   }
 
   def lookForBestTrip = Common.WithCtx { implicit request =>
@@ -32,7 +37,7 @@ object Cheminotm extends Controller {
       "te" -> nonEmptyText,
       "max" -> nonEmptyText
     )).bindFromRequest.fold(
-      error => Future successful BadRequest,
+      form => Future successful BadRequest(form.errorsAsJson),
       {
         case (vsId, veId, at, te, max) =>
           cheminotm.CheminotcActor.lookForBestTrip(request.ctx.sessionId, vsId, veId, at.toInt, te.toInt, max.toInt) map {
@@ -50,9 +55,7 @@ object Cheminotm extends Controller {
       "at" -> nonEmptyText,
       "te" -> nonEmptyText
     )).bindFromRequest.fold(
-      form => {
-        Future successful BadRequest(form.errorsAsJson)
-      },
+      form => Future successful BadRequest(form.errorsAsJson),
       {
         case (vsId, veId, at, te) =>
           cheminotm.CheminotcActor.lookForBestDirectTrip(request.ctx.sessionId, vsId, veId, at.toInt, te.toInt) map {

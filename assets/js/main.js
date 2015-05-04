@@ -10,7 +10,7 @@ qstart.then(function() {
 
       var phone = document.querySelector('.phone iframe');
 
-      phone.contentWindow.postMessage('cheminot:back', window.location.origin);
+      phone.contentWindow.postMessage({ event: 'cheminot:back' }, window.location.origin);
 
     });
 
@@ -18,13 +18,40 @@ qstart.then(function() {
 
   window.addEventListener("message", function(message) {
 
-    if(message.data == 'cheminot:ready' && message.origin == window.location.origin) {
+    if(message.data && message.origin == window.location.origin) {
 
-      Stream();
+      if(message.data.event == 'cheminot:ready') {
 
-      var screen = document.querySelector('.phone .screen');
+        Stream();
 
-      screen.classList.add('loaded');
+        var screen = document.querySelector('.phone .screen');
+
+        screen.classList.add('loaded');
+      }
+
+      if(message.data.event == 'cheminot:init') {
+
+        if(message.data.error == 'full') {
+
+          var demoFull = document.querySelector('.phone .demo-full');
+
+          demoFull.classList.add('on');
+
+        }
+
+      }
+
+      if(message.data.event == 'cheminot:lookforbesttrip') {
+
+        console.log(message.data.trip);
+
+      }
+
+      if(message.data.event == 'cheminot:lookforbestdirecttrip') {
+
+        console.log(message.data.trip);
+      }
+
     }
 
   });
@@ -72,7 +99,7 @@ qstart.then(function() {
 
       var data = JSON.parse(msg.data);
 
-      console.log(data);
+      //console.log(data);
 
       if(data && window.L) {
 

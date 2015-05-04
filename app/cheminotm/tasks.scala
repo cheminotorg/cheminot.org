@@ -15,11 +15,11 @@ import models.Config
 import akka.dispatch.UnboundedPriorityMailbox
 import akka.dispatch.PriorityGenerator
 
-sealed trait Status
-case object NotInitialized extends Status
-case object Full extends Status
-
 object Tasks {
+
+  sealed trait Status
+  case object NotInitialized extends Status
+  case object Full extends Status
 
   val executionContext = {
     import scala.concurrent.ExecutionContext
@@ -29,6 +29,9 @@ object Tasks {
   def shutdown(sessionId: String) = {
     CheminotcActor.stop(sessionId)
   }
+
+  def isFull(implicit app: Application): Boolean =
+    CheminotcActor.actors.size >= Config.maxTasks
 }
 
 object CheminotcActor {
@@ -43,6 +46,9 @@ object CheminotcActor {
     case class LookForBestDirectTrip(vsId: String, veId: String, at: Int, te: Int) extends Event
   }
 
+  def hasSession(sessionId: String): Boolean =
+    actors.get(sessionId).isDefined
+
   def ref(sessionId: String)(implicit app: Application) = {
     actors.get(sessionId).getOrElse {
       val r = Akka.system.actorOf(prop(sessionId), s"cheminotc-${sessionId}")
@@ -54,26 +60,26 @@ object CheminotcActor {
   def prop(sessionId: String)(implicit app: Application) =
     Props(classOf[CheminotcActor], sessionId, app)
 
-  def init(sessionId: String, graphPath: String, calendardatesPath: String)(implicit app: Application): Future[Either[Status, String]] = {
-    implicit val timeout = Timeout(30 seconds)
+  def init(sessionId: String, graphPath: String, calendardatesPath: String)(implicit app: Application): Future[Either[Tasks.Status, String]] = {
+    implicit val timeout = Timeout(90 seconds)
     if(actors.size < Config.maxTasks) {
       (ref(sessionId) ? Messages.Init(sessionId, graphPath, calendardatesPath)).mapTo[String].map { meta =>
         CheminotcMonitorActor.init(sessionId)
         Right(meta)
       }(Tasks.executionContext)
     } else {
-      Future successful Left(Full)
+      Future successful Left(Tasks.Full)
     }
   }
 
-  def lookForBestDirectTrip(sessionId: String, vsId: String, veId: String, at: Int, te: Int)(implicit app: Application): Future[Either[Status, String]] = {
+  def lookForBestDirectTrip(sessionId: String, vsId: String, veId: String, at: Int, te: Int)(implicit app: Application): Future[Either[Tasks.Status, String]] = {
     implicit val timeout = Timeout(30 seconds)
-    (ref(sessionId) ? Messages.LookForBestDirectTrip(vsId, veId, at, te)).mapTo[Either[Status, String]]
+    (ref(sessionId) ? Messages.LookForBestDirectTrip(vsId, veId, at, te)).mapTo[Either[Tasks.Status, String]]
   }
 
-  def lookForBestTrip(sessionId: String, vsId: String, veId: String, at: Int, te: Int, max: Int)(implicit app: Application): Future[Either[Status, String]] = {
+  def lookForBestTrip(sessionId: String, vsId: String, veId: String, at: Int, te: Int, max: Int)(implicit app: Application): Future[Either[Tasks.Status, String]] = {
     implicit val timeout = Timeout(2 minutes)
-    (ref(sessionId) ? Messages.LookForBestTrip(vsId, veId, at, te, max)).mapTo[Either[Status, String]]
+    (ref(sessionId) ? Messages.LookForBestTrip(vsId, veId, at, te, max)).mapTo[Either[Tasks.Status, String]]
   }
 
   def stop(sessionId: String) =
@@ -108,7 +114,7 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor {
         context.stop(self)
 
     case _ =>
-      sender ! Left(NotInitialized)
+      sender ! Left(Tasks.NotInitialized)
   }
 
   def busy: Receive = {
@@ -159,29 +165,37 @@ object CheminotcMonitorActor {
   def prop(sessionId: String)(implicit app: Application) =
     Props(classOf[CheminotcMonitorActor], sessionId, app)
 
-  def ref(sessionId: String)(implicit app: Application) = {
-    actors.get(sessionId).getOrElse {
-      val r = Akka.system.actorOf(prop(sessionId).withDispatcher("cheminotcmonitor-dispatcher"), s"cheminotcMonitor-${sessionId}")
-      actors += sessionId -> r
-      r
-    }
+  def ref(sessionId: String)(implicit app: Application): Option[ActorRef] = {
+    if(CheminotcActor.hasSession(sessionId)) {
+      actors.get(sessionId).orElse {
+        val r = Akka.system.actorOf(prop(sessionId).withDispatcher("cheminotcmonitor-dispatcher"), s"cheminotcMonitor-${sessionId}")
+        actors += sessionId -> r
+        Some(r)
+      }
+    } else None
   }
 
   def stop(sessionId: String) =
     actors.get(sessionId).foreach(_ ! Messages.Shutdown)
 
   def init(sessionId: String)(implicit app: Application) {
-    ref(sessionId) ! Messages.Init
+    ref(sessionId).foreach(_ ! Messages.Init)
   }
 
-  def abort(sessionId: String)(implicit app: Application): Future[Either[Status, Unit]] = {
+  def abort(sessionId: String)(implicit app: Application): Future[Either[Tasks.Status, Unit]] = {
     implicit val timeout = Timeout(30 seconds)
-    (ref(sessionId) ? Messages.Abort).mapTo[Either[Status, Unit]]
+    ref(sessionId) match {
+      case Some(actorref) => (actorref ? Messages.Abort).mapTo[Either[Tasks.Status, Unit]]
+      case None => Future successful Left(Tasks.NotInitialized)
+    }
   }
 
-  def trace(sessionId: String)(implicit app: Application): Future[Either[Status, Enumerator[String]]] = {
+  def trace(sessionId: String)(implicit app: Application): Future[Either[Tasks.Status, Enumerator[String]]] = {
     implicit val timeout = Timeout(30 seconds)
-    (ref(sessionId) ? Messages.Trace).mapTo[Either[Status, Enumerator[String]]]
+    ref(sessionId) match {
+      case Some(actorref) => (actorref ? Messages.Trace).mapTo[Either[Tasks.Status, Enumerator[String]]]
+      case None => Future successful Left(Tasks.NotInitialized)
+    }
   }
 
   class CheminotcMonitorMailbox(settings: ActorSystem.Settings, config: com.typesafe.config.Config) extends UnboundedPriorityMailbox(
@@ -235,7 +249,7 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor {
       context become waiting
 
     case _ =>
-      sender ! Left(NotInitialized)
+      sender ! Left(Tasks.NotInitialized)
   }
 
   def pulling: Receive = {

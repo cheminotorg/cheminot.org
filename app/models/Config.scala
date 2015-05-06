@@ -50,7 +50,7 @@ object Config {
     Logger.info("---------------------------")
     Logger.info("[CONFIGURATION]")
     Logger.info("cheminotc.path: " + cheminotcPath)
-    Logger.info("calendartes.path: " + calendardatesPath)
+    Logger.info("calendardates.path: " + calendardatesPath)
     Logger.info("graph.path: " + graphPath)
     Logger.info("cheminotdb.path: " + cheminotDbPath)
     Logger.info("bucket.path: " + bucketPath)

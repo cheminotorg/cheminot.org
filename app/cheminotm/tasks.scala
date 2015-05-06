@@ -123,11 +123,11 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor {
       sender ! meta.getOrElse("null")
 
     case LookForBestTrip(vsId, veId, at, te, max) =>
-      val trip = m.cheminot.plugin.jni.CheminotLib.lookForBestTrip(vsId, veId, at, te, max)
+      val trip = m.cheminot.plugin.jni.CheminotLib.lookForBestTrip(dbPath, vsId, veId, at, te, max)
       sender ! Right(trip)
 
     case LookForBestDirectTrip(vsId, veId, at, te) =>
-      val trip = m.cheminot.plugin.jni.CheminotLib.lookForBestDirectTrip(vsId, veId, at, te)
+      val trip = m.cheminot.plugin.jni.CheminotLib.lookForBestDirectTrip(dbPath, vsId, veId, at, te)
       sender ! Right(trip)
 
     case ReceiveTimeout =>
@@ -223,7 +223,7 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor {
   var cancellableScheduler: Option[Cancellable] = None
 
   def abort(sender: ActorRef) {
-    m.cheminot.plugin.jni.CheminotLib.abort()
+    m.cheminot.plugin.jni.CheminotLib.abort(dbPath)
     sender ! Right(Unit)
   }
 
@@ -270,7 +270,7 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor {
 
     case TracePulling(channel) =>
       context become pulling
-      val trace = m.cheminot.plugin.jni.CheminotLib.trace();
+      val trace = m.cheminot.plugin.jni.CheminotLib.trace(dbPath);
       if(trace != "[]") {
         channel.push(trace)
       }

@@ -44,15 +44,10 @@ qstart.then(function() {
 
       }
 
-      if(message.data.event == 'cheminot:lookforbesttrip') {
+      if(message.data.event == 'cheminot:selecttrip') {
 
-        console.log(message.data.trip);
+        map.displayTrip(message.data.trip);
 
-      }
-
-      if(message.data.event == 'cheminot:lookforbestdirecttrip') {
-
-        console.log(message.data.trip);
       }
 
     }
@@ -91,8 +86,6 @@ qstart.then(function() {
 
       var data = JSON.parse(msg.data);
 
-      //console.log(data);
-
       if(data && window.L) {
 
         map.displayTrace(data);
@@ -101,7 +94,9 @@ qstart.then(function() {
     };
 
     stream.onerror = function(event) {
+
       console.log(event);
+
     };
 
   };

@@ -1,5 +1,7 @@
-var layers = {},
+var tracesLayers = {},
+    tripsLayers = [],
     map,
+    lasttrip,
     lasttdsp;
 
 if(window.L) {
@@ -7,7 +9,7 @@ if(window.L) {
   L.mapbox.accessToken = 'pk.eyJ1Ijoic3JlbmF1bHQiLCJhIjoiNGRHRzgxWSJ9.pawb4Qw10gD_8dbE-_Qrvw';
 
   map = L.mapbox.map('map', 'srenault.ljcc52c6', { zoomControl: false })
-                    .setView([46.822616668804926, 2.4884033203125], 7);
+                .setView([46.822616668804926, 2.4884033203125], 7);
 }
 
 exports.displayTrace = function (trace) {
@@ -42,7 +44,7 @@ exports.displayTrace = function (trace) {
 
   if(lasttdsp && lasttdsp != tdsp) {
 
-    exports.clear(lasttdsp);
+    exports.clearTrace(lasttdsp);
 
   }
 
@@ -50,36 +52,88 @@ exports.displayTrace = function (trace) {
 
   featureLayer.addTo(map);
 
-  if(!layers[tdsp]) layers[tdsp] = [];
+  if(!tracesLayers[tdsp]) tracesLayers[tdsp] = [];
 
-  layers[tdsp].push(featureLayer);
+  tracesLayers[tdsp].push(featureLayer);
 
   lasttdsp = tdsp;
 };
 
 exports.displayTrip = function(trip) {
 
+  var tripId;
+
+  var features = trip.map(function(stopTime) {
+
+    tripId = stopTime.tripId;
+
+    return {
+      type: "Feature",
+      geometry: {
+        type: "Point",
+        coordinates: [stopTime.lng, stopTime.lat]
+      },
+      properties: {
+        title: stopTime.stopName,
+        'marker-color': '#e9683e',
+        'marker-shape': "pin",
+        'marker-size': "medium",
+        'marker-symbol': "rail-light",
+        "stroke-width": 1
+      }
+    };
+
+  });
+
+  var geojson = {
+    type: "FeatureCollection",
+    features: features
+  };
+
+  if(lasttdsp && lasttrip != tripId) {
+
+    exports.clearTrips(tripId);
+
+  }
+
+  var featureLayer = L.mapbox.featureLayer(geojson);
+
+  featureLayer.addTo(map);
+
+  tripsLayers.push(featureLayer);
+
+  lasttdsp = tripId;
+
 };
 
-exports.clear = function(tdsp) {
+exports.clearTrace = function(tdsp) {
 
   var layersByTdsp = [];
 
   if(tdsp) {
 
-    layersByTdsp = layers[tdsp];
+    layersByTdsp = tracesLayers[tdsp];
 
   } else {
 
-    layersByTdsp = Object.keys(layers).reduce(function(acc, key) {
+    layersByTdsp = Object.keys(tracesLayers).reduce(function(acc, key) {
 
-      return acc.concat(layers[key]);
+      return acc.concat(tracesLayers[key]);
 
     }, []);
 
   }
 
   layersByTdsp.forEach(function(layer) {
+
+    map.removeLayer(layer);
+
+  });
+};
+
+exports.clearTrips = function() {
+
+  tripsLayers.forEach(function(layer) {
 
     map.removeLayer(layer);
 

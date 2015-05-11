@@ -270,11 +270,13 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor {
 
     case TracePulling(channel) =>
       context become pulling
-      val trace = m.cheminot.plugin.jni.CheminotLib.trace(dbPath);
-      if(trace != "[]") {
-        channel.push(trace)
-      }
-      context become waiting
+      Future {
+        val trace = m.cheminot.plugin.jni.CheminotLib.trace(dbPath);
+        if(trace != "[]") {
+          channel.push(trace)
+        }
+        context become waiting
+      }(Tasks.executionContext)
 
     case Abort =>
       abort(sender)

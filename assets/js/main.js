@@ -1,7 +1,7 @@
 var qstart = require('qstart');
 var map = require('./map');
 
-console.log(map);
+var stream;
 
 qstart.then(function() {
 
@@ -25,11 +25,14 @@ qstart.then(function() {
 
       if(message.data.event == 'cheminot:ready') {
 
-        Stream();
+        map.enableZoomControl();
 
-        var screen = document.querySelector('.phone .screen');
+        document.body.classList.add('playing');
 
-        screen.classList.add('loaded');
+        if(!stream) {
+
+          stream = Stream();
+        }
       }
 
       if(message.data.event == 'cheminot:init') {
@@ -46,7 +49,7 @@ qstart.then(function() {
 
       if(message.data.event == 'cheminot:selecttrip') {
 
-        map.displayTrip(message.data.trip);
+        map.displayTrip(message.data.trip, message.data.tdsp);
 
       }
 
@@ -56,7 +59,7 @@ qstart.then(function() {
 
   (function StartDemo() {
 
-    var startDemoBtn = document.querySelector('.phone .start-demo');
+    var startDemoBtn = document.querySelector('#demo .start-demo');
 
     startDemoBtn.addEventListener('click', function() {
 
@@ -68,8 +71,28 @@ qstart.then(function() {
 
       mask.classList.add('off');
 
-      startDemoBtn.remove();
+      startDemoBtn.classList.add('hidden');
+    });
 
+  })();
+
+  (function StopDemo() {
+
+    var stopDemoBtn = document.querySelector('#demo .stop-demo');
+
+    stopDemoBtn.addEventListener('click', function() {
+
+      var mask = document.querySelector('.phone .mask');
+
+      mask.classList.remove('off');
+
+      document.body.classList.remove('playing');
+
+      var startDemoBtn = document.querySelector('#demo .start-demo');
+
+      startDemoBtn.classList.remove('hidden');
+
+      map.disableZoomControl();
     });
 
   })();
@@ -99,6 +122,7 @@ qstart.then(function() {
 
     };
 
+    return stream;
   };
 
 });

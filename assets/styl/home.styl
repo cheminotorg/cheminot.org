@@ -2,12 +2,7 @@ global-reset()
 
 h1 {
     font-family-bold()
-    font-size: 40px
-}
-
-h3 {
-    font-family-regular()
-    font-size: 24px
+    font-size: 26px
 }
 
 body {
@@ -19,25 +14,134 @@ body {
 
 body::before {
     content: ''
-    background: rgba(0, 0, 0, 0.4)
+    background: dark-blue
     position: absolute
     top: 0
     bottom: 0
     left: 0
     right: 0
     z-index: 1
+    transition: opacity 2s
+    opacity: .6
 }
 
+body:not(.playing) {
+
+    .screen::before {
+        content: ''
+        position: absolute
+        top: 0
+        bottom: -1px
+        left: 0
+        right: 0
+        background-color: blue
+    }
+
+
+    .screen::after {
+        content: ''
+        position: absolute
+        background: url("../images/train.png") no-repeat
+        top: 50%
+        left: 50%
+        height: 229px
+        width: 110px
+        background-size: 100%
+        transform: translate(-50%, -50%)
+    }
+}
+
+body.playing {
+
+    &::before {
+        opacity: 0
+    }
+
+    #content > .wrapper {
+        transform: translate3d(-1000px,-50%, 0);
+    }
+}
+
+#content, #demo {
+    width: 50%
+}
+
+#content {
+    position: absolute
+    right: 0
+    left: 0
+    top: 0
+    bottom: 0
+    z-index: 1
+
+    .wrapper {
+        transition: transform .6s cubic-bezier(.5,.99,.73,.86);
+        position: absolute
+        top: 50%
+        left: 50%
+        transform: translate(-50%, -50%)
+        width: 80%
+        margin: auto
+    }
+
+    .todo {
+
+        li {
+            list-style: disc inside
+
+            &.done {
+                text-decoration: line-through
+            }
+        }
+    }
+}
+
+body.playing .stop-demo {
+    display: block !important
+}
+
+#demo {
+    position: absolute
+    right: 0
+    top: 0
+    bottom: 0
+    z-index: 1
+
+    .stop-demo {
+        cursor: pointer
+        outline: none
+        position: absolute
+        top: 4%
+        right: 4%
+        border: none
+        background: transparent
+        font-size: 0
+        display: none
+
+        &::before {
+            font-family: 'Cheminot'
+            display: inline-block
+            content: '\F004'
+            font-size: 44px
+            color: dark-blue
+        }
+    }
+}
+
+
 #map {
-    height: 100vh
-    width: 100vw
+    position: absolute
+    right: 0
+    left: 0
+    top: 0
+    bottom: 0
 }
 
 .phone {
     position: absolute
     top: 50%
-    left: 90%
-    transform: translate(-90%, -50%)
+    left: 50%
+    transform: translate(-50%, -50%)
     background: #202020
     width: 320px
     height: 0
@@ -109,29 +213,6 @@ body::before {
         }
     }
 
-    .screen:not(.loaded)::before {
-        content: ''
-        position: absolute
-        top: 0
-        bottom: -1px
-        left: 0
-        right: 0
-        background-color: blue
-    }
-
-
-    .screen:not(.loaded)::after {
-        content: ''
-        position: absolute
-        background: url("../images/train.png") no-repeat
-        top: 50%
-        left: 50%
-        height: 229px
-        width: 110px
-        background-size: 100%
-        transform: translate(-50%, -50%)
-    }
-
     .square {
         position: absolute
         top: 11px
@@ -169,6 +250,10 @@ body::before {
         z-index: 4
         width: 90%
         text-align: center
+
+        &.hidden {
+            display: none
+        }
 
         button {
             text-transform: uppercase

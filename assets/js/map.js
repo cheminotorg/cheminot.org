@@ -1,8 +1,8 @@
 var tracesLayers = {},
     tripsLayers = [],
-    map,
-    lasttrip,
-    lasttdsp;
+    lasttdsp,
+    zoomControl,
+    map;
 
 if(window.L) {
 
@@ -12,7 +12,7 @@ if(window.L) {
                 .setView([46.822616668804926, 2.4884033203125], 7);
 }
 
-exports.displayTrace = function (trace) {
+exports.displayTrace = function(trace) {
 
   var tdsp;
 
@@ -42,9 +42,9 @@ exports.displayTrace = function (trace) {
     features: features
   };
 
-  if(lasttdsp && lasttdsp != tdsp) {
+  if(lasttdsp != tdsp) {
 
-    exports.clearTrace(lasttdsp);
+    exports.clearTraces();
 
   }
 
@@ -59,7 +59,9 @@ exports.displayTrace = function (trace) {
   lasttdsp = tdsp;
 };
 
-exports.displayTrip = function(trip) {
+exports.displayTrip = function(trip, tdsp) {
+
+  exports.clearTraces();
 
   var tripId;
 
@@ -90,39 +92,34 @@ exports.displayTrip = function(trip) {
     features: features
   };
 
-  if(lasttdsp && lasttrip != tripId) {
+  exports.clearTrips();
 
-    exports.clearTrips(tripId);
+  exports.clearTraces();
 
-  }
+  var tracesLayersByTdsp = tracesLayers[tdsp] || [];
+
+  tracesLayersByTdsp.forEach(function(layer) {
+
+    layer.addTo(map);
+
+  });
 
   var featureLayer = L.mapbox.featureLayer(geojson);
 
   featureLayer.addTo(map);
 
   tripsLayers.push(featureLayer);
-
-  lasttdsp = tripId;
-
 };
 
-exports.clearTrace = function(tdsp) {
+exports.clearTraces = function() {
 
   var layersByTdsp = [];
 
-  if(tdsp) {
+  layersByTdsp = Object.keys(tracesLayers).reduce(function(acc, key) {
 
-    layersByTdsp = tracesLayers[tdsp];
+    return acc.concat(tracesLayers[key]);
 
-  } else {
-
-    layersByTdsp = Object.keys(tracesLayers).reduce(function(acc, key) {
-
-      return acc.concat(tracesLayers[key]);
-
-    }, []);
-
-  }
+  }, []);
 
   layersByTdsp.forEach(function(layer) {
 
@@ -139,3 +136,25 @@ exports.clearTrips = function() {
 
   });
 };
+
+exports.enableZoomControl = function() {
+
+  if(window.L) {
+
+    if(!zoomControl) zoomControl = L.control.zoom();
+
+    map.addControl(zoomControl);
+
+  }
+
+}
+
+exports.disableZoomControl = function() {
+
+  if(zoomControl) {
+
+    map.removeControl(zoomControl);
+
+  }
+
+}

@@ -157,6 +157,7 @@ object CheminotcMonitorActor {
     case object Abort extends Event
     case object Trace extends Event
     case object Shutdown extends Event
+    case class GetStop(stopId: String) extends Event
     case class TracePulling(channel: Concurrent.Channel[String]) extends Event
   }
 
@@ -198,10 +199,18 @@ object CheminotcMonitorActor {
     }
   }
 
+  def getStop(sessionId: String, stopId: String)(implicit app: Application): Future[Either[Tasks.Status, String]] = {
+    implicit val timeout = Timeout(30 seconds)
+    ref(sessionId) match {
+      case Some(actorref) => (actorref ? Messages.GetStop(stopId)).mapTo[Either[Tasks.Status, String]]
+      case None => Future successful Left(Tasks.NotInitialized)
+    }
+  }
+
   class CheminotcMonitorMailbox(settings: ActorSystem.Settings, config: com.typesafe.config.Config) extends UnboundedPriorityMailbox(
     PriorityGenerator {
 
-      case Messages.Init | Messages.Abort | Messages.Shutdown => 0
+      case Messages.Init | Messages.Abort | Messages.Shutdown | Messages.GetStop => 0
 
       case Messages.Trace => 3
 
@@ -225,6 +234,12 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor {
   def abort(sender: ActorRef) {
     m.cheminot.plugin.jni.CheminotLib.abort(dbPath)
     sender ! Right(Unit)
+  }
+
+  def getStop(stopId: String, sender: ActorRef) {
+    val stop = m.cheminot.plugin.jni.CheminotLib.getStop(stopId)
+    println("GetStop " + stop)
+    sender ! Right(stop)
   }
 
   def shutdown() {
@@ -256,6 +271,9 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor {
 
     case TracePulling(_) =>
 
+    case GetStop(stopId) =>
+      getStop(stopId, sender)
+
     case Abort =>
       abort(sender)
 
@@ -280,6 +298,9 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor {
 
     case Abort =>
       abort(sender)
+
+    case GetStop(stopId) =>
+      getStop(stopId, sender)
 
     case Shutdown =>
       shutdown()

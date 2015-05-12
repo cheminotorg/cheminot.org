@@ -8,11 +8,20 @@
     <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
     <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
     <link href="https://api.tiles.mapbox.com/mapbox.js/v2.1.9/mapbox.css" rel="stylesheet"/>
+    <link href='http://fonts.googleapis.com/css?family=Noto+Serif:400,700' rel='stylesheet' type='text/css'>
     <script src="https://api.tiles.mapbox.com/mapbox.js/v2.1.9/mapbox.js"></script>
   </head>
   <body>
 
     <div id="map"></div>
+
+    <header>
+
+      <a class="logo" href="http://cheminot.org">cheminot.org</a>
+
+      <a class="beta" target="_blank" href="http://beta.cheminot.org">Télécharger la beta</a>
+
+    </header>
 
     <section id="content">
 
@@ -20,15 +29,44 @@
 
         <h1>Consulter vos horaires de train n'importe où et n'importe quand.</h1>
 
-        <h2>Roadmap</h2>
+        <p>Les données relatives aux horaires de train proviènnent de l' <a target="_blank" href="https://data.sncf.com">Open Data SNCF</a>.</p>
 
-        <ul class="todo">
-          <li class="done">Consulter les horaires hors ligne</li>
-          <li class="done">Intégrer les horaires des TER</li>
-          <li>Intégrer les horaires des intercités</li>
-          <li>Intégrer les horaires des transiliens</li>
-          <li>S'abonner à un trajet récurrent</li>
-        </ul>
+        <p>L'ensemble du project est Open Source et accessible sur <a target="_blank" href="http://github.com/srenault/cheminot.m">GitHub</a>.</p>
+
+        <div class="roadmap">
+
+          <h2>Roadmap</h2>
+
+          <ul class="todo">
+
+            <li class="done">
+              <input type="checkbox" checked />
+              Consulter les horaires hors ligne
+            </li>
+
+            <li class="done">
+              <input type="checkbox" checked />
+              Intégrer les horaires des TER
+            </li>
+
+            <li>
+              <input type="checkbox"/>
+              Intégrer les horaires des intercités
+            </li>
+
+            <li>
+              <input type="checkbox"/>
+              Intégrer les horaires des transiliens
+            </li>
+
+            <li>
+              <input type="checkbox"/>
+              S'abonner à un trajet récurrent
+            </li>
+
+          </ul>
+
+        </div>
 
       </div>
 

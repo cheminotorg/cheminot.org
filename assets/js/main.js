@@ -78,7 +78,7 @@ qstart.then(function() {
 
   (function StopDemo() {
 
-    var stopDemoBtn = document.querySelector('#demo .stop-demo');
+    var stopDemoBtn = document.querySelector('.stop-demo');
 
     stopDemoBtn.addEventListener('click', function() {
 
@@ -94,6 +94,23 @@ qstart.then(function() {
 
       map.disableZoomControl();
     });
+
+  })();
+
+  (function() {
+
+    var todoList = document.querySelectorAll('input[type=checkbox]');
+
+    for (var i = 0; i < todoList.length; i++) {
+
+      var todo = todoList.item(i);
+
+      todo.addEventListener('click', function(e) {
+
+        e.preventDefault();
+
+      });
+    }
 
   })();
 

@@ -1,28 +1,106 @@
 global-reset()
 
+html, body {
+    width: 100%
+    overflow: hidden
+}
+
+* {
+  box-sizing: border-box
+}
+
+light-underline(position, color) {
+    background-image: linear-gradient(to bottom, rgba(0,0,0,0) 75%, transparentify(color, color, 0.8) 75%)
+    background-repeat: repeat-x
+    background-size: 2px 2px;
+    background-position: 0 position
+}
+
+a, a:visited {
+    cursor: pointer
+    color: #FFF
+    text-decoration: none
+}
+
+button {
+    cursor: pointer
+    border: none
+    background: transparent
+    outline: none
+}
+
+header {
+    z-index: 2
+    position: fixed
+    padding: 20px 40px 20px 120px
+    width: 100%
+    background: transparentify(blue, blue, 0.6)
+    transition: transform .2s
+
+    font-family-title-bold()
+
+    .logo {
+
+        &::before {
+            vertical-align: -6px
+            content: ''
+            background: url("../images/logo.png") center center
+            height: 24px
+            width: 24px
+            display: inline-block
+            background-size: 100%
+            margin-right: 12px
+        }
+    }
+
+    .beta {
+        text-transform: uppercase
+        position: absolute
+        right: 40px
+        top: 25px
+    }
+}
+
 h1 {
-    font-family-bold()
-    font-size: 26px
+    margin: 20px 0
+}
+
+h1, h2 {
+    font-family-title-bold()
+}
+
+p {
+    margin: 10px 0
+}
+
+h1 {
+    font-size: 24px
+    line-height: 30px
+}
+
+h2 {
+    font-size: 20px
+    margin: 20px 0
 }
 
 body {
     -webkit-font-smoothing: antialiased
     color: #FFF
     background: dark-blue
-    font-family-regular()
+    font-family-text()
 }
 
 body::before {
     content: ''
-    background: dark-blue
+    background: black
     position: absolute
     top: 0
     bottom: 0
     left: 0
     right: 0
     z-index: 1
-    transition: opacity 2s
-    opacity: .6
+    transition: opacity .2s
+    opacity: .75
 }
 
 body:not(.playing) {
@@ -55,15 +133,27 @@ body.playing {
 
     &::before {
         opacity: 0
+        z-index: 0
     }
 
-    #content > .wrapper {
-        transform: translate3d(-1000px,-50%, 0);
+    header {
+        transform: translate3d(0,-64px, 0)
     }
-}
 
-#content, #demo {
-    width: 50%
+    #content {
+        z-index: -1
+
+        > .wrapper {
+            transform: translate3d(-1400px,-50%, 0);
+        }
+    }
+
+    #demo {
+
+        .stop-demo {
+            display: block !important
+        }
+    }
 }
 
 #content {
@@ -73,31 +163,41 @@ body.playing {
     top: 0
     bottom: 0
     z-index: 1
+    width: 70%
+
+    p a {
+        light-underline(17px, #FFF)
+    }
 
     .wrapper {
-        transition: transform .6s cubic-bezier(.5,.99,.73,.86);
+        transition: transform .2s
         position: absolute
         top: 50%
         left: 50%
         transform: translate(-50%, -50%)
-        width: 80%
+        width: 90%
         margin: auto
+        padding-left: 80px
     }
 
-    .todo {
+    .roadmap {
+        margin-top: 40px
 
-        li {
-            list-style: disc inside
+        .todo {
 
-            &.done {
-                text-decoration: line-through
+            li {
+                padding: 6px
+
+                input[type=checkbox] {
+                    outline: none
+                }
+
+                &.done {
+                    text-decoration: line-through
+                }
             }
         }
     }
-}
-
-body.playing .stop-demo {
-    display: block !important
 }
 
 #demo {
@@ -106,15 +206,12 @@ body.playing .stop-demo {
     top: 0
     bottom: 0
     z-index: 1
+    width: 40%
 
     .stop-demo {
-        cursor: pointer
-        outline: none
         position: absolute
         top: 4%
         right: 4%
-        border: none
-        background: transparent
         font-size: 0
         display: none
 
@@ -139,9 +236,9 @@ body.playing .stop-demo {
 
 .phone {
     position: absolute
-    top: 50%
+    top: 70%
     left: 50%
-    transform: translate(-50%, -50%)
+    transform: translate(-50%, -70%)
     background: #202020
     width: 320px
     height: 0

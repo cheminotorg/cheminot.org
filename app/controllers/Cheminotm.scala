@@ -79,6 +79,13 @@ object Cheminotm extends Controller {
     }
   }
 
+  def stop(id: String) = Common.WithCtx { implicit request =>
+    cheminotm.CheminotcMonitorActor.getStop(request.ctx.sessionId, id) map {
+      case Right(stop) => Ok(stop)
+      case _ => BadRequest
+    }
+  }
+
   def app(file: String) = Action{ request =>
     val fileToServe = new java.io.File(Config.cheminotmPath, file)
     if(fileToServe.exists) {

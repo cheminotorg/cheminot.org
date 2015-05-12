@@ -139,9 +139,9 @@ exports.clearTrips = function() {
 
 exports.enableZoomControl = function() {
 
-  if(window.L) {
+  if(window.L && !zoomControl) {
 
-    if(!zoomControl) zoomControl = L.control.zoom();
+    zoomControl = L.control.zoom();
 
     map.addControl(zoomControl);
 

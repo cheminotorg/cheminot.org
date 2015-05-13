@@ -238,7 +238,6 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor {
 
   def getStop(stopId: String, sender: ActorRef) {
     val stop = m.cheminot.plugin.jni.CheminotLib.getStop(stopId)
-    println("GetStop " + stop)
     sender ! Right(stop)
   }
 

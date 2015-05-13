@@ -1,5 +1,6 @@
 var qstart = require('qstart');
 var map = require('./map');
+var cheminotm = require('./cheminotm');
 
 var stream;
 
@@ -53,6 +54,25 @@ qstart.then(function() {
 
       }
 
+      if(message.data.event == 'cheminot:selectstop') {
+
+        cheminotm.getStop(message.data.stopId).then(function(stop) {
+
+          map.addMarker(stop);
+
+          map.fitMarkers();
+
+        });
+
+      }
+
+      if(message.data.event == 'cheminot:resetstop') {
+
+        map.removeMarker(message.data.stopId);
+
+        map.fitMarkers();
+
+      }
     }
 
   });
@@ -141,5 +161,4 @@ qstart.then(function() {
 
     return stream;
   };
-
 });

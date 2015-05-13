@@ -1,5 +1,6 @@
 var tracesLayers = {},
     tripsLayers = [],
+    markers = {},
     lasttdsp,
     zoomControl,
     map;
@@ -146,7 +147,6 @@ exports.enableZoomControl = function() {
     map.addControl(zoomControl);
 
   }
-
 }
 
 exports.disableZoomControl = function() {
@@ -156,5 +156,39 @@ exports.disableZoomControl = function() {
     map.removeControl(zoomControl);
 
   }
+}
 
+exports.addMarker = function(stop) {
+
+  var marker = L.marker([stop.lat, stop.lng], { title: stop.name });
+
+  marker.addTo(map);
+
+  markers[stop.id] = marker;
+}
+
+exports.removeMarker = function(stopId) {
+
+  var marker = markers[stopId];
+
+  if(marker) {
+
+    map.removeLayer(marker);
+
+    delete markers[stopId];
+
+  }
+}
+
+exports.fitMarkers = function() {
+
+  var pins = Object.keys(markers).map(function(stopId) {
+
+    return markers[stopId];
+
+  });
+
+  var group = new L.featureGroup(pins);
+
+  map.fitBounds(group.getBounds(), { maxZoom: 10 });
 }

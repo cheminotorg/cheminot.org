@@ -1,4 +1,4 @@
-@()
+@()(implicit app: play.api.Application)
 
 <!DOCTYPE html>
 
@@ -10,6 +10,11 @@
     <link href="https://api.tiles.mapbox.com/mapbox.js/v2.1.9/mapbox.css" rel="stylesheet"/>
     <link href='http://fonts.googleapis.com/css?family=Noto+Serif:400,700' rel='stylesheet' type='text/css'>
     <script src="https://api.tiles.mapbox.com/mapbox.js/v2.1.9/mapbox.js"></script>
+    <script type="application/javascript">
+      window.Settings = {
+        domain: '@Config.domain'
+      }
+    </script>
   </head>
   <body>
 

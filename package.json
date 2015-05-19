@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "browserify": "6.3.4",
-    "qstart": "0.2.0"
+    "qstart": "0.2.0",
+    "qajax": "1.2.0"
   }
 }

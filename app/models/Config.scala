@@ -6,6 +6,11 @@ import play.api.Logger
 
 object Config {
 
+  def domain(implicit app: Application): String =
+    Play.configuration(app).getString("domain").getOrElse {
+      throw new RuntimeException("Please specify `domain` configuration.")
+    }
+
   def cheminotcPath(implicit app: Application): String =
     Play.configuration(app).getString("cheminotc.path").getOrElse {
       app.getFile("/data/libcheminot.so").getAbsolutePath

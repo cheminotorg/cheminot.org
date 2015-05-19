@@ -10,7 +10,12 @@ if(window.L) {
   L.mapbox.accessToken = 'pk.eyJ1Ijoic3JlbmF1bHQiLCJhIjoiNGRHRzgxWSJ9.pawb4Qw10gD_8dbE-_Qrvw';
 
   map = L.mapbox.map('map', 'srenault.ljcc52c6', { zoomControl: false })
-                .setView([46.822616668804926, 2.4884033203125], 7);
+
+  reset();
+}
+
+function reset() {
+  map.setView([46.822616668804926, 2.4884033203125], 7);
 }
 
 exports.displayTrace = function(trace) {
@@ -177,6 +182,8 @@ exports.removeMarker = function(stopId) {
 
     delete markers[stopId];
 
+    if(!Object.keys(markers).length) reset();
+
   }
 }
 
@@ -188,7 +195,11 @@ exports.fitMarkers = function() {
 
   });
 
-  var group = new L.featureGroup(pins);
+  if(pins.length) {
 
-  map.fitBounds(group.getBounds(), { maxZoom: 10 });
+    var group = new L.featureGroup(pins);
+
+    map.fitBounds(group.getBounds(), { maxZoom: 10 });
+
+  }
 }

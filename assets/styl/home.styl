@@ -3,7 +3,6 @@ global-reset()
 html, body {
     height: 100%
     width: 100%
-    overflow: hidden
 }
 
 * {
@@ -32,8 +31,7 @@ button {
 
 header {
     z-index: 2
-    position: fixed
-    padding: 20px 40px 20px 120px
+    position: absolute
     width: 100%
     background: transparentify(blue, blue, 0.6)
     transition: transform .2s
@@ -71,6 +69,8 @@ h1, h2 {
 }
 
 p {
+    font-size: 16px
+    line-height: 20px
     margin: 10px 0
 }
 
@@ -161,24 +161,15 @@ body.playing {
     position: absolute
     right: 0
     left: 0
-    top: 0
     bottom: 0
     z-index: 1
-    width: 70%
+
+    .wrapper {
+        margin: auto
+    }
 
     p a {
         light-underline(17px, #FFF)
-    }
-
-    .wrapper {
-        transition: transform .2s
-        position: absolute
-        top: 50%
-        left: 50%
-        transform: translate(-50%, -50%)
-        width: 90%
-        margin: auto
-        padding-left: 80px
     }
 
     .roadmap {
@@ -198,6 +189,27 @@ body.playing {
                 }
             }
         }
+    }
+
+    .try-demo, .download-beta {
+        display: inline-block
+        color: #FFF
+        width: 100%
+        text-align: center
+        padding: 20px
+        font-size: 16px
+        text-transform: uppercase
+        font-family-title-bold()
+    }
+
+    .try-demo {
+        margin-top: 20px
+        background: orange
+    }
+
+    .download-beta {
+        margin: 20px 0
+        background: blue
     }
 }
 
@@ -239,7 +251,7 @@ body.playing {
     position: absolute
     top: 50%
     left: 50%
-    transform: translate(-50%, -50%)
+    transform: translate(-50%, calc(-50% + 32px))
     background: #202020
     width: 320px
     height: 0
@@ -387,4 +399,63 @@ body.playing {
             display: block
         }
     }
+}
+
+@media screen and (min-width: 1024px) {
+
+    html, body {
+        overflow: hidden
+    }
+
+    header {
+        padding: 20px 40px 20px 120px
+    }
+
+    #content {
+        top: 0
+        width: 60%
+
+        .wrapper {
+            position: absolute
+            top: 50%
+            left: 50%
+            transform: translate(-50%, calc(-50% + 32px))
+            transition: transform .2s
+            padding-left: 80px
+            width: 90%
+        }
+
+        .try-demo, .download-beta {
+            display: none
+        }
+    }
+
+}
+
+@media screen and (max-width: 1023px) {
+
+    body {
+        padding-top:
+    }
+
+    header {
+        padding: 20px
+
+        .beta {
+            display: none
+        }
+    }
+
+    #content {
+        top: 64px
+
+        .wrapper {
+            width: 84%
+        }
+    }
+
+    #demo {
+        display: none
+    }
+
 }

@@ -136,7 +136,7 @@ qstart.then(function() {
 
   function Stream() {
 
-    var baseURL = 'http://localhost:9000';
+    var baseURL = 'http://' + Settings.domain;
 
     var endpoint = baseURL + '/cheminotm/trace';
 

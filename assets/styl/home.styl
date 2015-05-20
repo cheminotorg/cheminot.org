@@ -87,14 +87,13 @@ h2 {
 body {
     -webkit-font-smoothing: antialiased
     color: #FFF
-    background: dark-blue
     font-family-text()
 }
 
 body::before {
     content: ''
     background: black
-    position: absolute
+    position: fixed
     top: 0
     bottom: 0
     left: 0
@@ -161,7 +160,7 @@ body.playing {
     position: absolute
     right: 0
     left: 0
-    bottom: 0
+    height: 100vh
     z-index: 1
 
     .wrapper {
@@ -407,8 +406,12 @@ body.playing {
         overflow: hidden
     }
 
+    body {
+        background: dark-blue
+    }
+
     header {
-        padding: 20px 40px 20px 120px
+        padding: 20px 40px 20px 80px
     }
 
     #content {
@@ -422,7 +425,7 @@ body.playing {
             transform: translate(-50%, calc(-50% + 32px))
             transition: transform .2s
             padding-left: 80px
-            width: 90%
+            width: 100%
         }
 
         .try-demo, .download-beta {
@@ -435,7 +438,7 @@ body.playing {
 @media screen and (max-width: 1023px) {
 
     body {
-        padding-top:
+        background: #FFF
     }
 
     header {

@@ -3,203 +3,270 @@ var tracesLayers = {},
     markers = {},
     lasttdsp,
     zoomControl,
-    map;
+    map,
+    mapId = 'srenault.ljcc52c6',
+    accessToken = 'pk.eyJ1Ijoic3JlbmF1bHQiLCJhIjoiNGRHRzgxWSJ9.pawb4Qw10gD_8dbE-_Qrvw';
 
-if(window.L) {
 
-  L.mapbox.accessToken = 'pk.eyJ1Ijoic3JlbmF1bHQiLCJhIjoiNGRHRzgxWSJ9.pawb4Qw10gD_8dbE-_Qrvw';
+exports.init = function() {
 
-  map = L.mapbox.map('map', 'srenault.ljcc52c6', { zoomControl: false })
+  if(window.L) {
 
-  reset();
-}
+    L.mapbox.accessToken = accessToken;
 
-function reset() {
-  map.setView([46.822616668804926, 2.4884033203125], 7);
-}
+    map = L.mapbox.map('map', mapId, { zoomControl: false });
+
+    reset();
+
+  } else {
+
+    staticMap();
+
+  }
+};
 
 exports.displayTrace = function(trace) {
 
-  var tdsp;
+  if(map) {
 
-  var features = trace.map(function(vertice) {
+    var tdsp;
 
-    tdsp = vertice.tdsp;
+    var features = trace.map(function(vertice) {
 
-    return {
-      type: "Feature",
-      geometry: {
-        type: "Point",
-        coordinates: [vertice.lng, vertice.lat]
-      },
-      properties: {
-        title: vertice.name,
-        'marker-color': '#548cba',
-        'marker-shape': "pin",
-        'marker-size': "small",
-        'marker-symbol': "embassy",
-        "stroke-width": 1
-      }
+      tdsp = vertice.tdsp;
+
+      return {
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: [vertice.lng, vertice.lat]
+        },
+        properties: {
+          title: vertice.name,
+          'marker-color': '#548cba',
+          'marker-shape': "pin",
+          'marker-size': "small",
+          'marker-symbol': "embassy",
+          "stroke-width": 1
+        }
+      };
+    });
+
+    var geojson = {
+      type: "FeatureCollection",
+      features: features
     };
-  });
 
-  var geojson = {
-    type: "FeatureCollection",
-    features: features
-  };
+    if(lasttdsp != tdsp) {
 
-  if(lasttdsp != tdsp) {
+      exports.clearTraces();
 
-    exports.clearTraces();
+    }
+
+    var featureLayer = L.mapbox.featureLayer(geojson);
+
+    featureLayer.addTo(map);
+
+    if(!tracesLayers[tdsp]) tracesLayers[tdsp] = [];
+
+    tracesLayers[tdsp].push(featureLayer);
+
+    lasttdsp = tdsp;
 
   }
-
-  var featureLayer = L.mapbox.featureLayer(geojson);
-
-  featureLayer.addTo(map);
-
-  if(!tracesLayers[tdsp]) tracesLayers[tdsp] = [];
-
-  tracesLayers[tdsp].push(featureLayer);
-
-  lasttdsp = tdsp;
 };
 
 exports.displayTrip = function(trip, tdsp) {
 
-  exports.clearTraces();
+  if(map) {
 
-  var tripId;
+    exports.clearTraces();
 
-  var features = trip.map(function(stopTime) {
+    var tripId;
 
-    tripId = stopTime.tripId;
+    var features = trip.map(function(stopTime) {
 
-    return {
-      type: "Feature",
-      geometry: {
-        type: "Point",
-        coordinates: [stopTime.lng, stopTime.lat]
-      },
-      properties: {
-        title: stopTime.stopName,
-        'marker-color': '#e9683e',
-        'marker-shape': "pin",
-        'marker-size': "medium",
-        'marker-symbol': "rail-light",
-        "stroke-width": 1
-      }
+      tripId = stopTime.tripId;
+
+      return {
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: [stopTime.lng, stopTime.lat]
+        },
+        properties: {
+          title: stopTime.stopName,
+          'marker-color': '#e9683e',
+          'marker-shape': "pin",
+          'marker-size': "medium",
+          'marker-symbol': "rail-light",
+          "stroke-width": 1
+        }
+      };
+
+    });
+
+    var geojson = {
+      type: "FeatureCollection",
+      features: features
     };
 
-  });
+    exports.clearTrips();
 
-  var geojson = {
-    type: "FeatureCollection",
-    features: features
-  };
+    exports.clearTraces();
 
-  exports.clearTrips();
+    var tracesLayersByTdsp = tracesLayers[tdsp] || [];
 
-  exports.clearTraces();
+    tracesLayersByTdsp.forEach(function(layer) {
 
-  var tracesLayersByTdsp = tracesLayers[tdsp] || [];
+      layer.addTo(map);
 
-  tracesLayersByTdsp.forEach(function(layer) {
+    });
 
-    layer.addTo(map);
+    var featureLayer = L.mapbox.featureLayer(geojson);
 
-  });
+    featureLayer.addTo(map);
 
-  var featureLayer = L.mapbox.featureLayer(geojson);
+    tripsLayers.push(featureLayer);
 
-  featureLayer.addTo(map);
-
-  tripsLayers.push(featureLayer);
+  }
 };
 
 exports.clearTraces = function() {
 
-  var layersByTdsp = [];
+  if(map) {
 
-  layersByTdsp = Object.keys(tracesLayers).reduce(function(acc, key) {
+    var layersByTdsp = [];
 
-    return acc.concat(tracesLayers[key]);
+    layersByTdsp = Object.keys(tracesLayers).reduce(function(acc, key) {
 
-  }, []);
+      return acc.concat(tracesLayers[key]);
 
-  layersByTdsp.forEach(function(layer) {
+    }, []);
 
-    map.removeLayer(layer);
+    layersByTdsp.forEach(function(layer) {
 
-  });
+      map.removeLayer(layer);
+
+    });
+
+  }
 };
 
 exports.clearTrips = function() {
 
-  tripsLayers.forEach(function(layer) {
+  if(map) {
 
-    map.removeLayer(layer);
+    tripsLayers.forEach(function(layer) {
 
-  });
+      map.removeLayer(layer);
+
+    });
+
+  }
 };
 
 exports.enableZoomControl = function() {
 
-  if(window.L && !zoomControl) {
+  if(map && !zoomControl) {
 
     zoomControl = L.control.zoom();
 
     map.addControl(zoomControl);
 
   }
-}
+};
 
 exports.disableZoomControl = function() {
 
-  if(zoomControl) {
+  if(map && zoomControl) {
 
     map.removeControl(zoomControl);
 
   }
-}
+};
 
 exports.addMarker = function(stop) {
 
-  var marker = L.marker([stop.lat, stop.lng], { title: stop.name });
+  if(map) {
 
-  marker.addTo(map);
+    var marker = L.marker([stop.lat, stop.lng], { title: stop.name });
 
-  markers[stop.id] = marker;
-}
+    marker.addTo(map);
+
+    markers[stop.id] = marker;
+
+  }
+};
 
 exports.removeMarker = function(stopId) {
 
-  var marker = markers[stopId];
+  if(map) {
 
-  if(marker) {
+    var marker = markers[stopId];
 
-    map.removeLayer(marker);
+    if(marker) {
 
-    delete markers[stopId];
+      map.removeLayer(marker);
 
-    if(!Object.keys(markers).length) reset();
+      delete markers[stopId];
+
+      if(!Object.keys(markers).length) reset();
+
+    }
 
   }
-}
+};
 
 exports.fitMarkers = function() {
 
-  var pins = Object.keys(markers).map(function(stopId) {
+  if(map) {
 
-    return markers[stopId];
+    var pins = Object.keys(markers).map(function(stopId) {
 
-  });
+      return markers[stopId];
 
-  if(pins.length) {
+    });
 
-    var group = new L.featureGroup(pins);
+    if(pins.length) {
 
-    map.fitBounds(group.getBounds(), { maxZoom: 10 });
+      var group = new L.featureGroup(pins);
+
+      map.fitBounds(group.getBounds(), { maxZoom: 10 });
+
+    }
+
+  }
+};
+
+function reset() {
+
+  if(map) {
+
+    map.setView([46.822616668804926, 2.4884033203125], 7);
 
   }
 }
+
+function staticMap() {
+
+  var baseURL = 'http://api.tiles.mapbox.com/v4/' + mapId;
+
+  var position = '2.4884033203125,46.822616668804926,7';
+
+  console.log(document.body.scrollHeight);
+
+  var size = document.body.scrollWidth + 'x' + document.body.scrollHeight + '.png';
+
+  var url = [baseURL, position, size].join('/') + '?access_token=' + accessToken;
+
+  var image = new Image();
+
+  image.src = url;
+
+  image.onload = function() {
+    console.log('here');
+    document.body.style.backgroundImage="url('" + url + "')";
+
+  };
+};

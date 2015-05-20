@@ -9,6 +9,13 @@ case class Ctx(sessionId: String)
 
 object Common {
 
+  val MobileRegex = """(iPhone)|(Ipad)|(Ipod)|(webOS)|(BlackBerry)|(Windows Phone)|(Android)""".r
+
+  def isMobile(request: RequestHeader): Boolean =
+    request.headers.get("User-Agent").map { userAgent =>
+      !MobileRegex.findAllMatchIn(userAgent).toList.isEmpty
+    } getOrElse false
+
   case class RequestWithCtx[A](ctx: Ctx, request: Request[A]) extends WrappedRequest(request)
 
   case class RequestWithMaybeCtx[A](maybeCtx: Option[Ctx], request: Request[A]) extends WrappedRequest(request)

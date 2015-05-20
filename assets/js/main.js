@@ -4,7 +4,11 @@ var cheminotm = require('./cheminotm');
 
 var stream;
 
+sessionStorage.clear();
+
 qstart.then(function() {
+
+  map.init();
 
   (function BackButton() {
 
@@ -146,7 +150,7 @@ qstart.then(function() {
 
       var data = JSON.parse(msg.data);
 
-      if(data && window.L) {
+      if(data) {
 
         map.displayTrace(data);
 

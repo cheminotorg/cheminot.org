@@ -9,6 +9,6 @@ import play.api.Play.current
 object Application extends Controller {
 
   def index = Common.Public { implicit request =>
-    Future successful Ok(views.html.index())
+    Future successful Ok(views.html.index(Common.isMobile(request)))
   }
 }

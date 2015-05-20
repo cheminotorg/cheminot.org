@@ -1,3 +1,5 @@
+var phone = require('./phone');
+
 var tracesLayers = {},
     tripsLayers = [],
     markers = {},
@@ -6,7 +8,6 @@ var tracesLayers = {},
     map,
     mapId = 'srenault.ljcc52c6',
     accessToken = 'pk.eyJ1Ijoic3JlbmF1bHQiLCJhIjoiNGRHRzgxWSJ9.pawb4Qw10gD_8dbE-_Qrvw';
-
 
 exports.init = function() {
 
@@ -254,8 +255,6 @@ function staticMap() {
 
   var position = '2.4884033203125,46.822616668804926,7';
 
-  console.log(document.body.scrollHeight);
-
   var size = document.body.scrollWidth + 'x' + document.body.scrollHeight + '.png';
 
   var url = [baseURL, position, size].join('/') + '?access_token=' + accessToken;
@@ -265,8 +264,14 @@ function staticMap() {
   image.src = url;
 
   image.onload = function() {
-    console.log('here');
+
     document.body.style.backgroundImage="url('" + url + "')";
+
+  };
+
+  image.onerror = function() {
+
+    phone.unavailableDemo();
 
   };
 };

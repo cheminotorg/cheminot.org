@@ -154,6 +154,15 @@ body.playing {
             display: block !important
         }
     }
+
+    .phone {
+        opacity: 0.9
+        transition: opacity 0.2s
+
+        &:hover {
+            opacity: 1
+        }
+    }
 }
 
 #content {
@@ -351,6 +360,10 @@ body.playing {
         }
     }
 
+    .unavailable-demo, start-demo {
+        font-family-title-regular()
+    }
+
     .start-demo {
         position: absolute
         top: 50%
@@ -377,7 +390,7 @@ body.playing {
         }
     }
 
-    .demo-full {
+    .unavailable-demo {
         display: none
         position: absolute
         top: 50%
@@ -406,10 +419,6 @@ body.playing {
         overflow: hidden
     }
 
-    body {
-        background: dark-blue
-    }
-
     header {
         padding: 20px 40px 20px 80px
     }
@@ -436,10 +445,6 @@ body.playing {
 }
 
 @media screen and (max-width: 1023px) {
-
-    body {
-        background: #FFF
-    }
 
     header {
         padding: 20px

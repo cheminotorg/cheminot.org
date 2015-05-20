@@ -1,12 +1,15 @@
 var qstart = require('qstart');
 var map = require('./map');
 var cheminotm = require('./cheminotm');
+var phone = require('./phone');
 
 var stream;
 
 sessionStorage.clear();
 
 qstart.then(function() {
+
+  phone.init();
 
   map.init();
 
@@ -16,9 +19,7 @@ qstart.then(function() {
 
     backBtn.addEventListener('click', function() {
 
-      var phone = document.querySelector('.phone iframe');
-
-      phone.contentWindow.postMessage({ event: 'cheminot:back' }, window.location.origin);
+      phone.triggerBack();
 
     });
 
@@ -44,9 +45,7 @@ qstart.then(function() {
 
         if(message.data.error == 'full') {
 
-          var demoFull = document.querySelector('.phone .demo-full');
-
-          demoFull.classList.add('on');
+          phone.unavailableDemo();
 
         }
 
@@ -80,46 +79,6 @@ qstart.then(function() {
     }
 
   });
-
-  (function StartDemo() {
-
-    var startDemoBtn = document.querySelector('#demo .start-demo');
-
-    startDemoBtn.addEventListener('click', function() {
-
-      var phone = document.querySelector('.phone iframe');
-
-      phone.contentWindow.location.href = "/cheminotm/app/index.html";
-
-      var mask = document.querySelector('.phone .mask');
-
-      mask.classList.add('off');
-
-      startDemoBtn.classList.add('hidden');
-    });
-
-  })();
-
-  (function StopDemo() {
-
-    var stopDemoBtn = document.querySelector('.stop-demo');
-
-    stopDemoBtn.addEventListener('click', function() {
-
-      var mask = document.querySelector('.phone .mask');
-
-      mask.classList.remove('off');
-
-      document.body.classList.remove('playing');
-
-      var startDemoBtn = document.querySelector('#demo .start-demo');
-
-      startDemoBtn.classList.remove('hidden');
-
-      map.disableZoomControl();
-    });
-
-  })();
 
   (function() {
 

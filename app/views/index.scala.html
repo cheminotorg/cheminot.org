@@ -1,4 +1,4 @@
-@(isMobile: Boolean)(implicit app: play.api.Application)
+@(isMobile: Boolean)(implicit app: play.api.Application, request: RequestHeader)
 
 <!DOCTYPE html>
 
@@ -101,6 +101,12 @@
       }
 
     </section>
+
+    @helper.javascriptRouter("Router")(
+      routes.javascript.Cheminotm.stop,
+      routes.javascript.Cheminotm.abort,
+      routes.javascript.Cheminotm.signout
+    )
 
     <script src="/assets/javascripts/main.js"></script>
 

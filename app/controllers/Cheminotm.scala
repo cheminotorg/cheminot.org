@@ -86,12 +86,17 @@ object Cheminotm extends Controller {
     }
   }
 
-  def app(file: String) = Action{ request =>
+  def app(file: String) = Action { implicit request =>
     val fileToServe = new java.io.File(Config.cheminotmPath, file)
     if(fileToServe.exists) {
       Ok.sendFile(fileToServe, inline = true)
     } else {
       NotFound
     }
+  }
+
+  def signout = Common.WithCtx { implicit request =>
+    cheminotm.Tasks.shutdown(request.ctx.sessionId)
+    Future successful Ok.withNewSession
   }
 }

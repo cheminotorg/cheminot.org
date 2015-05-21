@@ -1,9 +1,10 @@
-var qstart = require('qstart');
-var map = require('./map');
-var cheminotm = require('./cheminotm');
-var phone = require('./phone');
+var qstart = require('qstart'),
+    map = require('./map'),
+    cheminotm = require('./cheminotm'),
+    phone = require('./phone');
 
-var stream;
+var stream,
+    abort = false;
 
 sessionStorage.clear();
 
@@ -76,6 +77,12 @@ qstart.then(function() {
         map.fitMarkers();
 
       }
+
+      if(message.data.event == 'cheminot:abort') {
+
+        abort = true;
+
+      }
     }
 
   });
@@ -107,11 +114,18 @@ qstart.then(function() {
 
     stream.onmessage = function(msg) {
 
-      var data = JSON.parse(msg.data);
+      if(!abort) {
 
-      if(data) {
+        var data = JSON.parse(msg.data);
 
-        map.displayTrace(data);
+        if(data) {
+
+          map.displayTrace(data);
+
+        }
+      } else {
+
+        stream.close();
 
       }
     };

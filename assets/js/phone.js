@@ -1,4 +1,5 @@
-var map = require('./map');
+var map = require('./map'),
+    cheminotm = require('./cheminotm');
 
 exports.init = function() {
 
@@ -58,6 +59,10 @@ function bindStopDemo() {
   var stopDemoBtn = document.querySelector('.stop-demo');
 
   stopDemoBtn.addEventListener('click', function() {
+
+    cheminotm.abort();
+
+    cheminotm.signout();
 
     var mask = document.querySelector('.phone .mask');
 

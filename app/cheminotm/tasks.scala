@@ -26,7 +26,7 @@ object Tasks {
     ExecutionContext.fromExecutor(java.util.concurrent.Executors.newFixedThreadPool(10))
   }
 
-  def shutdown(sessionId: String) = {
+  def shutdown(sessionId: String) {
     CheminotcActor.stop(sessionId)
   }
 

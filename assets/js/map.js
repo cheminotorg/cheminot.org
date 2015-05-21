@@ -26,6 +26,21 @@ exports.init = function() {
   }
 };
 
+exports.reset = function() {
+
+  if(map) {
+
+    exports.clearTrips();
+
+    exports.clearTraces();
+
+    exports.clearMarkers();
+
+    resetPosition();
+
+  }
+}
+
 exports.displayTrace = function(trace) {
 
   if(map) {
@@ -204,6 +219,14 @@ exports.addMarker = function(stop) {
   }
 };
 
+exports.clearMarkers = function() {
+
+  if(map) {
+
+    Object.keys(markers).forEach(exports.removeMarker);
+  }
+};
+
 exports.removeMarker = function(stopId) {
 
   if(map) {
@@ -220,7 +243,7 @@ exports.removeMarker = function(stopId) {
 
       delete markers[stopId];
 
-      if(!Object.keys(markers).length) reset();
+      if(!Object.keys(markers).length) resetPosition();
 
     }
 

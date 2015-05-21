@@ -70,6 +70,8 @@ function bindStopDemo() {
     startDemoBtn.classList.remove('hidden');
 
     map.disableControls();
+
+    map.reset();
   });
 
 };

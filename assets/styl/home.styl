@@ -30,6 +30,7 @@ button {
 }
 
 header {
+    top: 0
     z-index: 2
     position: absolute
     width: 100%
@@ -140,11 +141,15 @@ body.playing {
         transform: translate3d(0,-64px, 0)
     }
 
+    #map-legend {
+        display: block
+    }
+
     #content {
         z-index: -1
 
         > .wrapper {
-            transform: translate3d(-1400px,-50%, 0);
+            transform: translate3d(-100%,-50%, 0);
         }
     }
 
@@ -246,6 +251,41 @@ body.playing {
     }
 }
 
+#map-legend {
+    position: absolute
+    left: 10px
+    bottom: 10%
+    transform: translateY(10%)
+    z-index: 1
+    display: none
+    border-radius: 4px
+    padding: 10px
+    background: transparentify(#000, #000, .5)
+    font-size: 14px
+
+    li {
+        text-shadow: 0px 1px 1px rgba(0, 0, 0, 1)
+        padding: 4px 0 4px 0
+
+        .icon {
+            display: inline-block
+            width: 20px
+            height: 30px
+            vertical-align: middle
+            margin-right: 8px
+        }
+
+        &.algorithm .icon {
+            background: url("../images/pin-s-embassy+548cba@2x.png") center center
+            background-size: 100%
+        }
+
+        &.best-trip .icon {
+            background: url("../images/pin-m-rail-light+e9683e@2x.png") center center
+            background-size: 100%
+        }
+    }
+}
 
 #map {
     position: absolute
@@ -360,7 +400,7 @@ body.playing {
         }
     }
 
-    .unavailable-demo, start-demo {
+    .unavailable-demo, .start-demo button {
         font-family-title-regular()
     }
 

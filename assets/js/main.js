@@ -31,7 +31,7 @@ qstart.then(function() {
 
       if(message.data.event == 'cheminot:ready') {
 
-        map.enableZoomControl();
+        map.enableControls();
 
         document.body.classList.add('playing');
 

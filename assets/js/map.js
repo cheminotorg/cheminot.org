@@ -17,7 +17,7 @@ exports.init = function() {
 
     map = L.mapbox.map('map', mapId, { zoomControl: false });
 
-    reset();
+    resetPosition();
 
   } else {
 
@@ -167,22 +167,26 @@ exports.clearTrips = function() {
   }
 };
 
-exports.enableZoomControl = function() {
+exports.enableControls = function() {
 
-  if(map && !zoomControl) {
+  if(map) {
 
-    zoomControl = L.control.zoom();
+    if(!zoomControl) {
 
-    map.addControl(zoomControl);
+      zoomControl = L.control.zoom();
+
+      map.addControl(zoomControl);
+
+    }
 
   }
 };
 
-exports.disableZoomControl = function() {
+exports.disableControls = function() {
 
-  if(map && zoomControl) {
+  if(map) {
 
-    map.removeControl(zoomControl);
+    if(zoomControl) map.removeControl(zoomControl);
 
   }
 };
@@ -203,6 +207,10 @@ exports.addMarker = function(stop) {
 exports.removeMarker = function(stopId) {
 
   if(map) {
+
+    exports.clearTrips();
+
+    exports.clearTraces();
 
     var marker = markers[stopId];
 
@@ -240,7 +248,7 @@ exports.fitMarkers = function() {
   }
 };
 
-function reset() {
+function resetPosition() {
 
   if(map) {
 

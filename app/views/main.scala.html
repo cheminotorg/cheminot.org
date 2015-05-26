@@ -1,0 +1,70 @@
+@(prismicCtxOrError: Either[Exception, PrismicHelper.Ctx])(body: Html)(implicit app: play.api.Application, request: RequestHeader)
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>cheminot.org</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimal-ui">
+    <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
+    <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
+    @if(!Common.isMobile(request)) {
+      <link href="https://api.tiles.mapbox.com/mapbox.js/v2.1.9/mapbox.css" rel="stylesheet"/>
+      <script src="https://api.tiles.mapbox.com/mapbox.js/v2.1.9/mapbox.js"></script>
+    }
+    <script type="application/javascript">
+      window.Settings = {
+        domain: '@Config.domain'
+      }
+    </script>
+    @prismicCtxOrError.right.toOption.map { prismicCtx =>
+      <script src="//static.cdn.prismic.io/prismic.min.js"></script>
+      @experiment(prismicCtx)
+    }
+  </head>
+
+  <body>
+
+    <ul id="map-legend">
+
+      <li class="algorithm"><span class="icon"></span>Stations parcourues par l'algorithme</li>
+
+      <li class="best-trip"><span class="icon"></span>Meilleurs trajet trouvé</li>
+
+    </ul>
+
+    <div id="map"></div>
+
+    <header>
+
+      <a class="logo" href="http://cheminot.org">cheminot.org</a>
+
+      <a class="beta" target="_blank" href="http://beta.cheminot.org">Télécharger la beta</a>
+
+    </header>
+
+    @body
+
+    <section id="demo">
+
+      <button class="stop-demo">X</button>
+
+      @phone(masked = true) {
+        <iframe src=""></iframe>
+      }
+
+    </section>
+
+    @helper.javascriptRouter("Router")(
+      routes.javascript.Cheminotm.stop,
+      routes.javascript.Cheminotm.abort,
+      routes.javascript.Cheminotm.signout
+    )
+
+    <script src="/assets/javascripts/main.js"></script>
+
+    @ga()
+
+  </body>
+
+</html>

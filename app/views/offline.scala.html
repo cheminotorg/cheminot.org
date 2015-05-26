@@ -1,0 +1,59 @@
+@(error: Exception)(implicit app: play.api.Application, request: RequestHeader)
+
+@main(Left(error)) {
+
+    <section id="content">
+
+      <div class="wrapper">
+
+        <h1>Consultez vos horaires de train n'importe où et n'importe quand.</h1>
+
+        <p>Inutile de vous souciez d'avoir du réseau ou non pour consulter vos horaires. L'application fonctionne hors ligne.</p>
+
+        <p>Les données relatives aux horaires de train proviènnent de l' <a target="_blank" href="https://data.sncf.com">Open Data SNCF</a>.</p>
+
+        <p>L'ensemble du project est Open Source et accessible sur <a target="_blank" href="http://github.com/srenault/cheminot.m">GitHub</a>.</p>
+
+        <div class="roadmap">
+
+          <h2>Roadmap</h2>
+
+          <ul class="todo">
+
+            <li class="roadmap-item-done">
+              <input type="checkbox" checked />
+              Consulter les horaires hors ligne
+            </li>
+
+            <li class="roadmap-item-done">
+              <input type="checkbox" checked />
+              Intégrer les horaires des TER
+            </li>
+
+            <li>
+              <input type="checkbox"/>
+              Intégrer les horaires des intercités
+            </li>
+
+            <li>
+              <input type="checkbox"/>
+              Intégrer les horaires des transiliens
+            </li>
+
+            <li>
+              <input type="checkbox"/>
+              S'abonner à un trajet récurrent
+            </li>
+
+          </ul>
+
+        </div>
+
+        <a href="@routes.Cheminotm.app("index.html")" class="try-demo">Démarrer la démo</a>
+
+        <a class="download-beta" target="_blank" href="http://beta.cheminot.org">Télécharger la beta</a>
+
+      </div>
+
+    </section>
+}

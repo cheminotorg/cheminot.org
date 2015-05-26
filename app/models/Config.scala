@@ -6,6 +6,14 @@ import play.api.Logger
 
 object Config {
 
+  def prismicApi(implicit app: Application): String =
+    Play.configuration(app).getString("prismic.api").getOrElse {
+      throw new RuntimeException("Please specify `prismic.api` configuration.")
+    }
+
+  def prismicToken(implicit app: Application): Option[String] =
+    Play.configuration(app).getString("prismic.token")
+
   def domain(implicit app: Application): String =
     Play.configuration(app).getString("domain").getOrElse {
       throw new RuntimeException("Please specify `domain` configuration.")

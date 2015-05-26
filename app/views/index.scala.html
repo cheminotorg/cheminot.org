@@ -1,88 +1,48 @@
-@(isMobile: Boolean)(implicit app: play.api.Application, request: RequestHeader)
+@(home: io.prismic.Document, prismicCtx: PrismicHelper.Ctx)(implicit app: play.api.Application, request: RequestHeader)
 
-<!DOCTYPE html>
-
-<html>
-  <head>
-    <title>cheminot.org</title>
-    <meta name="viewport" content="width=device-width, user-scalable=no, minimal-ui">
-    <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
-    <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
-    <link href='http://fonts.googleapis.com/css?family=Noto+Serif:400,700' rel='stylesheet' type='text/css'>
-    @if(!isMobile) {
-      <link href="https://api.tiles.mapbox.com/mapbox.js/v2.1.9/mapbox.css" rel="stylesheet"/>
-      <script src="https://api.tiles.mapbox.com/mapbox.js/v2.1.9/mapbox.js"></script>
-    }
-    <script type="application/javascript">
-      window.Settings = {
-        domain: '@Config.domain'
-      }
-    </script>
-  </head>
-  <body>
-
-    <ul id="map-legend">
-
-      <li class="algorithm"><span class="icon"></span>Stations parcourues par l'algorithme</li>
-
-      <li class="best-trip"><span class="icon"></span>Meilleurs trajet trouvé</li>
-
-    </ul>
-
-    <div id="map"></div>
-
-    <header>
-
-      <a class="logo" href="http://cheminot.org">cheminot.org</a>
-
-      <a class="beta" target="_blank" href="http://beta.cheminot.org">Télécharger la beta</a>
-
-    </header>
+@main(Right(prismicCtx)) {
 
     <section id="content">
 
       <div class="wrapper">
 
-        <h1>Consulter vos horaires de train n'importe où et n'importe quand.</h1>
+        @defining(Application.linkResolver(prismicCtx.api)) { linkResolver =>
 
-        <p>Les données relatives aux horaires de train proviènnent de l' <a target="_blank" href="https://data.sncf.com">Open Data SNCF</a>.</p>
+          @Html(home.getStructuredText("home.catchphrase").map(_.asHtml(linkResolver)).getOrElse(""))
 
-        <p>L'ensemble du project est Open Source et accessible sur <a target="_blank" href="http://github.com/srenault/cheminot.m">GitHub</a>.</p>
+          @Html(home.getStructuredText("home.description").map(_.asHtml(linkResolver)).getOrElse(""))
 
-        <div class="roadmap">
+          <div class="roadmap">
 
-          <h2>Roadmap</h2>
+            @Html(home.getStructuredText("home.roadmap-title").map(_.asHtml(linkResolver)).getOrElse(""))
 
-          <ul class="todo">
+            <ul class="todo">
 
-            <li class="done">
-              <input type="checkbox" checked />
-              Consulter les horaires hors ligne
-            </li>
+              @home.getGroup("home.roadmap-items").map { items =>
 
-            <li class="done">
-              <input type="checkbox" checked />
-              Intégrer les horaires des TER
-            </li>
+                @items.docs.map { doc =>
 
-            <li>
-              <input type="checkbox"/>
-              Intégrer les horaires des intercités
-            </li>
+                  @doc.getStructuredText("todo").map { todo =>
 
-            <li>
-              <input type="checkbox"/>
-              Intégrer les horaires des transiliens
-            </li>
+                    <li @if(doc.getBoolean("done")) {class="done"} else {""}>
 
-            <li>
-              <input type="checkbox"/>
-              S'abonner à un trajet récurrent
-            </li>
+                      <input type="checkbox" @if(doc.getBoolean("done")) {checked} else {""} />
 
-          </ul>
+                      @Html(todo.asHtml(linkResolver))
 
-        </div>
+                    </li>
+
+                  }
+
+                }
+
+              }
+
+            </ul>
+
+          </div>
+
+        }
 
         <a href="@routes.Cheminotm.app("index.html")" class="try-demo">Démarrer la démo</a>
 
@@ -91,26 +51,4 @@
       </div>
 
     </section>
-
-    <section id="demo">
-
-      <button class="stop-demo">X</button>
-
-      @phone(masked = true) {
-      <iframe src=""></iframe>
-      }
-
-    </section>
-
-    @helper.javascriptRouter("Router")(
-      routes.javascript.Cheminotm.stop,
-      routes.javascript.Cheminotm.abort,
-      routes.javascript.Cheminotm.signout
-    )
-
-    <script src="/assets/javascripts/main.js"></script>
-
-    @ga()
-
-  </body>
-</html>
+}

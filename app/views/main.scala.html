@@ -14,7 +14,8 @@
     }
     <script type="application/javascript">
       window.Settings = {
-        domain: '@Config.domain'
+        domain: '@Config.domain',
+        mode: '@play.api.Play.application.mode'
       }
     </script>
     @prismicCtxOrError.right.toOption.map { prismicCtx =>
@@ -27,9 +28,15 @@
 
     <ul id="map-legend">
 
-      <li class="algorithm"><span class="icon"></span>Stations parcourues par l'algorithme</li>
+      <li class="best-trip">
+        <input type="checkbox" checked="checked" />
+        <span class="icon"></span>Meilleurs trajet trouvé
+      </li>
 
-      <li class="best-trip"><span class="icon"></span>Meilleurs trajet trouvé</li>
+      <li class="algorithm">
+        <input type="checkbox" checked="checked" />
+        <span class="icon"></span>Stations parcourues par l'algorithme
+      </li>
 
     </ul>
 

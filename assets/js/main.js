@@ -1,10 +1,10 @@
 var qstart = require('qstart'),
     map = require('./map'),
     cheminotm = require('./cheminotm'),
-    phone = require('./phone');
+    phone = require('./phone'),
+    analytics = require('./analytics');
 
-var stream,
-    abort = false;
+var stream;
 
 sessionStorage.clear();
 
@@ -13,18 +13,6 @@ qstart.then(function() {
   phone.init();
 
   map.init();
-
-  (function BackButton() {
-
-    var backBtn = document.querySelector('.phone .back');
-
-    backBtn.addEventListener('click', function() {
-
-      phone.triggerBack();
-
-    });
-
-  })();
 
   window.addEventListener("message", function(message) {
 
@@ -54,9 +42,22 @@ qstart.then(function() {
 
       if(message.data.event == 'cheminot:selecttrip') {
 
+        map.disableTrace();
+
         map.displayTrip(message.data.trip, message.data.tdsp);
 
       }
+
+      if(message.data.event == 'cheminot:unselecttrip') {
+
+        map.clearTrips();
+
+        map.clearTraces();
+
+        map.enableTrace();
+
+      }
+
 
       if(message.data.event == 'cheminot:selectstop') {
 
@@ -80,8 +81,6 @@ qstart.then(function() {
 
       if(message.data.event == 'cheminot:abort') {
 
-        abort = true;
-
       }
     }
 
@@ -89,7 +88,25 @@ qstart.then(function() {
 
   (function() {
 
-    var todoList = document.querySelectorAll('input[type=checkbox]');
+    var beta = document.querySelector('header .beta');
+
+    beta.addEventListener('click', function(e) {
+
+      e.preventDefault();
+
+      analytics.trackDownloadBeta().fin(function() {
+
+        window.location.href = beta.getAttribute('href');
+
+      });
+
+    });
+
+  })();
+
+  (function() {
+
+    var todoList = document.querySelectorAll('.roadmap input[type=checkbox]');
 
     for (var i = 0; i < todoList.length; i++) {
 
@@ -114,18 +131,11 @@ qstart.then(function() {
 
     stream.onmessage = function(msg) {
 
-      if(!abort) {
+      var data = JSON.parse(msg.data);
 
-        var data = JSON.parse(msg.data);
+      if(data) {
 
-        if(data) {
-
-          map.displayTrace(data);
-
-        }
-      } else {
-
-        stream.close();
+        map.displayTrace(data);
 
       }
     };

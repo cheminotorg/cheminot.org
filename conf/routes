@@ -4,6 +4,7 @@
 
 # Home page
 GET     /                            controllers.Application.index
+GET     /preview                     controllers.Application.preview(token: String)
 
 # Cheminotm
 GET     /cheminotm/init              controllers.Cheminotm.init

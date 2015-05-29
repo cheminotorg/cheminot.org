@@ -5,6 +5,12 @@ html, body {
     width: 100%
 }
 
+body {
+    -webkit-font-smoothing: antialiased
+    color: #FFF
+    font-family-light()
+}
+
 * {
   box-sizing: border-box
 }
@@ -14,6 +20,14 @@ light-underline(position, color) {
     background-repeat: repeat-x
     background-size: 2px 2px;
     background-position: 0 position
+}
+
+strong {
+  font-weight: bold
+}
+
+em {
+  font-style: italic
 }
 
 a, a:visited {
@@ -37,7 +51,7 @@ header {
     background: transparentify(blue, blue, 0.6)
     transition: transform .2s
 
-    font-family-title-bold()
+    font-family-regular()
 
     .logo {
 
@@ -56,44 +70,46 @@ header {
     .beta {
         text-transform: uppercase
         position: absolute
-        right: 40px
+        right: 80px
         top: 25px
+
+        &::before {
+            font-family: 'Cheminot'
+            display: inline-block
+            content: '\F00F'
+            color: #FFF
+            font-size: 30px
+            position: absolute
+            left: -40px
+            top: -10px
+        }
     }
 }
 
-h1 {
-    margin: 20px 0
-}
-
 h1, h2 {
-    font-family-title-bold()
+    font-family-bold()
 }
 
 p {
-    font-size: 16px
-    line-height: 20px
+    font-size: 18px
+    line-height: 24px
     margin: 10px 0
 }
 
 h1 {
-    font-size: 24px
-    line-height: 30px
-}
-
-h2 {
-    font-size: 20px
+    font-size: 34px
+    line-height: 44px
     margin: 20px 0
 }
 
-body {
-    -webkit-font-smoothing: antialiased
-    color: #FFF
-    font-family-text()
+h2 {
+    font-size: 26px
+    margin: 20px 0
 }
 
 body::before {
     content: ''
-    background: black
+    background: rgb(33, 84, 134)
     position: fixed
     top: 0
     bottom: 0
@@ -101,7 +117,7 @@ body::before {
     right: 0
     z-index: 1
     transition: opacity .2s
-    opacity: .75
+    opacity: .7
 }
 
 body:not(.playing) {
@@ -182,16 +198,44 @@ body.playing {
     }
 
     p a {
-        light-underline(17px, #FFF)
+        light-underline(19px, #FFF)
     }
+
+    /* a.github::before { */
+    /*   font-family: 'Cheminot' */
+    /*   content: '\F012' */
+    /*   display: inline-block */
+    /*   color: #FFF */
+    /*   padding-right: 4px */
+    /* } */
+
+    /* a.googleplus::before { */
+    /*   font-family: 'Cheminot' */
+    /*   content: '\F010' */
+    /*   display: inline-block */
+    /*   color: #FFF */
+    /*   padding-right: 4px */
+    /* } */
+
+    /* a.twitter::before { */
+    /*   font-family: 'Cheminot' */
+    /*   content: '\F011' */
+    /*   display: inline-block */
+    /*   color: #FFF */
+    /*   padding-right: 4px */
+    /* } */
 
     .roadmap {
         margin-top: 40px
 
-        .todo {
+        ul {
 
             li {
                 padding: 6px
+
+                p {
+                    display: inline
+                }
 
                 input[type=checkbox] {
                     outline: none
@@ -212,7 +256,7 @@ body.playing {
         padding: 20px
         font-size: 16px
         text-transform: uppercase
-        font-family-title-bold()
+        font-family-bold()
     }
 
     .try-demo {
@@ -232,7 +276,7 @@ body.playing {
     top: 0
     bottom: 0
     z-index: 1
-    width: 40%
+    width: 33%
 
     .stop-demo {
         position: absolute
@@ -300,12 +344,12 @@ body.playing {
     top: 50%
     left: 50%
     transform: translate(-50%, calc(-50% + 32px))
-    background: #202020
+    background: #000
     width: 320px
     height: 0
     padding-top: 630px
     margin: 0 auto
-    border-radius: 1.5em
+    border-radius: 50em/6em
     z-index: 2
 
     * {
@@ -315,12 +359,11 @@ body.playing {
     .mask {
         position: absolute
         top: 0
-        bottom: 0
+        bottom: -1px
         left: 0
         right: 0
         z-index: 2
-        border-radius: 24px
-        background: rgba(18, 18, 24, 0.59)
+        background: rgba(33, 84, 134, 0.7)
 
         &.off {
             display: none
@@ -359,11 +402,11 @@ body.playing {
     .screen {
         background: #FFF
         width: 90%
-        height: 75%
+        height: 485px
         position: absolute
         top: 12.5%
         left: 5%
-        animation: lighten 5s infinite alternate
+        padding-bottom: 38px
 
         iframe {
             width: 100%
@@ -382,7 +425,12 @@ body.playing {
     }
 
     .buttons {
-        padding: 16px 4px
+        width: 100%
+        padding: 6px 30px
+        position: absolute
+        bottom: -1px
+        z-index: 2
+        background: rgb(29, 29, 29)
 
         button {
             border: none
@@ -401,7 +449,7 @@ body.playing {
     }
 
     .unavailable-demo, .start-demo button {
-        font-family-title-regular()
+        font-family-regular()
     }
 
     .start-demo {
@@ -420,7 +468,7 @@ body.playing {
         button {
             text-transform: uppercase
             border: none
-            background: dark-blue
+            background: blue
             color: grey-blue
             outline: none
             display: inline-block
@@ -465,7 +513,7 @@ body.playing {
 
     #content {
         top: 0
-        width: 60%
+        width: 66%
 
         .wrapper {
             position: absolute

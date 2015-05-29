@@ -7,7 +7,7 @@ exports.getStop = function(id) {
   return Qajax(url)
     .then(Qajax.filterSuccess)
     .then(function(response) {
-      return response.responseJSON;
+      return JSON.parse(response.responseText);
     });
 };
 

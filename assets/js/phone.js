@@ -1,11 +1,14 @@
 var map = require('./map'),
-    cheminotm = require('./cheminotm');
+    cheminotm = require('./cheminotm'),
+    analytics = require('./analytics');
 
 exports.init = function() {
 
   bindStopDemo();
 
   bindStartDemo();
+
+  bindBackButton();
 
 };
 
@@ -14,14 +17,6 @@ exports.unavailableDemo = function() {
   var demoFull = document.querySelector('.phone .unavailable-demo');
 
   demoFull.classList.add('on');
-
-};
-
-exports.triggerBack = function() {
-
-  var phone = document.querySelector('.phone iframe');
-
-  phone.contentWindow.postMessage({ event: 'cheminot:back' }, window.location.origin);
 
 };
 
@@ -38,7 +33,9 @@ function bindStartDemo() {
 
   phone.addEventListener('click', function() {
 
-    if(isDemoAvailable()) {
+    if(isDemoAvailable() && !document.body.classList.contains('playing')) {
+
+      analytics.trackStartDemo();
 
       var iframe = document.querySelector('.phone iframe');
 
@@ -80,3 +77,20 @@ function bindStopDemo() {
   });
 
 };
+
+function bindBackButton() {
+
+  var backBtn = document.querySelector('.phone .back');
+
+  backBtn.addEventListener('click', function(e) {
+
+    e.preventDefault();
+
+    e.stopPropagation();
+
+    var phone = document.querySelector('.phone iframe');
+
+    phone.contentWindow.postMessage({ event: 'cheminot:back' }, window.location.origin);
+
+  });
+}

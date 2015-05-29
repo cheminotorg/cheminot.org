@@ -3,9 +3,12 @@ var phone = require('./phone');
 var tracesLayers = {},
     tripsLayers = [],
     markers = {},
-    lasttdsp,
-    zoomControl,
-    map,
+    zoomControl;
+
+var lasttdsp,
+    selectedtdsp;
+
+var map,
     mapId = 'srenault.ljcc52c6',
     accessToken = 'pk.eyJ1Ijoic3JlbmF1bHQiLCJhIjoiNGRHRzgxWSJ9.pawb4Qw10gD_8dbE-_Qrvw';
 
@@ -24,6 +27,8 @@ exports.init = function() {
     staticMap();
 
   }
+
+  bindLegend();
 };
 
 exports.reset = function() {
@@ -39,6 +44,22 @@ exports.reset = function() {
     resetPosition();
 
   }
+};
+
+function showTrace() {
+
+  var layers = (tracesLayers[selectedtdsp] || []).reduce(function(acc, layers) {
+
+    return acc.concat(layers);
+
+  }, []);
+
+  layers.forEach(function(layer) {
+
+    layer.addTo(map);
+
+  });
+
 }
 
 exports.displayTrace = function(trace) {
@@ -81,20 +102,34 @@ exports.displayTrace = function(trace) {
 
     var featureLayer = L.mapbox.featureLayer(geojson);
 
-    featureLayer.addTo(map);
+    if(isDisplayTrace() && !selectedtdsp) featureLayer.addTo(map);
 
     if(!tracesLayers[tdsp]) tracesLayers[tdsp] = [];
 
     tracesLayers[tdsp].push(featureLayer);
 
     lasttdsp = tdsp;
-
   }
 };
+
+function showTrip() {
+
+  tripsLayers.forEach(function(layer) {
+
+    layer.addTo(map);
+
+  });
+}
 
 exports.displayTrip = function(trip, tdsp) {
 
   if(map) {
+
+    var checkbox = document.querySelector('#map-legend .best-trip input[type=checkbox]');
+
+    checkbox.checked = true;
+
+    exports.clearTrips();
 
     exports.clearTraces();
 
@@ -127,24 +162,41 @@ exports.displayTrip = function(trip, tdsp) {
       features: features
     };
 
-    exports.clearTrips();
+    var coordinates = trip.reduce(function(acc, stopTime) {
+      acc.push(L.latLng(stopTime.lat, stopTime.lng));
+      return acc;
+    }, []);
 
-    exports.clearTraces();
 
     var tracesLayersByTdsp = tracesLayers[tdsp] || [];
 
-    tracesLayersByTdsp.forEach(function(layer) {
+    if(isDisplayTrace()) {
 
-      layer.addTo(map);
+      tracesLayersByTdsp.forEach(function(layer) {
 
-    });
+        layer.addTo(map);
+
+      });
+
+    }
+
+    var line = L.polyline(coordinates, { color: '#e9683e' });
+
+    if(isDisplayTrip()) {
+
+      line.addTo(map);
+
+    }
 
     var featureLayer = L.mapbox.featureLayer(geojson);
 
-    featureLayer.addTo(map);
+    if(isDisplayTrip()) featureLayer.addTo(map);
 
     tripsLayers.push(featureLayer);
 
+    tripsLayers.push(line);
+
+    selectedtdsp = tdsp;
   }
 };
 
@@ -264,11 +316,29 @@ exports.fitMarkers = function() {
 
       var group = new L.featureGroup(pins);
 
-      map.fitBounds(group.getBounds(), { maxZoom: 10 });
+      map.fitBounds(group.getBounds(), { maxZoom: 8 });
 
     }
 
   }
+};
+
+exports.disableTrace = function() {
+
+  var checkbox = document.querySelector('#map-legend .algorithm input[type=checkbox]');
+
+  checkbox.checked = false;
+
+  exports.clearTraces();
+};
+
+exports.enableTrace = function() {
+
+  selectedtdsp = null;
+
+  var checkbox = document.querySelector('#map-legend .algorithm input[type=checkbox]');
+
+  checkbox.checked = true;
 };
 
 function resetPosition() {
@@ -302,7 +372,67 @@ function staticMap() {
 
   image.onerror = function() {
 
-    phone.unavailableDemo();
+    if(Settings.mode != "Dev") {
+
+      phone.unavailableDemo();
+
+    }
 
   };
 };
+
+function bindLegend() {
+
+  var filters = document.querySelectorAll('#map-legend input[type=checkbox]');
+
+  for (var i = 0; i < filters.length; i++) {
+
+    var filter = filters.item(i);
+
+    filter.addEventListener('click', function(e) {
+
+      var checkbox = e.currentTarget;
+
+      var li = checkbox.parentElement;
+
+      if(checkbox.checked) {
+
+        if(li.classList.contains('algorithm')) {
+
+          showTrace();
+
+        } else {
+
+          showTrip();
+
+        }
+      } else {
+
+        if(li.classList.contains('algorithm')) {
+
+          exports.clearTraces();
+
+        } else {
+
+          exports.clearTrips();
+
+        }
+
+      }
+    });
+  }
+}
+
+function isDisplayTrip() {
+
+  var filter = document.querySelector('#map-legend .best-trip input[type=checkbox]');
+
+  return filter.checked;
+}
+
+function isDisplayTrace() {
+
+  var filter = document.querySelector('#map-legend .algorithm input[type=checkbox]');
+
+  return filter.checked;
+}

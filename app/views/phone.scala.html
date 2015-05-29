@@ -1,12 +1,12 @@
 @(masked: Boolean = false)(content: Html)
 
 <div class="phone">
-  <div class="mask @if(masked) { on } else { off }"></div>
   <div class="start-demo"><button>Démarrer la demo</button></div>
   <div class="unavailable-demo">Demo indisponible</div>
   <div class="camera"></div>
   <div class="speaker"></div>
   <div class="screen">
+  <div class="mask @if(masked) { on } else { off }"></div>
     @content
     <div class="buttons">
       <button class="back">Back</button>

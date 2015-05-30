@@ -71,7 +71,9 @@ header {
         text-transform: uppercase
         position: absolute
         right: 80px
-        top: 25px
+        top: 0
+        transition: color .2s
+        padding: 23px
 
         &::before {
             font-family: 'Cheminot'
@@ -80,8 +82,12 @@ header {
             color: #FFF
             font-size: 30px
             position: absolute
-            left: -40px
-            top: -10px
+            left: -18px
+            top: 14px
+        }
+
+        &:hover::before {
+            color: #a4c643
         }
     }
 }
@@ -104,7 +110,7 @@ h1 {
 
 h2 {
     font-size: 26px
-    margin: 20px 0
+    margin: 20px 0 6px 0
 }
 
 body::before {
@@ -117,7 +123,7 @@ body::before {
     right: 0
     z-index: 1
     transition: opacity .2s
-    opacity: .7
+    opacity: .8
 }
 
 body:not(.playing) {
@@ -162,11 +168,7 @@ body.playing {
     }
 
     #content {
-        z-index: -1
-
-        > .wrapper {
-            transform: translate3d(-100%,-50%, 0);
-        }
+        transform: translate3d(-100%, 0, 0);
     }
 
     #demo {
@@ -344,7 +346,7 @@ body.playing {
     top: 50%
     left: 50%
     transform: translate(-50%, calc(-50% + 32px))
-    background: #000
+    background: #2C2C2C
     width: 320px
     height: 0
     padding-top: 630px
@@ -430,7 +432,7 @@ body.playing {
         position: absolute
         bottom: -1px
         z-index: 2
-        background: rgb(29, 29, 29)
+        background: #383838
 
         button {
             border: none
@@ -514,13 +516,13 @@ body.playing {
     #content {
         top: 0
         width: 66%
+        transition: transform .2s
 
         .wrapper {
             position: absolute
             top: 50%
             left: 50%
-            transform: translate(-50%, calc(-50% + 32px))
-            transition: transform .2s
+            transform: translate(-50%, -50%)
             padding-left: 80px
             width: 100%
         }
@@ -532,7 +534,7 @@ body.playing {
 
 }
 
-@media screen and (max-width: 1023px) {
+@media (max-width: 1023px) {
 
     header {
         padding: 20px

@@ -1,4 +1,4 @@
-@(prismicCtxOrError: Either[Exception, PrismicHelper.Ctx])(body: Html)(implicit app: play.api.Application, request: RequestHeader)
+@(maybePrismicCtx: Option[ PrismicHelper.Ctx] = None)(body: Html)(implicit app: play.api.Application, request: RequestHeader)
 
 <!DOCTYPE html>
 
@@ -18,7 +18,7 @@
         mode: '@play.api.Play.application.mode'
       }
     </script>
-    @prismicCtxOrError.right.toOption.map { prismicCtx =>
+    @maybePrismicCtx.map { prismicCtx =>
       <script src="//static.cdn.prismic.io/prismic.min.js"></script>
       @experiment(prismicCtx)
     }

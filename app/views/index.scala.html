@@ -1,6 +1,6 @@
 @(home: io.prismic.Document, prismicCtx: PrismicHelper.Ctx)(implicit app: play.api.Application, request: RequestHeader)
 
-@main(Right(prismicCtx)) {
+@main(Some(prismicCtx)) {
 
     <section id="content">
 

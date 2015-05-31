@@ -1,3 +1,5 @@
+import scala.concurrent.Future
+import play.api.mvc._
 import play.api._
 
 object Global extends GlobalSettings {
@@ -9,5 +11,30 @@ object Global extends GlobalSettings {
     System.load(models.Config.cheminotcPath(app))
 
     models.CheminotDb.clean()(app)
+  }
+
+  override def onHandlerNotFound(request: RequestHeader) = Future successful {
+
+    implicit val app = Play.current
+
+    implicit val rq = request
+
+    Results.Ok(views.html.badresponse(404))
+  }
+
+  override def onError(request: RequestHeader, e: Throwable): Future[SimpleResult] = {
+
+    implicit val app = Play.current
+
+    implicit val rq = request
+
+    if (Play.mode == Mode.Dev) {
+
+      super.onError(request, e)
+
+    }
+
+    Future successful Results.Ok(views.html.badresponse(500))
+
   }
 }

@@ -15,7 +15,8 @@
     "nib": "latest",
     "del": "latest",
     "watchify": "latest",
-    "vinyl-source-stream": "latest"
+    "vinyl-source-stream": "latest",
+    "run-sequence": "latest"
   },
   "dependencies": {
     "browserify": "6.3.4",

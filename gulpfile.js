@@ -5,12 +5,14 @@ var gulp = require('gulp'),
     watchify = require('watchify'),
     browserify = require('browserify'),
     source = require('vinyl-source-stream'),
-    gutil = require('gulp-util');
+    gutil = require('gulp-util'),
+    runSequence = require('run-sequence');
 
 var Assets = {
   styl: {
     src: {
       main: './assets/styl/main.styl',
+      badresponse: './assets/styl/badresponse.styl',
       files: ['assets/styl/**/*.styl']
     },
     dest: {
@@ -45,20 +47,27 @@ function buildStyl(src) {
     .pipe(gulp.dest(Assets.styl.dest.dir));
 }
 
-gulp.task('styl:clean', function(cb) {
-  return del([Assets.styl.dest.dir], cb);
-});
-
 gulp.task('js:clean', function(cb) {
   return del([Assets.js.dest.dir], cb);
 });
 
-gulp.task('styl:main', ['styl:clean'], function() {
+gulp.task('styl:clean', function(cb) {
+  return del([Assets.styl.dest.dir], cb);
+});
+
+gulp.task('styl:main', function() {
   return buildStyl(Assets.styl.src.main);
 });
 
-gulp.task('styl', ['styl:main'], function() {
-  return buildStyl(Assets.styl.src.main);
+gulp.task('styl:badresponse', function() {
+  return buildStyl(Assets.styl.src.badresponse);
+});
+
+gulp.task('styl', function(callback) {
+  runSequence('styl:clean',
+              'styl:main',
+              'styl:badresponse',
+              callback);
 });
 
 gulp.task('js', ['js:clean'], function() {

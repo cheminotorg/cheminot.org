@@ -1,0 +1,42 @@
+@(status: Int)(implicit app: play.api.Application, request: RequestHeader)
+
+<html>
+
+  <head>
+
+    <title>cheminot.org</title>
+
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/badresponse.css")">
+
+    <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
+
+  </head>
+
+  <body class="error-page">
+
+    <header>
+
+      <a class="logo" href="http://cheminot.org">cheminot.org</a>
+
+    </header>
+
+    <div class="wrapper">
+
+      <div class="train"></div>
+
+      @defining(status match {
+        case 500 => "Ooops, une erreur inattendue est survenue"
+        case 404 => "Ressource introuvable"
+        case _ => ""
+      }) { message =>
+        <h1>@status</h2>
+        <h2>@message</h2>
+      }
+
+    </div>
+
+  </body>
+
+</html>

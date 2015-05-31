@@ -18,7 +18,7 @@ object Application extends Controller with PrismicController {
     request.ctx match {
 
       case Left(e) =>
-        Future successful Ok(views.html.offline(e))
+        Future successful Ok(views.html.offline())
 
       case Right(prismicCtx) =>
         PrismicHelper.getBookmark("home")(prismicCtx).map {
@@ -27,8 +27,7 @@ object Application extends Controller with PrismicController {
             Ok(views.html.index(home, prismicCtx))
 
           case _ =>
-            val e = new Exception("Unable to get home prismic document.")
-            Ok(views.html.offline(e))
+            Ok(views.html.offline())
         }
     }
   }

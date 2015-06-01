@@ -19,6 +19,7 @@ object Tasks {
 
   sealed trait Status
   case object NotInitialized extends Status
+  case object Busy extends Status
   case object Full extends Status
 
   val executionContext = {
@@ -118,7 +119,7 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor with Han
       misc.Files.copy(Config.cheminotDbPath(app), dbPath)
       val metadata = m.cheminot.plugin.jni.CheminotLib.init(dbPath, graphPath, calendardatesPath)
       meta = Some(metadata)
-      context become busy
+      context become ready
       sender ! metadata
 
     case ReceiveTimeout =>
@@ -128,18 +129,43 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor with Han
       sender ! Left(Tasks.NotInitialized)
   }
 
+  def ready: Receive = WithFailure {
+
+    case m: Init =>
+      sender ! meta.getOrElse("null")
+
+    case LookForBestTrip(vsId, veId, at, te, max) =>
+      val s = sender
+      context become busy
+      Future {
+        val trip = m.cheminot.plugin.jni.CheminotLib.lookForBestTrip(dbPath, vsId, veId, at, te, max)
+        s ! Right(trip)
+        context become ready
+      }(Tasks.executionContext)
+
+    case LookForBestDirectTrip(vsId, veId, at, te) =>
+      val s = sender
+      context become busy
+      Future {
+        val trip = m.cheminot.plugin.jni.CheminotLib.lookForBestDirectTrip(dbPath, vsId, veId, at, te)
+        s ! Right(trip)
+        context become ready
+      }(Tasks.executionContext)
+
+    case ReceiveTimeout =>
+        context.stop(self)
+  }
+
   def busy: Receive = WithFailure {
 
     case m: Init =>
       sender ! meta.getOrElse("null")
 
     case LookForBestTrip(vsId, veId, at, te, max) =>
-      val trip = m.cheminot.plugin.jni.CheminotLib.lookForBestTrip(dbPath, vsId, veId, at, te, max)
-      sender ! Right(trip)
+      sender ! Left(Tasks.Busy)
 
     case LookForBestDirectTrip(vsId, veId, at, te) =>
-      val trip = m.cheminot.plugin.jni.CheminotLib.lookForBestDirectTrip(dbPath, vsId, veId, at, te)
-      sender ! Right(trip)
+      sender ! Left(Tasks.Busy)
 
     case ReceiveTimeout =>
         context.stop(self)

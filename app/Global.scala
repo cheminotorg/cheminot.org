@@ -8,7 +8,7 @@ object Global extends GlobalSettings {
 
     models.Config.print(app)
 
-//    System.load(models.Config.cheminotcPath(app))
+    System.load(models.Config.cheminotcPath(app))
 
     models.CheminotDb.clean()(app)
   }

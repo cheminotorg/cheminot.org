@@ -5,6 +5,7 @@
 # Home page
 GET     /                            controllers.Application.index
 GET     /preview                     controllers.Application.preview(token: String)
+GET     /500                         controllers.Application.triggerUnexpectedError
 
 # Cheminotm
 GET     /cheminotm/init              controllers.Cheminotm.init

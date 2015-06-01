@@ -46,4 +46,9 @@ object Application extends Controller with PrismicController {
         Future successful Redirect(routes.Application.index)
     }
   }
+
+  def triggerUnexpectedError = Action {
+    throw new RuntimeException("No worry, this is just a simple test about error reporting.")
+    Ok
+  }
 }

@@ -55,7 +55,6 @@ class MailerActor(implicit app: Application) extends Actor {
       mails = mail +: mails
 
     case Mailer.Squash =>
-      println("squash")
       mails.groupBy(_.subject).foreach {
         case (_, grouped) => grouped.headOption.map { mail =>
           val count = if(grouped.size > 1) s"[${grouped.size} times] " else ""

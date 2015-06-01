@@ -1,0 +1,11 @@
+@(e: Throwable)(implicit request: RequestHeader)
+
+@import org.apache.commons.lang3.exception.ExceptionUtils
+
+<h1>@request.method @request.path</h1>
+
+@defining(ExceptionUtils.getRootCauseStackTrace(e).mkString("\n")) { stacktrace =>
+
+  <p>@stacktrace</p>
+
+}

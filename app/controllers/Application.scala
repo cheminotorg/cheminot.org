@@ -9,9 +9,10 @@ import scala.concurrent.ExecutionContext.Implicits._
 
 object Application extends Controller with PrismicController {
 
-  def linkResolver(api: io.prismic.Api)(implicit request: RequestHeader) = io.prismic.DocumentLinkResolver(api) {
-    case _ => routes.Application.index().absoluteURL()
-  }
+  def linkResolver(api: io.prismic.Api)(implicit request: RequestHeader) =
+    io.prismic.DocumentLinkResolver(api) {
+      case _ => routes.Application.index().absoluteURL()
+    }
 
   def index = PrismicAction { implicit request =>
 

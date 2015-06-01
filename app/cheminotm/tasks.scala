@@ -34,6 +34,18 @@ object Tasks {
     CheminotcActor.actors.size >= Config.maxTasks
 }
 
+trait HandlingFailure {
+  self: Actor =>
+
+  def WithFailure(f: PartialFunction[Any, Unit]): PartialFunction[Any, Unit] = {
+    case x =>
+      try { f(x) } catch {
+        case e: Exception =>
+          sender ! akka.actor.Status.Failure(e)
+      }
+  }
+}
+
 object CheminotcActor {
 
   val actors = TrieMap.empty[String, ActorRef]
@@ -86,8 +98,7 @@ object CheminotcActor {
     actors.get(sessionId).foreach(_ ! PoisonPill)
 }
 
-
-class CheminotcActor(sessionId: String, app: Application) extends Actor {
+class CheminotcActor(sessionId: String, app: Application) extends Actor with HandlingFailure {
 
   import CheminotcActor.Messages._
 
@@ -101,7 +112,7 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor {
 
   context.setReceiveTimeout(Config.sessionDuration(app))
 
-  def idle: Receive = {
+  def idle: Receive = WithFailure {
 
     case Init(sessionId, graphPath, calendardatesPath) =>
       misc.Files.copy(Config.cheminotDbPath(app), dbPath)
@@ -117,7 +128,7 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor {
       sender ! Left(Tasks.NotInitialized)
   }
 
-  def busy: Receive = {
+  def busy: Receive = WithFailure {
 
     case m: Init =>
       sender ! meta.getOrElse("null")
@@ -219,7 +230,7 @@ object CheminotcMonitorActor {
   )
 }
 
-class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor {
+class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor with HandlingFailure {
 
   import CheminotcMonitorActor.Messages._
 
@@ -257,7 +268,7 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor {
     sender ! Right(stream)
   }
 
-  def idle: Receive = {
+  def idle: Receive = WithFailure {
 
     case Init =>
       context become waiting
@@ -266,7 +277,7 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor {
       sender ! Left(Tasks.NotInitialized)
   }
 
-  def pulling: Receive = {
+  def pulling: Receive = WithFailure {
 
     case TracePulling(_) =>
 
@@ -280,7 +291,7 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor {
       shutdown()
   }
 
-  def waiting: Receive = {
+  def waiting: Receive = WithFailure {
 
     case Trace =>
       trace(sender)

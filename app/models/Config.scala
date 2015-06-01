@@ -59,6 +59,34 @@ object Config {
       app.getFile("/data/app").getAbsolutePath
     }
 
+  def mailgunEndpoint(implicit app: Application): String =
+    Play.configuration(app).getString("mailgun.endpoint").getOrElse {
+      throw new RuntimeException("Please specify `mailgun.endpoint` configuration.")
+    }
+
+  def mailgunFrom(implicit app: Application): String =
+    Play.configuration(app).getString("mailgun.from").getOrElse {
+      throw new RuntimeException("Please specify `mailgun.from` configuration.")
+    }
+
+  def mailgunTo(implicit app: Application): String =
+    Play.configuration(app).getString("mailgun.to").getOrElse {
+      throw new RuntimeException("Please specify `mailgun.to` configuration.")
+    }
+
+  def mailgunUsername(implicit app: Application): String =
+    Play.configuration(app).getString("mailgun.username").getOrElse {
+      throw new RuntimeException("Please specify `mailgun.username` configuration.")
+    }
+
+  def mailgunPassword(implicit app: Application): String =
+    Play.configuration(app).getString("mailgun.password").getOrElse {
+      throw new RuntimeException("Please specify `mailgun.password` configuration.")
+    }
+
+  def mailerPeriod(implicit app: Application): FiniteDuration =
+    (Play.configuration(app).getLong("mailer.period") getOrElse 4L) seconds
+
   def print(implicit app: Application) {
     Logger.info("---------------------------")
     Logger.info("[CONFIGURATION]")

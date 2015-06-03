@@ -14,7 +14,7 @@ object Cheminotm extends Controller {
 
   def init = Common.WithMaybeCtx { implicit request =>
     val sessionId = request.maybeCtx map(_.sessionId) getOrElse CheminotDb.Id.next
-    cheminotm.CheminotcActor.init(sessionId, Config.graphPath, Config.calendardatesPath) map {
+    cheminotm.CheminotcActor.openConnection(sessionId) map {
       case Right(meta) =>
         val result = Ok(meta)
         request.maybeCtx map (_ => result) getOrElse {

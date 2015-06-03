@@ -1,6 +1,7 @@
 import scala.concurrent.Future
 import play.api.mvc._
 import play.api._
+import models.Config
 
 object Global extends GlobalSettings {
 
@@ -11,6 +12,8 @@ object Global extends GlobalSettings {
     System.load(models.Config.cheminotcPath(app))
 
     models.CheminotDb.clean()(app)
+
+    cheminotm.Tasks.init(Config.graphPath(app), Config.calendardatesPath(app))
   }
 
   override def onHandlerNotFound(request: RequestHeader) = Future successful {

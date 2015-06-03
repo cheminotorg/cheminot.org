@@ -30,6 +30,10 @@ object Tasks {
     ExecutionContext.fromExecutor(threadPool)
   }
 
+  def init(graphPath: String, calendardatesPath: String) { // Bloking
+    m.cheminot.plugin.jni.CheminotLib.load(graphPath, calendardatesPath)
+  }
+
   def shutdown(sessionId: String) {
     CheminotcActor.stop(sessionId)
   }
@@ -57,7 +61,7 @@ object CheminotcActor {
   object Messages {
 
     sealed trait Event
-    case class Init(sessionId: String, graphPath: String, calendardatesPath: String) extends Event
+    case class OpenConnection(sessionId: String) extends Event
     case class LookForBestTrip(vsId: String, veId: String, at: Int, te: Int, max: Int) extends Event
     case class LookForBestDirectTrip(vsId: String, veId: String, at: Int, te: Int) extends Event
   }
@@ -76,10 +80,10 @@ object CheminotcActor {
   def prop(sessionId: String)(implicit app: Application) =
     Props(classOf[CheminotcActor], sessionId, app)
 
-  def init(sessionId: String, graphPath: String, calendardatesPath: String)(implicit app: Application): Future[Either[Tasks.Status, String]] = {
+  def openConnection(sessionId: String)(implicit app: Application): Future[Either[Tasks.Status, String]] = {
     implicit val timeout = Timeout(90 seconds)
     if(actors.size < Config.maxTasks) {
-      (ref(sessionId) ? Messages.Init(sessionId, graphPath, calendardatesPath)).mapTo[String].map { meta =>
+      (ref(sessionId) ? Messages.OpenConnection(sessionId)).mapTo[String].map { meta =>
         CheminotcMonitorActor.init(sessionId)
         Right(meta)
       }(Tasks.executionContext)
@@ -118,9 +122,9 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor with Han
 
   def idle: Receive = WithFailure {
 
-    case Init(sessionId, graphPath, calendardatesPath) =>
+    case OpenConnection(sessionId) =>
       misc.Files.copy(Config.cheminotDbPath(app), dbPath)
-      val metadata = m.cheminot.plugin.jni.CheminotLib.init(dbPath, graphPath, calendardatesPath)
+      val metadata = m.cheminot.plugin.jni.CheminotLib.openConnection(dbPath)
       meta = Some(metadata)
       context become ready
       sender ! metadata
@@ -134,7 +138,7 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor with Han
 
   def ready: Receive = WithFailure {
 
-    case m: Init =>
+    case m: OpenConnection =>
       sender ! meta.getOrElse("null")
 
     case LookForBestTrip(vsId, veId, at, te, max) =>
@@ -161,7 +165,7 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor with Han
 
   def busy: Receive = WithFailure {
 
-    case m: Init =>
+    case m: OpenConnection =>
       sender ! meta.getOrElse("null")
 
     case LookForBestTrip(vsId, veId, at, te, max) =>

@@ -1,5 +1,6 @@
 package cheminotm
 
+import java.util.concurrent.{ Executors, ThreadPoolExecutor }
 import java.io.File
 import play.api.Application
 import play.api.libs.concurrent.Akka
@@ -11,7 +12,7 @@ import akka.util.Timeout
 import akka.event.Logging
 import scala.collection.concurrent.TrieMap
 import scala.concurrent.Future
-import models.Config
+import models.{ Config, Metrics }
 import akka.dispatch.UnboundedPriorityMailbox
 import akka.dispatch.PriorityGenerator
 
@@ -22,9 +23,11 @@ object Tasks {
   case object Busy extends Status
   case object Full extends Status
 
+  val threadPool = Executors.newFixedThreadPool(10).asInstanceOf[ThreadPoolExecutor]
+
   val executionContext = {
     import scala.concurrent.ExecutionContext
-    ExecutionContext.fromExecutor(java.util.concurrent.Executors.newFixedThreadPool(10))
+    ExecutionContext.fromExecutor(threadPool)
   }
 
   def shutdown(sessionId: String) {

@@ -87,6 +87,9 @@ object Config {
   def mailerPeriod(implicit app: Application): FiniteDuration =
     (Play.configuration(app).getLong("mailer.period") getOrElse 4L) seconds
 
+  def metricsPeriod(implicit app: Application): FiniteDuration =
+    (Play.configuration(app).getLong("metrics.period") getOrElse 4L) seconds
+
   def print(implicit app: Application) {
     Logger.info("---------------------------")
     Logger.info("[CONFIGURATION]")

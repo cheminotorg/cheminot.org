@@ -19,7 +19,6 @@ object Mailgun {
         "to" ->Seq(to),
         "subject" -> Seq(subject),
         "html" -> Seq(text.toString)
-      )).map(r => println(r.body)).map(_ => ())
-
+      )).map(_ => ())
   }
 }

@@ -4,6 +4,7 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.duration._
 import akka.actor.{ Actor, ActorRef, Props }
+import akka.event.Logging
 import play.twirl.api.Html
 import play.api.Application
 import play.api.mvc.RequestHeader
@@ -44,6 +45,8 @@ object Mailer {
 class MailerActor(implicit app: Application) extends Actor {
   import Mailer._
 
+  val Logger = Logging(context.system, this)
+
   var mails: List[Mail] = Nil
 
   def receive = {
@@ -63,5 +66,13 @@ class MailerActor(implicit app: Application) extends Actor {
           mails = Nil
         }
       }
+  }
+
+  override def preStart() = {
+    Logger.info("[MailerActor] Starting")
+  }
+
+  override def postStop(): Unit = {
+    Logger.info("[MailerActor] Shutting down")
   }
 }

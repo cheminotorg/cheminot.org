@@ -6,6 +6,8 @@ var gulp = require('gulp'),
     browserify = require('browserify'),
     source = require('vinyl-source-stream'),
     gutil = require('gulp-util'),
+    streamify = require('gulp-streamify'),
+    autoprefixer = require('gulp-autoprefixer'),
     runSequence = require('run-sequence');
 
 var Assets = {
@@ -40,10 +42,8 @@ function buildScripts() {
 
 function buildStyl(src) {
   return gulp.src(src)
-    .pipe(stylus({
-      use: nib(),
-      compress: true
-    }))
+    .pipe(stylus())
+    .pipe(streamify(autoprefixer()))
     .pipe(gulp.dest(Assets.styl.dest.dir));
 }
 

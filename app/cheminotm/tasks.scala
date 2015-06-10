@@ -12,7 +12,7 @@ import akka.util.Timeout
 import akka.event.Logging
 import scala.collection.concurrent.TrieMap
 import scala.concurrent.Future
-import models.{ Config, Metrics }
+import models.Config
 import akka.dispatch.UnboundedPriorityMailbox
 import akka.dispatch.PriorityGenerator
 
@@ -40,6 +40,8 @@ object Tasks {
 
   def isFull(implicit app: Application): Boolean =
     CheminotcActor.actors.size >= Config.maxTasks
+
+  def activeSessions: Int = CheminotcActor.actors.size
 }
 
 trait HandlingFailure {

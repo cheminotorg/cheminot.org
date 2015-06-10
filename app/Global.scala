@@ -7,13 +7,18 @@ object Global extends GlobalSettings {
 
   override def beforeStart(app: Application) {
 
-    models.Config.print(app)
-
     System.load(models.Config.cheminotcPath(app))
+  }
+
+  override def onStart(app: Application) {
+
+    models.Config.print(app)
 
     models.CheminotDb.clean()(app)
 
     cheminotm.Tasks.init(Config.graphPath(app), Config.calendardatesPath(app))
+
+    monitor.Tasks.init(app)
   }
 
   override def onHandlerNotFound(request: RequestHeader) = Future successful {

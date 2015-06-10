@@ -9,8 +9,8 @@ import models.Config
 
 object Dweet {
 
-  def send(data: JsValue)(implicit app: Application): Future[Unit] = {
+  def send(thing: String, data: JsValue)(implicit app: Application): Future[Unit] = {
 
-    WS.url("https://dweet.io:443/dweet/for/chemniotorg").post(data).map(r => println(r.body)).map(_ => ())
+    WS.url("https://dweet.io:443/dweet/for/" + thing).post(data).map(_ => ())
   }
 }

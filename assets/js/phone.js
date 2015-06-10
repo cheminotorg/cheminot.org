@@ -20,6 +20,14 @@ exports.unavailableDemo = function() {
 
 };
 
+exports.notSupportedBrowser = function() {
+
+  var unsupportedBrowser = document.querySelector('.phone .unsupported-browser');
+
+  unsupportedBrowser.classList.add('on');
+
+};
+
 function isDemoAvailable() {
 
   return !document.querySelector('.phone .unavailable-demo.on');
@@ -42,6 +50,8 @@ function bindStartDemo() {
       iframe.contentWindow.location.href = "/cheminotm/app/index.html";
 
       var mask = document.querySelector('.phone .mask');
+
+      mask.classList.remove('on');
 
       mask.classList.add('off');
 

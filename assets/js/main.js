@@ -6,146 +6,156 @@ var qstart = require('qstart'),
 
 var stream;
 
-sessionStorage.clear();
-
 qstart.then(function() {
 
-  phone.init();
+  var ua = window.navigator.userAgent;
 
-  map.init();
+  if(!ua.indexOf("MSIE ") >= 0) {
 
-  window.addEventListener("message", function(message) {
+    sessionStorage.clear();
 
-    if(message.data && message.origin == window.location.origin) {
+    phone.init();
 
-      if(message.data.event == 'cheminot:ready') {
+    map.init();
 
-        map.enableControls();
+    window.addEventListener("message", function(message) {
 
-        document.body.classList.add('playing');
+      if(message.data && message.origin == window.location.origin) {
 
-        if(!stream) {
+        if(message.data.event == 'cheminot:ready') {
 
-          stream = Stream();
-        }
-      }
+          map.enableControls();
 
-      if(message.data.event == 'cheminot:init') {
+          document.body.classList.add('playing');
 
-        if(message.data.error == 'full') {
+          if(!stream) {
 
-          phone.unavailableDemo();
-
+            stream = Stream();
+          }
         }
 
-      }
+        if(message.data.event == 'cheminot:init') {
 
-      if(message.data.event == 'cheminot:selecttrip') {
+          if(message.data.error == 'full') {
 
-        map.disableTrace();
+            phone.unavailableDemo();
 
-        map.displayTrip(message.data.trip, message.data.tdsp);
+          }
 
-      }
+        }
 
-      if(message.data.event == 'cheminot:unselecttrip') {
+        if(message.data.event == 'cheminot:selecttrip') {
 
-        map.clearTrips();
+          map.disableTrace();
 
-        map.clearTraces();
+          map.displayTrip(message.data.trip, message.data.tdsp);
 
-        map.enableTrace();
+        }
 
-      }
+        if(message.data.event == 'cheminot:unselecttrip') {
+
+          map.clearTrips();
+
+          map.clearTraces();
+
+          map.enableTrace();
+
+        }
 
 
-      if(message.data.event == 'cheminot:selectstop') {
+        if(message.data.event == 'cheminot:selectstop') {
 
-        cheminotm.getStop(message.data.stopId).then(function(stop) {
+          cheminotm.getStop(message.data.stopId).then(function(stop) {
 
-          map.addMarker(stop);
+            map.addMarker(stop);
+
+            map.fitMarkers();
+
+          });
+
+        }
+
+        if(message.data.event == 'cheminot:resetstop') {
+
+          map.removeMarker(message.data.stopId);
 
           map.fitMarkers();
 
-        });
+        }
 
+        if(message.data.event == 'cheminot:abort') {
+
+        }
       }
-
-      if(message.data.event == 'cheminot:resetstop') {
-
-        map.removeMarker(message.data.stopId);
-
-        map.fitMarkers();
-
-      }
-
-      if(message.data.event == 'cheminot:abort') {
-
-      }
-    }
-
-  });
-
-  (function() {
-
-    var beta = document.querySelector('header .beta');
-
-    beta.addEventListener('click', function(e) {
-
-      e.preventDefault();
-
-      analytics.trackDownloadBeta().fin(function() {
-
-        window.location.href = beta.getAttribute('href');
-
-      });
 
     });
 
-  })();
+    (function() {
 
-  (function() {
+      var beta = document.querySelector('header .beta');
 
-    var todoList = document.querySelectorAll('.roadmap input[type=checkbox]');
-
-    for (var i = 0; i < todoList.length; i++) {
-
-      var todo = todoList.item(i);
-
-      todo.addEventListener('click', function(e) {
+      beta.addEventListener('click', function(e) {
 
         e.preventDefault();
 
+        analytics.trackDownloadBeta().fin(function() {
+
+          window.location.href = beta.getAttribute('href');
+
+        });
+
       });
-    }
 
-  })();
+    })();
 
-  function Stream() {
+    (function() {
 
-    var baseURL = 'http://' + Settings.domain;
+      var todoList = document.querySelectorAll('.roadmap input[type=checkbox]');
 
-    var endpoint = baseURL + '/cheminotm/trace';
+      for (var i = 0; i < todoList.length; i++) {
 
-    var stream = new EventSource(baseURL + '/cheminotm/trace');
+        var todo = todoList.item(i);
 
-    stream.onmessage = function(msg) {
+        todo.addEventListener('click', function(e) {
 
-      var data = JSON.parse(msg.data);
+          e.preventDefault();
 
-      if(data) {
-
-        map.displayTrace(data);
-
+        });
       }
+
+    })();
+
+    function Stream() {
+
+      var baseURL = 'http://' + Settings.domain;
+
+      var endpoint = baseURL + '/cheminotm/trace';
+
+      var stream = new EventSource(baseURL + '/cheminotm/trace');
+
+      stream.onmessage = function(msg) {
+
+        var data = JSON.parse(msg.data);
+
+        if(data) {
+
+          map.displayTrace(data);
+
+        }
+      };
+
+      stream.onerror = function(event) {
+
+        console.log(event);
+
+      };
+
+      return stream;
     };
 
-    stream.onerror = function(event) {
+  } else {
 
-      console.log(event);
+    phone.notSupportedBrowser();
 
-    };
-
-    return stream;
-  };
+  }
 });

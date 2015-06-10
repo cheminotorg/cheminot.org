@@ -72,7 +72,6 @@ header {
         position: absolute
         right: 80px
         top: 0
-        transition: color .2s
         padding: 23px
 
         &::before {
@@ -84,6 +83,7 @@ header {
             position: absolute
             left: -18px
             top: 14px
+            transition: color .2s
         }
 
         &:hover::before {
@@ -203,30 +203,6 @@ body.playing {
         light-underline(19px, #FFF)
     }
 
-    /* a.github::before { */
-    /*   font-family: 'Cheminot' */
-    /*   content: '\F012' */
-    /*   display: inline-block */
-    /*   color: #FFF */
-    /*   padding-right: 4px */
-    /* } */
-
-    /* a.googleplus::before { */
-    /*   font-family: 'Cheminot' */
-    /*   content: '\F010' */
-    /*   display: inline-block */
-    /*   color: #FFF */
-    /*   padding-right: 4px */
-    /* } */
-
-    /* a.twitter::before { */
-    /*   font-family: 'Cheminot' */
-    /*   content: '\F011' */
-    /*   display: inline-block */
-    /*   color: #FFF */
-    /*   padding-right: 4px */
-    /* } */
-
     .roadmap {
         margin-top: 40px
 
@@ -345,12 +321,12 @@ body.playing {
     position: absolute
     top: 50%
     left: 50%
-    transform: translate(-50%, calc(-50% + 32px))
+    transform: translate(-50%, -50%)
     background: #2C2C2C
     width: 320px
     height: 0
     padding-top: 630px
-    margin: 0 auto
+    margin: 32px auto 0 auto
     border-radius: 50em/6em
     z-index: 2
 
@@ -404,11 +380,11 @@ body.playing {
     .screen {
         background: #FFF
         width: 90%
-        height: 485px
+        height: 500px
         position: absolute
         top: 12.5%
         left: 5%
-        padding-bottom: 38px
+        padding-bottom: 40px
 
         iframe {
             width: 100%
@@ -450,11 +426,7 @@ body.playing {
         }
     }
 
-    .unavailable-demo, .start-demo button {
-        font-family-regular()
-    }
-
-    .start-demo {
+    .unavailable-demo, .unsupported-browser, .start-demo {
         position: absolute
         top: 50%
         left: 50%
@@ -462,44 +434,36 @@ body.playing {
         z-index: 4
         width: 90%
         text-align: center
+        padding: 26px
+        box-sizing: border-box
+        color: #FFF
+        font-size: 20px
+        text-transform: uppercase
+        font-family-regular()
 
         &.hidden {
             display: none
         }
 
-        button {
-            text-transform: uppercase
-            border: none
-            background: blue
-            color: grey-blue
-            outline: none
-            display: inline-block
-            font-size: 20px
-            width: 100%
-            padding: 20px
-        }
-    }
-
-    .unavailable-demo {
-        display: none
-        position: absolute
-        top: 50%
-        left: 50%
-        transform: translate(-50%, -50%)
-        z-index: 4
-        width: 90%
-        text-align: center
-        text-transform: uppercase
-        background: orange
-        color: #FFF
-        outline: none
-        font-size: 20px
-        padding: 20px
-        box-sizing: border-box
-
         &.on {
             display: block
         }
+    }
+
+
+    .start-demo {
+        background: blue
+        color: grey-blue
+    }
+
+    .unsupported-browser {
+      padding: 16px;
+      line-height: 22px;
+    }
+
+    .unavailable-demo, .unsupported-browser {
+        display: none
+        background: orange
     }
 }
 

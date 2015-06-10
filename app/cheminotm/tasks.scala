@@ -49,6 +49,7 @@ trait HandlingFailure {
     case x =>
       try { f(x) } catch {
         case e: Exception =>
+          e.printStackTrace
           sender ! akka.actor.Status.Failure(e)
       }
   }
@@ -146,8 +147,8 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor with Han
       context become busy
       Future {
         val trip = m.cheminot.plugin.jni.CheminotLib.lookForBestTrip(dbPath, vsId, veId, at, te, max)
-        s ! Right(trip)
         context become ready
+        s ! Right(trip)
       }(Tasks.executionContext)
 
     case LookForBestDirectTrip(vsId, veId, at, te) =>
@@ -155,12 +156,12 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor with Han
       context become busy
       Future {
         val trip = m.cheminot.plugin.jni.CheminotLib.lookForBestDirectTrip(dbPath, vsId, veId, at, te)
-        s ! Right(trip)
         context become ready
+        s ! Right(trip)
       }(Tasks.executionContext)
 
     case ReceiveTimeout =>
-        context.stop(self)
+      context.stop(self)
   }
 
   def busy: Receive = WithFailure {
@@ -312,6 +313,8 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor w
 
   def pulling: Receive = WithFailure {
 
+    case Init =>
+
     case TracePulling(_) =>
 
     case GetStop(stopId) =>
@@ -326,10 +329,13 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor w
 
   def waiting: Receive = WithFailure {
 
+    case Init =>
+
     case Trace =>
       trace(sender)
 
     case TracePulling(channel) =>
+      //println(Tasks.threadPool.getActiveCount)
       context become pulling
       Future {
         val trace = m.cheminot.plugin.jni.CheminotLib.trace(dbPath);

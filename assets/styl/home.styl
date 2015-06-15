@@ -1,13 +1,19 @@
 global-reset()
 
+size(n) {
+    n / 16 rem;
+}
+
 html, body {
     height: 100%
     width: 100%
+    font-size: 100%
 }
 
 body {
     -webkit-font-smoothing: antialiased
     color: #FFF
+    font-size: 1em
     font-family-light()
 }
 
@@ -18,7 +24,7 @@ body {
 light-underline(position, color) {
     background-image: linear-gradient(to bottom, rgba(0,0,0,0) 75%, transparentify(color, color, 0.8) 75%)
     background-repeat: repeat-x
-    background-size: 2px 2px;
+    background-size: size(2px) size(2px);
     background-position: 0 position
 }
 
@@ -50,39 +56,46 @@ header {
     width: 100%
     background: transparentify(blue, blue, 0.6)
     transition: transform .2s
+    padding: size(20px) size(40px) size(20px) size(80px)
 
     font-family-regular()
 
     .logo {
 
         &::before {
-            vertical-align: -6px
+            vertical-align: size(-6px)
             content: ''
             background: url("../images/logo.png") center center
-            height: 24px
-            width: 24px
+            height: size(24px)
+            width: size(24px)
             display: inline-block
             background-size: 100%
-            margin-right: 12px
+            margin-right: size(12px)
         }
     }
 
+    .left, .right {
+        width: 50%
+        display: inline-block
+    }
+
+    .right {
+        text-align: right
+    }
+
     .beta {
+        position: relative
         text-transform: uppercase
-        position: absolute
-        right: 80px
-        top: 0
-        padding: 23px
 
         &::before {
             font-family: 'Cheminot'
             display: inline-block
             content: '\F00F'
             color: #FFF
-            font-size: 30px
+            font-size: size(30px)
             position: absolute
-            left: -18px
-            top: 14px
+            left: size(-38px)
+            top: size(-5px)
             transition: color .2s
         }
 
@@ -97,20 +110,20 @@ h1, h2 {
 }
 
 p {
-    font-size: 18px
+    font-size: size(18px)
     line-height: 24px
-    margin: 10px 0
+    margin: size(10px) 0
 }
 
 h1 {
-    font-size: 34px
+    font-size: size(34px)
     line-height: 44px
-    margin: 20px 0
+    margin: size(20px) 0
 }
 
 h2 {
-    font-size: 26px
-    margin: 20px 0 6px 0
+    font-size: size(26px)
+    margin: size(20px) 0 size(6px) 0
 }
 
 body::before {
@@ -145,8 +158,8 @@ body:not(.playing) {
         background: url("../images/train.png") no-repeat
         top: 50%
         left: 50%
-        height: 229px
-        width: 110px
+        height: size(229px)
+        width: size(110px)
         background-size: 100%
         transform: translate(-50%, -50%)
     }
@@ -160,7 +173,7 @@ body.playing {
     }
 
     header {
-        transform: translate3d(0,-64px, 0)
+        transform: translate3d(0,size(-64px), 0)
     }
 
     #map-legend {
@@ -200,16 +213,16 @@ body.playing {
     }
 
     p a {
-        light-underline(19px, #FFF)
+        light-underline(size(19px), #FFF)
     }
 
     .roadmap {
-        margin-top: 40px
+        margin-top: size(40px)
 
         ul {
 
             li {
-                padding: 6px
+                padding: size(6px)
 
                 p {
                     display: inline
@@ -231,19 +244,19 @@ body.playing {
         color: #FFF
         width: 100%
         text-align: center
-        padding: 20px
-        font-size: 16px
+        padding: size(20px)
+        font-size: size(16px)
         text-transform: uppercase
         font-family-bold()
     }
 
     .try-demo {
-        margin-top: 20px
+        margin-top: size(20px)
         background: orange
     }
 
     .download-beta {
-        margin: 20px 0
+        margin: size(20px) 0
         background: blue
     }
 }
@@ -267,7 +280,7 @@ body.playing {
             font-family: 'Cheminot'
             display: inline-block
             content: '\F004'
-            font-size: 44px
+            font-size: size(44px)
             color: dark-blue
         }
     }
@@ -275,26 +288,26 @@ body.playing {
 
 #map-legend {
     position: absolute
-    left: 10px
+    left: size(10px)
     bottom: 10%
     transform: translateY(10%)
     z-index: 1
     display: none
-    border-radius: 4px
-    padding: 10px
+    border-radius: size(4px)
+    padding: size(10px)
     background: transparentify(#000, #000, .5)
-    font-size: 14px
+    font-size: size(14px)
 
     li {
         text-shadow: 0px 1px 1px rgba(0, 0, 0, 1)
-        padding: 4px 0 4px 0
+        padding: size(4px) 0 size(4px) 0
 
         .icon {
             display: inline-block
-            width: 20px
-            height: 30px
+            width: size(20px)
+            height: size(30px)
             vertical-align: middle
-            margin-right: 8px
+            margin-right: size(8px)
         }
 
         &.algorithm .icon {
@@ -323,10 +336,10 @@ body.playing {
     left: 50%
     transform: translate(-50%, -50%)
     background: #2C2C2C
-    width: 320px
+    width: size(320px)
     height: 0
-    padding-top: 630px
-    margin: 32px auto 0 auto
+    padding-top: size(630px)
+    margin: size(32px) auto 0 auto
     border-radius: 50em/6em
     z-index: 2
 
@@ -370,21 +383,14 @@ body.playing {
         border-radius: 1em
     }
 
-    .text {
-        opacity: 0
-        font-size: 1.25rem
-        text-align: center
-        animation: unhide 5s infinite alternate
-    }
-
     .screen {
         background: #FFF
         width: 90%
-        height: 500px
+        height: size(500px)
         position: absolute
         top: 12.5%
         left: 5%
-        padding-bottom: 40px
+        padding-bottom: size(40px)
 
         iframe {
             width: 100%
@@ -394,8 +400,8 @@ body.playing {
 
     .square {
         position: absolute
-        top: 11px
-        left: 11px
+        top: size(11px)
+        left: size(11px)
         border: 2px solid #d7d7d7
         border-radius: .3em
         width: 45%
@@ -404,7 +410,7 @@ body.playing {
 
     .buttons {
         width: 100%
-        padding: 9px 30px
+        padding: size(10px) size(30px)
         position: absolute
         bottom: -1px
         z-index: 2
@@ -422,7 +428,7 @@ body.playing {
             display: inline-block
             content: '\F00E'
             color: rgba(255, 255, 255, 0.73)
-            font-size: 16px
+            font-size: size(16px)
         }
     }
 
@@ -434,10 +440,10 @@ body.playing {
         z-index: 4
         width: 90%
         text-align: center
-        padding: 26px
+        padding: size(26px)
         box-sizing: border-box
         color: #FFF
-        font-size: 20px
+        font-size: size(20px)
         text-transform: uppercase
         font-family-regular()
 
@@ -457,8 +463,8 @@ body.playing {
     }
 
     .unsupported-browser {
-      padding: 16px;
-      line-height: 22px;
+      padding: size(16px);
+      line-height: size(22px);
     }
 
     .unavailable-demo, .unsupported-browser {
@@ -473,10 +479,6 @@ body.playing {
         overflow: hidden
     }
 
-    header {
-        padding: 20px 40px 20px 80px
-    }
-
     #content {
         top: 0
         width: 66%
@@ -487,7 +489,7 @@ body.playing {
             top: 50%
             left: 50%
             transform: translate(-50%, -50%)
-            padding-left: 80px
+            padding-left: size(80px)
             width: 100%
         }
 
@@ -501,7 +503,7 @@ body.playing {
 @media (max-width: 1023px) {
 
     header {
-        padding: 20px
+        padding: size(20px)
 
         .beta {
             display: none
@@ -509,7 +511,7 @@ body.playing {
     }
 
     #content {
-        top: 64px
+        top: size(64px)
 
         .wrapper {
             width: 84%

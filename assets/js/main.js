@@ -2,9 +2,12 @@ var qstart = require('qstart'),
     map = require('./map'),
     cheminotm = require('./cheminotm'),
     phone = require('./phone'),
+    responsive = require('./responsive'),
     analytics = require('./analytics');
 
 var stream;
+
+responsive.init();
 
 qstart.then(function() {
 

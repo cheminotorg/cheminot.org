@@ -7,13 +7,13 @@ import play.api.libs.EventSource
 import play.api.Play.current
 import play.api.data._
 import play.api.data.Forms._
-import models.{ Config, CheminotDb }
 import play.api.libs.json._
+import cheminotorg._
 
 object Cheminotm extends Controller {
 
   def init = Common.WithMaybeCtx { implicit request =>
-    val sessionId = request.maybeCtx map(_.sessionId) getOrElse CheminotDb.Id.next
+    val sessionId = request.maybeCtx map(_.sessionId) getOrElse CheminotDB.Id.next
     cheminotm.CheminotcActor.openConnection(sessionId) map {
       case Right(meta) =>
         val result = Ok(meta)

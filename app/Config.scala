@@ -1,4 +1,4 @@
-package models
+package cheminotorg
 
 import play.api.{ Play, Application }
 import scala.concurrent.duration._
@@ -51,8 +51,11 @@ object Config {
     duration seconds
   }
 
-  def maxTasks(implicit app: Application): Int =
-    Play.configuration(app).getInt("tasks.max") getOrElse 10
+  def maxLookForBestTrip(implicit app: Application): Int =
+    Play.configuration(app).getInt("tasks.lookforbesttrip.max") getOrElse 10
+
+  def maxSessions(implicit app: Application): Int =
+    Play.configuration(app).getInt("sessions.max") getOrElse 10
 
   def cheminotmPath(implicit app: Application): String =
     Play.configuration(app).getString("cheminotm.path").getOrElse {
@@ -99,7 +102,7 @@ object Config {
     Logger.info("cheminotdb.path: " + cheminotDbPath)
     Logger.info("bucket.path: " + bucketPath)
     Logger.info("session.duration: " + sessionDuration)
-    Logger.info("tasks.max: " + maxTasks)
+    Logger.info("sessions.max: " + maxSessions)
     Logger.info("cheminotm.path: " + cheminotmPath)
     Logger.info("---------------------------")
   }

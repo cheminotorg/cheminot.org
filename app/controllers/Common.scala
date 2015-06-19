@@ -3,7 +3,7 @@ package controllers
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.mvc.{ Session => PlaySession, _ }
-import models.Config
+import cheminotorg._
 
 case class Ctx(sessionId: String)
 

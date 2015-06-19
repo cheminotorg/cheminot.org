@@ -1,4 +1,4 @@
-package monitor;
+package cheminotorg.monitor;
 
 import com.sun.management.OperatingSystemMXBean;
 import java.lang.management.*;

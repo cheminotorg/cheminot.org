@@ -1,3 +1,4 @@
+package cheminotorg
 package misc
 
 import scala.concurrent.Future
@@ -6,7 +7,6 @@ import play.api.libs.ws.WS
 import play.api.libs.ws.WSAuthScheme
 import play.twirl.api.Html
 import play.api.Application
-import models.Config
 
 object Mailgun {
 

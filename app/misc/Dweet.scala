@@ -1,3 +1,4 @@
+package cheminotorg
 package misc
 
 import scala.concurrent.Future
@@ -5,7 +6,6 @@ import scala.concurrent.ExecutionContext.Implicits._
 import play.api.libs.ws.WS
 import play.api.Application
 import play.api.libs.json._
-import models.Config
 
 object Dweet {
 

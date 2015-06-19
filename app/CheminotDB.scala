@@ -1,10 +1,10 @@
-package models
+package cheminotorg
 
 import play.api.Application
 import org.apache.commons.io.FileUtils
 import java.io.File
 
-object CheminotDb {
+object CheminotDB {
 
   object Id {
 
@@ -12,11 +12,11 @@ object CheminotDb {
   }
 
   def clean()(implicit app: Application) {
-    FileUtils.deleteDirectory(new File(models.Config.bucketPath(app)))
+    FileUtils.deleteDirectory(new File(Config.bucketPath(app)))
   }
 
   def del(sessionId: String)(implicit app: Application) = {
-    val dir = new File(models.Config.bucketPath + "/" + sessionId)
+    val dir = new File(Config.bucketPath + "/" + sessionId)
     if(dir.exists) {
       FileUtils.deleteDirectory(dir)
     }

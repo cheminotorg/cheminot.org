@@ -1,4 +1,4 @@
-package models
+package cheminotorg
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits._
@@ -29,7 +29,7 @@ object Mailer {
 
   def ref(implicit app: Application) = maybeRef.getOrElse {
     val r = Akka.system.actorOf(prop(app), "mailer")
-    Akka.system.scheduler.schedule(0 milliseconds, models.Config.mailerPeriod, r, Squash)
+    Akka.system.scheduler.schedule(0 milliseconds, Config.mailerPeriod, r, Squash)
     maybeRef = Some(r)
     r
   }
@@ -52,7 +52,7 @@ class MailerActor(implicit app: Application) extends Actor {
   def receive = {
 
     case Mailer.Send(Mail(subject, html)) if Play.mode(app) == Mode.Prod =>
-      misc.Mailgun.send(models.Config.mailgunFrom, models.Config.mailgunTo, subject, html)
+      misc.Mailgun.send(Config.mailgunFrom, Config.mailgunTo, subject, html)
 
     case Mailer.AddUp(mail) =>
       mails = mail +: mails

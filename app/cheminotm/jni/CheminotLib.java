@@ -1,6 +1,5 @@
 package m.cheminot.plugin.jni;
 
-
 public class CheminotLib {
 
   public static native void load(String graphPath, String calendarDatesPath);

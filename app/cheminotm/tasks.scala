@@ -1,3 +1,4 @@
+package cheminotorg
 package cheminotm
 
 import java.util.concurrent.{ Executors, ThreadPoolExecutor }
@@ -12,7 +13,6 @@ import akka.util.Timeout
 import akka.event.Logging
 import scala.collection.concurrent.TrieMap
 import scala.concurrent.Future
-import models.Config
 import akka.dispatch.UnboundedPriorityMailbox
 import akka.dispatch.PriorityGenerator
 
@@ -30,16 +30,13 @@ object Tasks {
     ExecutionContext.fromExecutor(threadPool)
   }
 
-  def init(graphPath: String, calendardatesPath: String) { // Bloking
+  def init(graphPath: String, calendardatesPath: String) { // Blocking
     m.cheminot.plugin.jni.CheminotLib.load(graphPath, calendardatesPath)
   }
 
   def shutdown(sessionId: String) {
     CheminotcActor.stop(sessionId)
   }
-
-  def isFull(implicit app: Application): Boolean =
-    CheminotcActor.actors.size >= Config.maxTasks
 
   def activeSessions: Int = CheminotcActor.actors.size
 }
@@ -115,7 +112,7 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor with Han
 
   val Logger = Logging(context.system, this)
 
-  val dbPath = models.CheminotDb.dbPath(sessionId)(app)
+  val dbPath = CheminotDB.dbPath(sessionId)(app)
 
   var meta: Option[String] = None;
 
@@ -192,7 +189,7 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor with Han
     Logger.info(s"[CheminotcActor] Shutting down ${sessionId}")
     CheminotcActor.actors -= sessionId
     CheminotcMonitorActor.stop(sessionId)
-    models.CheminotDb.del(sessionId)(app)
+    CheminotDB.del(sessionId)(app)
   }
 }
 
@@ -272,7 +269,7 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor w
 
   val Logger = Logging(context.system, this)
 
-  val dbPath = models.CheminotDb.dbPath(sessionId)(app)
+  val dbPath = CheminotDB.dbPath(sessionId)(app)
 
   var enumerator: Option[Enumerator[String]] = None
 

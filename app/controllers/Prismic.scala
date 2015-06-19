@@ -2,14 +2,11 @@ package controllers
 
 import play.api._
 import play.api.mvc._
-
 import scala.concurrent._
 import play.api.libs.concurrent.Execution.Implicits._
-
 import Play.current
-
 import io.prismic._
-
+import cheminotorg._
 
 trait PrismicController {
   self: Controller =>
@@ -45,7 +42,7 @@ object PrismicHelper {
   }
 
   def buildContext()(implicit request: RequestHeader): Future[Either[Exception, Ctx]] = {
-    val token = request.session.get(ACCESS_TOKEN).orElse(models.Config.prismicToken)
+    val token = request.session.get(ACCESS_TOKEN).orElse(Config.prismicToken)
     apiHome(token) map { apiOrError =>
       apiOrError.right.map { api =>
         val ref = {
@@ -60,7 +57,7 @@ object PrismicHelper {
 
   def apiHome(token: Option[String] = None): Future[Either[Exception, io.prismic.Api]] = {
     try {
-      Api.get(models.Config.prismicApi, accessToken = token, cache = Cache, logger = Logger).map(Right(_))
+      Api.get(Config.prismicApi, accessToken = token, cache = Cache, logger = Logger).map(Right(_))
     } catch {
       case e: Exception => Future successful Left(e)
     }

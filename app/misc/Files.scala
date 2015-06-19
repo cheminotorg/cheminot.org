@@ -1,3 +1,4 @@
+package cheminotorg
 package misc
 
 import java.io.{ File, FileInputStream, FileOutputStream }

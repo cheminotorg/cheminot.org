@@ -1,3 +1,4 @@
+package cheminotorg
 package monitor
 
 import java.lang.management.ManagementFactory
@@ -26,7 +27,7 @@ object MetricsActor {
 
   def ref(implicit app: Application) = maybeRef.getOrElse {
     val r = Akka.system.actorOf(prop(app), "metrics")
-    Akka.system.scheduler.schedule(0 milliseconds, models.Config.metricsPeriod, r, Update)
+    Akka.system.scheduler.schedule(0 milliseconds, Config.metricsPeriod, r, Update)
     maybeRef = Some(r)
     r
   }

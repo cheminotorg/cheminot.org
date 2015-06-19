@@ -1,24 +1,28 @@
 import scala.concurrent.Future
 import play.api.mvc._
 import play.api._
-import models.Config
+import cheminotorg._
 
 object Global extends GlobalSettings {
 
   override def beforeStart(app: Application) {
 
-    System.load(models.Config.cheminotcPath(app))
+    System.load(Config.cheminotcPath(app))
   }
 
   override def onStart(app: Application) {
 
-    models.Config.print(app)
+    Config.print(app)
 
-    models.CheminotDb.clean()(app)
+    CheminotDB.clean()(app)
 
     cheminotm.Tasks.init(Config.graphPath(app), Config.calendardatesPath(app))
 
-    monitor.Tasks.init(app)
+    if(Play.mode(app) == Mode.Prod) {
+
+      monitor.Tasks.init(app)
+
+    }
   }
 
   override def onHandlerNotFound(request: RequestHeader) = Future successful {
@@ -36,7 +40,7 @@ object Global extends GlobalSettings {
 
     implicit val rq = request
 
-    models.Mailer.sendException(e)
+    Mailer.sendException(e)
 
     if (Play.mode == Mode.Dev) {
 
@@ -45,6 +49,5 @@ object Global extends GlobalSettings {
     }
 
     Future successful Results.Ok(views.html.badresponse(500))
-
   }
 }

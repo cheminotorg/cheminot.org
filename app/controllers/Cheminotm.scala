@@ -42,6 +42,8 @@ object Cheminotm extends Controller {
         case (vsId, veId, at, te, max) =>
           cheminotm.CheminotcActor.lookForBestTrip(request.ctx.sessionId, vsId, veId, at.toInt, te.toInt, max.toInt) map {
             case Right(trip) => Ok(trip)
+            case Left(cheminotm.Tasks.Full) => BadRequest(Json.obj("error" -> "full"))
+            case Left(cheminotm.Tasks.Busy) => BadRequest(Json.obj("error" -> "busy"))
             case _ => BadRequest
           }
       }

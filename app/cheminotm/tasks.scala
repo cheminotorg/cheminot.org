@@ -58,8 +58,9 @@ object CheminotcActor {
 
   val actors = TrieMap.empty[String, ActorRef]
 
-  object Messages {
+  val lookForBestTripCounter = new java.util.concurrent.atomic.AtomicInteger(0)
 
+  object Messages {
     sealed trait Event
     case class OpenConnection(sessionId: String) extends Event
     case class LookForBestTrip(vsId: String, veId: String, at: Int, te: Int, max: Int) extends Event
@@ -82,7 +83,7 @@ object CheminotcActor {
 
   def openConnection(sessionId: String)(implicit app: Application): Future[Either[Tasks.Status, String]] = {
     implicit val timeout = Timeout(90 seconds)
-    if(actors.size < Config.maxTasks) {
+    if(Tasks.activeSessions < Config.maxSessions) {
       (ref(sessionId) ? Messages.OpenConnection(sessionId)).mapTo[String].map { meta =>
         CheminotcMonitorActor.init(sessionId)
         Right(meta)
@@ -99,7 +100,15 @@ object CheminotcActor {
 
   def lookForBestTrip(sessionId: String, vsId: String, veId: String, at: Int, te: Int, max: Int)(implicit app: Application): Future[Either[Tasks.Status, String]] = {
     implicit val timeout = Timeout(2 minutes)
-    (ref(sessionId) ? Messages.LookForBestTrip(vsId, veId, at, te, max)).mapTo[Either[Tasks.Status, String]]
+    if(lookForBestTripCounter.get() < Config.maxLookForBestTrip) {
+      lookForBestTripCounter.incrementAndGet()
+        (ref(sessionId) ? Messages.LookForBestTrip(vsId, veId, at, te, max)).mapTo[Either[Tasks.Status, String]].map { x =>
+          lookForBestTripCounter.decrementAndGet()
+          x
+        }(Tasks.executionContext)
+    } else {
+      Future successful Left(Tasks.Busy)
+    }
   }
 
   def stop(sessionId: String) =

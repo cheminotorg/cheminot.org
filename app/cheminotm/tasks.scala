@@ -102,9 +102,9 @@ object CheminotcActor {
     implicit val timeout = Timeout(2 minutes)
     if(lookForBestTripCounter.get() < Config.maxLookForBestTrip) {
       lookForBestTripCounter.incrementAndGet()
-        (ref(sessionId) ? Messages.LookForBestTrip(vsId, veId, at, te, max)).mapTo[Either[Tasks.Status, String]].map { x =>
-          lookForBestTripCounter.decrementAndGet()
-          x
+        (ref(sessionId) ? Messages.LookForBestTrip(vsId, veId, at, te, max)).mapTo[Either[Tasks.Status, String]].andThen {
+          case _ =>
+            lookForBestTripCounter.decrementAndGet()
         }(Tasks.executionContext)
     } else {
       Future successful Left(Tasks.Busy)

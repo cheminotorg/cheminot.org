@@ -2,10 +2,12 @@
 
 <!DOCTYPE html>
 
+@defining("L'application mobile pour consulter ses horaires de train hors ligne") { title =>
 <html>
   <head>
-    <title>cheminot.org</title>
+    <title>@("cheminot.org - " + title)</title>
     <meta name="viewport" content="width=device-width, user-scalable=no, minimal-ui">
+    @twitter_meta(title)
     <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
     <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
     @if(!Common.isMobile(request)) {
@@ -15,7 +17,8 @@
     <script type="application/javascript">
       window.Settings = {
         domain: '@cheminotorg.Config.domain',
-        mode: '@play.api.Play.application.mode'
+        mode: '@play.api.Play.application.mode',
+        isMobile: @Common.isMobile(request)
       }
     </script>
     @maybePrismicCtx.map { prismicCtx =>
@@ -76,3 +79,5 @@
   </body>
 
 </html>
+
+}

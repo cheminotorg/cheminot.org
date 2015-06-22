@@ -24,8 +24,8 @@ function onResize() {
 
 exports.init = function() {
 
-  window.addEventListener('resize', onResize, false);
-
-  onResize();
-
+  if(!Settings.isMobile) {
+    window.addEventListener('resize', onResize, false);
+    onResize();
+  }
 };

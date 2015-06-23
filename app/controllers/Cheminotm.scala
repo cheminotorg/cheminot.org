@@ -89,9 +89,12 @@ object Cheminotm extends Controller {
   }
 
   def app(file: String) = Action { implicit request =>
-    val fileToServe = new java.io.File(Config.cheminotmPath, file)
-    if(fileToServe.exists) {
-      Ok.sendFile(fileToServe, inline = true)
+    val f = new java.io.File(Config.cheminotmPath, file)
+    val fgz = new java.io.File(Config.cheminotmPath, file + ".gz")
+    if(fgz.exists) {
+      Ok.sendFile(fgz).withHeaders("Content-Encoding" -> "gzip")
+    } else if(f.exists) {
+      Ok.sendFile(f, inline = true)
     } else {
       NotFound
     }

@@ -103,6 +103,7 @@ object Config {
     Logger.info("bucket.path: " + bucketPath)
     Logger.info("session.duration: " + sessionDuration)
     Logger.info("sessions.max: " + maxSessions)
+    Logger.info("tasks.lookforbesttrip.max: " + maxLookForBestTrip)
     Logger.info("cheminotm.path: " + cheminotmPath)
     Logger.info("---------------------------")
   }

@@ -8,6 +8,7 @@ GET     /preview                     controllers.Application.preview(token: Stri
 GET     /500                         controllers.Application.triggerUnexpectedError
 
 # Cheminotm
+GET     /cheminotm                   controllers.Cheminotm.appRoot
 GET     /cheminotm/init              controllers.Cheminotm.init
 POST    /cheminotm/besttrip          controllers.Cheminotm.lookForBestTrip
 POST    /cheminotm/bestdirecttrip    controllers.Cheminotm.lookForBestDirectTrip

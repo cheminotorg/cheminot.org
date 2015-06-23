@@ -88,6 +88,10 @@ object Cheminotm extends Controller {
     }
   }
 
+  def appRoot = Action { implicit request =>
+    Redirect(routes.Cheminotm.app("index.html"))
+  }
+
   def app(file: String) = Action { implicit request =>
     val f = new java.io.File(Config.cheminotmPath, file)
     val fgz = new java.io.File(Config.cheminotmPath, file + ".gz")

@@ -1,11 +1,15 @@
-@(title: String)
+@(maybeHome: Option[io.prismic.Document])
 
-<meta name="twitter:title" content="cheminot.org">
+@maybeHome.map { home =>
+
+<meta name="twitter:title" content="@home.getText("home.headline") | @home.getText("home.catchphrase")">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:site" content="@@cheminotorg">
-<meta name="twitter:description" content="@title">
-<meta name="twitter:image" content="https://prismic-io.s3.amazonaws.com/cheminot%2Fb0513edb-f3c6-4de3-9b84-7c1d7397a0f5_icon-192.png">
+<meta name="twitter:description" content="@home.getText("home.description")">
+<meta name="twitter:image" content="@home.getImage("home.twitter-card-image").map(_.main.url)">
 <!-- <meta name="twitter:app:country" content="FR"> -->
 <!-- <meta name="twitter:app:name:googleplay" content="cheminot"> -->
 <!-- <meta name="twitter:app:id:googleplay" content="m.cheminot.prod"> -->
 <!-- <meta name="twitter:app:url:googleplay" content="http://beta.cheminot.org"> -->
+
+}

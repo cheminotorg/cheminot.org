@@ -8,6 +8,10 @@ var gulp = require('gulp'),
     gutil = require('gulp-util'),
     streamify = require('gulp-streamify'),
     autoprefixer = require('gulp-autoprefixer'),
+    minifyCss = require('gulp-minify-css'),
+    uglify = require('gulp-uglify'),
+    gulpif = require('gulp-if'),
+    minimist = require('minimist'),
     runSequence = require('run-sequence');
 
 var Assets = {
@@ -32,18 +36,26 @@ var Assets = {
   }
 };
 
-function buildScripts() {
+var minimistOptions = {
+  string: ['env', 'mode']
+};
+
+var options = minimist(process.argv.slice(2), minimistOptions);
+
+function buildScripts(mode) {
   var bundleStream = browserify(Assets.js.src.main, { debug: true }).bundle();
   return bundleStream
     .on('error', function(error) { gutil.log(gutil.colors.red(error.message)); })
     .pipe(source('main.js'))
+    .pipe(gulpif(mode === 'prod', streamify(uglify())))
     .pipe(gulp.dest(Assets.js.dest.dir));
 }
 
-function buildStyl(src) {
+function buildStyl(src, mode) {
   return gulp.src(src)
     .pipe(stylus())
     .pipe(streamify(autoprefixer()))
+    .pipe(gulpif(mode === 'prod', minifyCss()))
     .pipe(gulp.dest(Assets.styl.dest.dir));
 }
 
@@ -56,11 +68,11 @@ gulp.task('styl:clean', function(cb) {
 });
 
 gulp.task('styl:main', function() {
-  return buildStyl(Assets.styl.src.main);
+  return buildStyl(Assets.styl.src.main, options.mode);
 });
 
 gulp.task('styl:badresponse', function() {
-  return buildStyl(Assets.styl.src.badresponse);
+  return buildStyl(Assets.styl.src.badresponse, options.mode);
 });
 
 gulp.task('styl', function(callback) {
@@ -71,7 +83,7 @@ gulp.task('styl', function(callback) {
 });
 
 gulp.task('js', ['js:clean'], function() {
-  return buildScripts();
+  return buildScripts(options.mode);
 });
 
 gulp.task('watch-scripts', function() {

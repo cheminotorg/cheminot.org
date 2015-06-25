@@ -54,6 +54,9 @@ object Config {
   def maxLookForBestTrip(implicit app: Application): Int =
     Play.configuration(app).getInt("tasks.lookforbesttrip.max") getOrElse 10
 
+  def threadPoolSize(implicit app: Application): Int =
+    Play.configuration(app).getInt("threadpool.size") getOrElse 8
+
   def maxSessions(implicit app: Application): Int =
     Play.configuration(app).getInt("sessions.max") getOrElse 10
 

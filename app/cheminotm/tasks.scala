@@ -23,7 +23,7 @@ object Tasks {
   case object Busy extends Status
   case object Full extends Status
 
-  val threadPool = Executors.newFixedThreadPool(Config.maxSessions(Play.current)).asInstanceOf[ThreadPoolExecutor]
+  val threadPool = Executors.newFixedThreadPool(Config.threadPoolSize(Play.current)).asInstanceOf[ThreadPoolExecutor]
 
   val executionContext = {
     import scala.concurrent.ExecutionContext

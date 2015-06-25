@@ -8,3 +8,4 @@ data/app
 data/bucket
 target
 *.log
+version

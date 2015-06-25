@@ -323,6 +323,8 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor w
 
     case Init =>
 
+    case Trace =>
+
     case TracePulling(_) =>
 
     case GetStop(stopId) =>
@@ -343,7 +345,6 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor w
       trace(sender)
 
     case TracePulling(channel) =>
-      //println(Tasks.threadPool.getActiveCount)
       context become pulling
       Future {
         val trace = m.cheminot.plugin.jni.CheminotLib.trace(dbPath);

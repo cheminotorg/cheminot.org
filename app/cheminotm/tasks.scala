@@ -3,7 +3,7 @@ package cheminotm
 
 import java.util.concurrent.{ Executors, ThreadPoolExecutor }
 import java.io.File
-import play.api.Application
+import play.api.{ Play, Application }
 import play.api.libs.concurrent.Akka
 import akka.actor.{ Actor, ActorRef, Props, Cancellable, PoisonPill, ActorSystem, ReceiveTimeout }
 import scala.concurrent.duration._
@@ -23,7 +23,7 @@ object Tasks {
   case object Busy extends Status
   case object Full extends Status
 
-  val threadPool = Executors.newFixedThreadPool(10).asInstanceOf[ThreadPoolExecutor]
+  val threadPool = Executors.newFixedThreadPool(Config.maxSessions(Play.current)).asInstanceOf[ThreadPoolExecutor]
 
   val executionContext = {
     import scala.concurrent.ExecutionContext

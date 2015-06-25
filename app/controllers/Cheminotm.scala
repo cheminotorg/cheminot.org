@@ -13,8 +13,12 @@ import cheminotorg._
 object Cheminotm extends Controller {
 
   def init = Common.WithMaybeCtx { implicit request =>
-    request.maybeCtx.foreach(ctx => cheminotm.Tasks.shutdown(ctx.sessionId))
-    val sessionId = CheminotDB.Id.next
+    val sessionId = if(Config.siegeMode) {
+      request.maybeCtx.map(_.sessionId).getOrElse(CheminotDB.Id.next)
+    } else {
+      request.maybeCtx.foreach(ctx => cheminotm.Tasks.shutdown(ctx.sessionId))
+      CheminotDB.Id.next
+    }
     cheminotm.CheminotcActor.openConnection(sessionId) map {
       case Right(meta) =>
         val result = Ok(meta)

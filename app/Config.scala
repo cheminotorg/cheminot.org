@@ -93,6 +93,9 @@ object Config {
   def metricsPeriod(implicit app: Application): FiniteDuration =
     (Play.configuration(app).getLong("metrics.period") getOrElse 4L) seconds
 
+  def siegeMode(implicit app: Application): Boolean =
+    (Play.configuration(app).getBoolean("siege") getOrElse false)
+
   def print(implicit app: Application) {
     Logger.info("---------------------------")
     Logger.info("[CONFIGURATION]")

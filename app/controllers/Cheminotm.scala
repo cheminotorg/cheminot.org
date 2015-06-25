@@ -13,13 +13,12 @@ import cheminotorg._
 object Cheminotm extends Controller {
 
   def init = Common.WithMaybeCtx { implicit request =>
-    val sessionId = request.maybeCtx map(_.sessionId) getOrElse CheminotDB.Id.next
+    request.maybeCtx.foreach(ctx => cheminotm.Tasks.shutdown(ctx.sessionId))
+    val sessionId = CheminotDB.Id.next
     cheminotm.CheminotcActor.openConnection(sessionId) map {
       case Right(meta) =>
         val result = Ok(meta)
-        request.maybeCtx map (_ => result) getOrElse {
-          result.withCookies(Common.Session.create(sessionId))
-        }
+        result.withCookies(Common.Session.create(sessionId))
 
       case Left(cheminotm.Tasks.Full) =>
         BadRequest(Json.obj("error" -> "full"))

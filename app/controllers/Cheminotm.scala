@@ -85,7 +85,7 @@ object Cheminotm extends Controller {
   }
 
   def stop(id: String) = Common.WithCtx { implicit request =>
-    cheminotm.CheminotcMonitorActor.getStop(request.ctx.sessionId, id) map {
+    cheminotm.CheminotcActor.getStop(request.ctx.sessionId, id) map {
       case Right(stop) => Ok(stop)
       case _ => BadRequest
     }

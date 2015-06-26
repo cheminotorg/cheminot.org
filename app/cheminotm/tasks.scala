@@ -77,11 +77,22 @@ object CheminotcActor {
   def hasSession(sessionId: String): Boolean =
     actors.get(sessionId).isDefined
 
-  def ref(sessionId: String)(implicit app: Application) = {
+  def ref(sessionId: String)(implicit app: Application): ActorRef = {
     actors.get(sessionId).getOrElse {
       val r = Akka.system.actorOf(prop(sessionId), s"cheminotc-${sessionId}")
       actors += sessionId -> r
+      CheminotcMonitorActor.init(sessionId)
       r
+    }
+  }
+
+  def fref(sessionId: String)(implicit app: Application): Future[ActorRef] = {
+    implicit val executionContext = Tasks.executionContext
+    actors.get(sessionId).map(Future.successful).getOrElse {
+      val r = Akka.system.actorOf(prop(sessionId), s"cheminotc-${sessionId}")
+      actors += sessionId -> r
+      CheminotcMonitorActor.init(sessionId)
+      openConnection(sessionId).map(_ => r)
     }
   }
 
@@ -89,12 +100,9 @@ object CheminotcActor {
     Props(classOf[CheminotcActor], sessionId, app)
 
   def openConnection(sessionId: String)(implicit app: Application): Future[Either[Tasks.Status, String]] = {
-    implicit val timeout = Timeout(90 seconds)
+    implicit val timeout = Timeout(30 seconds)
     if(Tasks.activeSessions < Config.maxSessions) {
-      (ref(sessionId) ? Messages.OpenConnection(sessionId)).mapTo[String].map { meta =>
-        CheminotcMonitorActor.init(sessionId)
-        Right(meta)
-      }(Tasks.executionContext)
+      (ref(sessionId) ? Messages.OpenConnection(sessionId)).mapTo[String].map(meta => Right(meta))(Tasks.executionContext)
     } else {
       Future successful Left(Tasks.Full)
     }
@@ -102,17 +110,18 @@ object CheminotcActor {
 
   def lookForBestDirectTrip(sessionId: String, vsId: String, veId: String, at: Int, te: Int)(implicit app: Application): Future[Either[Tasks.Status, String]] = {
     implicit val timeout = Timeout(30 seconds)
-    (ref(sessionId) ? Messages.LookForBestDirectTrip(vsId, veId, at, te)).mapTo[Either[Tasks.Status, String]]
+    implicit val executionContext = Tasks.executionContext
+    fref(sessionId) flatMap (ref => (ref ? Messages.LookForBestDirectTrip(vsId, veId, at, te)).mapTo[Either[Tasks.Status, String]])
   }
 
   def lookForBestTrip(sessionId: String, vsId: String, veId: String, at: Int, te: Int, max: Int)(implicit app: Application): Future[Either[Tasks.Status, String]] = {
     implicit val timeout = Timeout(2 minutes)
+    implicit val executionContext = Tasks.executionContext
     if(lookForBestTripCounter.get() < Config.maxLookForBestTrip) {
       lookForBestTripCounter.incrementAndGet()
-        (ref(sessionId) ? Messages.LookForBestTrip(vsId, veId, at, te, max)).mapTo[Either[Tasks.Status, String]].andThen {
-          case _ =>
-            lookForBestTripCounter.decrementAndGet()
-        }(Tasks.executionContext)
+      fref(sessionId) flatMap (ref => (ref ? Messages.LookForBestTrip(vsId, veId, at, te, max)).mapTo[Either[Tasks.Status, String]]) andThen {
+        case _ => lookForBestTripCounter.decrementAndGet()
+      }
     } else {
       Future successful Left(Tasks.Busy)
     }

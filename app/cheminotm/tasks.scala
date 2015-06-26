@@ -30,7 +30,14 @@ object Tasks {
     ExecutionContext.fromExecutor(threadPool)
   }
 
-  def init(graphPath: String, calendardatesPath: String) { // Blocking
+  var _cheminotDb: Option[Array[Byte]] = None
+
+  lazy val cheminotDb: Array[Byte] = _cheminotDb.getOrElse {
+    throw new RuntimeException("cheminotDb not initialized!")
+  }
+
+  def init(graphPath: String, calendardatesPath: String, cheminotDbPath: String) { // Blocking
+    _cheminotDb = Some(misc.Files.read(cheminotDbPath))
     m.cheminot.plugin.jni.CheminotLib.load(graphPath, calendardatesPath)
   }
 
@@ -132,7 +139,7 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor with Han
   def idle: Receive = WithFailure {
 
     case OpenConnection(sessionId) =>
-      misc.Files.copy(Config.cheminotDbPath(app), dbPath)
+      misc.Files.write(Tasks.cheminotDb, dbPath)
       val metadata = m.cheminot.plugin.jni.CheminotLib.openConnection(dbPath)
       meta = Some(metadata)
       context become ready

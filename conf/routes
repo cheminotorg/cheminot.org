@@ -6,6 +6,7 @@
 GET     /                            controllers.Application.index
 GET     /preview                     controllers.Application.preview(token: String)
 GET     /500                         controllers.Application.triggerUnexpectedError
+GET     /about                       controllers.Application.about
 
 # Cheminotm
 GET     /cheminotm                   controllers.Cheminotm.appRoot

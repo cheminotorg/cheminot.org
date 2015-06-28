@@ -51,4 +51,10 @@ object Application extends Controller with PrismicController {
     throw new RuntimeException("No worry, this is just a simple test about error reporting.")
     Ok
   }
+
+  def about = Action {
+    Ok(Json.obj(
+      "version" -> cheminotorg.Config.version
+    ))
+  }
 }

@@ -4,7 +4,9 @@ import play.api.{ Play, Application }
 import scala.concurrent.duration._
 import play.api.Logger
 
-object Config {
+object Config extends Settings {
+
+  lazy val version = GIT_TAG
 
   def prismicApi(implicit app: Application): String =
     Play.configuration(app).getString("prismic.api").getOrElse {

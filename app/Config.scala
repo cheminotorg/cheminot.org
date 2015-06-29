@@ -8,6 +8,9 @@ object Config extends Settings {
 
   lazy val version = GIT_TAG
 
+  lazy val cheminotcVersion =
+    m.cheminot.plugin.jni.CheminotLib.gitVersion
+
   def prismicApi(implicit app: Application): String =
     Play.configuration(app).getString("prismic.api").getOrElse {
       throw new RuntimeException("Please specify `prismic.api` configuration.")

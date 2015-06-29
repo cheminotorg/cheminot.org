@@ -54,7 +54,8 @@ object Application extends Controller with PrismicController {
 
   def about = Action {
     Ok(Json.obj(
-      "version" -> cheminotorg.Config.version
+      "cheminotorg" -> cheminotorg.Config.version,
+      "cheminotc" -> cheminotorg.Config.cheminotcVersion
     ))
   }
 }

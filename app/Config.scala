@@ -61,7 +61,12 @@ object Config extends Settings {
     duration seconds
   }
 
-  def maxLookForBestTrip(implicit app: Application): Int =
+  def lookForBestTripTimeout(implicit app: Application): FiniteDuration = {
+    val duration = Play.configuration(app).getDouble("tasks.lookforbesttrip.timeout").getOrElse(120.toDouble)
+    duration seconds
+  }
+
+  def lookForBestTripLimit(implicit app: Application): Int =
     Play.configuration(app).getInt("tasks.lookforbesttrip.max") getOrElse 10
 
   def threadPoolSize(implicit app: Application): Int =
@@ -119,7 +124,7 @@ object Config extends Settings {
     Logger.info("bucket.path: " + bucketPath)
     Logger.info("session.duration: " + sessionDuration)
     Logger.info("sessions.max: " + maxSessions)
-    Logger.info("tasks.lookforbesttrip.max: " + maxLookForBestTrip)
+    Logger.info("tasks.lookforbesttrip.max: " + lookForBestTripLimit)
     Logger.info("cheminotm.path: " + cheminotmPath)
     Logger.info("---------------------------")
   }

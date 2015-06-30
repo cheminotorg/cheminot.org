@@ -116,9 +116,9 @@ object CheminotcActor {
   }
 
   def lookForBestTrip(sessionId: String, vsId: String, veId: String, at: Int, te: Int, max: Int)(implicit app: Application): Future[Either[Tasks.Status, String]] = {
-    implicit val timeout = Timeout(2 minutes)
+    implicit val timeout = Timeout(Config.lookForBestTripTimeout)
     implicit val executionContext = Tasks.executionContext
-    if(lookForBestTripCounter.get() < Config.maxLookForBestTrip) {
+    if(lookForBestTripCounter.get() < Config.lookForBestTripLimit) {
       lookForBestTripCounter.incrementAndGet()
       fref(sessionId) flatMap (ref => (ref ? Messages.LookForBestTrip(vsId, veId, at, te, max)).mapTo[Either[Tasks.Status, String]]) andThen {
         case _ => lookForBestTripCounter.decrementAndGet()

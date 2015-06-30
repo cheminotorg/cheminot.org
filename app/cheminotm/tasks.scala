@@ -319,7 +319,7 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor w
     val stream = enumerator.getOrElse {
       val (producer, channel) = Concurrent.broadcast[String]
       enumerator = Some(producer)
-      val cancellable = Akka.system(app).scheduler.schedule(0 milliseconds, 0.2 seconds, self, TracePulling(channel))(Tasks.executionContext)
+      val cancellable = Akka.system(app).scheduler.schedule(0 milliseconds, Config.tracePullingPeriod(app), self, TracePulling(channel))(Tasks.executionContext)
       cancellableScheduler = Some(cancellable)
       producer
     }

@@ -56,6 +56,11 @@ object Config extends Settings {
     duration seconds
   }
 
+  def tracePullingPeriod(implicit app: Application): FiniteDuration = {
+    val duration = Play.configuration(app).getDouble("tasks.trace.period").getOrElse(1.toDouble)
+    duration seconds
+  }
+
   def maxLookForBestTrip(implicit app: Application): Int =
     Play.configuration(app).getInt("tasks.lookforbesttrip.max") getOrElse 10
 

@@ -22,9 +22,10 @@
       }
     </script>
     @maybePrismicCtx.map { prismicCtx =>
-      <script async src="//static.cdn.prismic.io/prismic.min.js"></script>
+      <script src="//static.cdn.prismic.io/prismic.min.js"></script>
       @experiment(prismicCtx)
     }
+    @hotjar()
   </head>
   <body>
 

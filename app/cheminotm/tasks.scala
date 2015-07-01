@@ -30,14 +30,14 @@ object Tasks {
     ExecutionContext.fromExecutor(threadPool)
   }
 
-  var _cheminotDb: Option[Array[Byte]] = None
+  var _cheminotDbFile: Option[Array[Byte]] = None
 
-  lazy val cheminotDb: Array[Byte] = _cheminotDb.getOrElse {
+  lazy val cheminotDbFile: Array[Byte] = _cheminotDbFile.getOrElse {
     throw new RuntimeException("cheminotDb not initialized!")
   }
 
   def init(graphPath: String, calendardatesPath: String, cheminotDbPath: String) { // Blocking
-    _cheminotDb = Some(misc.Files.read(cheminotDbPath))
+    _cheminotDbFile = Some(misc.Files.read(cheminotDbPath))
     m.cheminot.plugin.jni.CheminotLib.load(graphPath, calendardatesPath)
   }
 
@@ -155,7 +155,7 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor with Han
   def idle: Receive = WithFailure {
 
     case OpenConnection(sessionId) =>
-      misc.Files.write(Tasks.cheminotDb, dbPath)
+      misc.Files.write(Tasks.cheminotDbFile, dbPath)
       val metadata = m.cheminot.plugin.jni.CheminotLib.openConnection(dbPath)
       meta = Some(metadata)
       context become ready
@@ -228,6 +228,7 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor with Han
     Logger.info(s"[CheminotcActor] Shutting down ${sessionId}")
     CheminotcActor.actors -= sessionId
     CheminotcMonitorActor.stop(sessionId)
+    m.cheminot.plugin.jni.CheminotLib.closeConnection(dbPath)
     CheminotDB.del(sessionId)(app)
   }
 }

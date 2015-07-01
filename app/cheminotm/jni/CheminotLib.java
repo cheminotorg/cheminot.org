@@ -8,6 +8,8 @@ public class CheminotLib {
 
   public static native String openConnection(String dbPath);
 
+  public static native void closeConnection(String dbPath);
+
   public static native String init(String dbPath, String graphPath, String calendarDatesPath);
 
   public static native String lookForBestTrip(String dbPath, String vsId, String veId, int at, int te, int max);

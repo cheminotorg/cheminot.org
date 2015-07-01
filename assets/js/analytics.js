@@ -4,20 +4,28 @@ function triggerEvent(event) {
 
   var deferred = Q.defer();
 
-  window.setTimeout(function() {
+  if(window.ga) {
 
-    deferred.resolve();
-
-  }, 1000);
-
-  ga('send', 'event', event, 'successful', {
-
-    'hitCallback': function() {
+    window.setTimeout(function() {
 
       deferred.resolve();
 
-    }
-  });
+    }, 1000);
+
+    ga('send', 'event', event, 'successful', {
+
+      'hitCallback': function() {
+
+        deferred.resolve();
+
+      }
+    });
+
+  } else {
+
+    deferred.resolve();
+
+  }
 
   return deferred.promise;
 }

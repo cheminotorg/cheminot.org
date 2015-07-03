@@ -59,13 +59,14 @@ class MailerActor(implicit app: Application) extends Actor {
 
     case Mailer.Squash =>
       mails.groupBy(_.subject).foreach {
-        case (_, grouped) => grouped.headOption.map { mail =>
-          val count = if(grouped.size > 1) s"[${grouped.size} times] " else ""
-          val squashed = mail.copy(subject=count + mail.subject)
-          self ! Mailer.Send(squashed)
-          mails = Nil
-        }
+        case (_, grouped) =>
+          grouped.headOption.map { mail =>
+            val count = if(grouped.size > 1) s"[${grouped.size} times] " else ""
+            val squashed = mail.copy(subject=count + mail.subject)
+            self ! Mailer.Send(squashed)
+          }
       }
+      mails = Nil
   }
 
   override def preStart() = {

@@ -19,7 +19,6 @@ object Files {
     dest.createNewFile
     val fout = new FileOutputStream(dest);
     fout.write(data)
-    println(dest)
     fout.close
   }
 

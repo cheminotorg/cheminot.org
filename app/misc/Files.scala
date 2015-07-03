@@ -16,8 +16,10 @@ object Files {
     val dest = new File(to)
     val parentDir = new File(dest.getParent)
     parentDir.mkdirs
-    val fout = new FileOutputStream(to)
-    org.apache.commons.io.IOUtils.write(data, fout)
+    dest.createNewFile
+    val fout = new FileOutputStream(dest);
+    fout.write(data)
+    println(dest)
     fout.close
   }
 

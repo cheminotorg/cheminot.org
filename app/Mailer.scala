@@ -20,6 +20,10 @@ object Mailer {
     ref ! AddUp(Mail(subject, html))
   }
 
+  def notify(title: String, description: String)(implicit app: Application) {
+    send(s"[cheminot.org] $title", views.html.mails.notify(title, description))
+  }
+
   def sendException(e: Throwable)(implicit request: RequestHeader, app: Application) {
     send(s"[cheminot.org] [${request.method} ${request.path}] ${e.getMessage}", views.html.mails.exception(e))
   }

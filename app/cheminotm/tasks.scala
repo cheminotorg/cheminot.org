@@ -105,6 +105,7 @@ object CheminotcActor {
     if(Tasks.activeSessions < Config.maxSessions) {
       (ref(sessionId) ? Messages.OpenConnection(sessionId)).mapTo[String].map(meta => Right(meta))(Tasks.executionContext)
     } else {
+      cheminotorg.Mailer.notify("I can't accept more demo sessions", s"Limit is ${Config.maxSessions} and current value is ${Tasks.activeSessions}")
       Future successful Left(Tasks.Full)
     }
   }
@@ -118,12 +119,14 @@ object CheminotcActor {
   def lookForBestTrip(sessionId: String, vsId: String, veId: String, at: Int, te: Int, max: Int)(implicit app: Application): Future[Either[Tasks.Status, String]] = {
     implicit val timeout = Timeout(Config.lookForBestTripTimeout)
     implicit val executionContext = Tasks.executionContext
-    if(lookForBestTripCounter.get() < Config.lookForBestTripLimit) {
+    val taskCounter = lookForBestTripCounter.get()
+    if(taskCounter < Config.lookForBestTripLimit) {
       lookForBestTripCounter.incrementAndGet()
       fref(sessionId) flatMap (ref => (ref ? Messages.LookForBestTrip(vsId, veId, at, te, max)).mapTo[Either[Tasks.Status, String]]) andThen {
         case _ => lookForBestTripCounter.decrementAndGet()
       }
     } else {
+      cheminotorg.Mailer.notify("Task lookForBestTrip can't accept anymore requests", s"Limit is ${Config.lookForBestTripLimit} and current value is ${taskCounter}")
       Future successful Left(Tasks.Busy)
     }
   }

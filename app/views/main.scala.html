@@ -51,7 +51,11 @@
       </div><!--
 
       --><div class="right">
-        <a class="beta" target="_blank" href="http://beta.cheminot.org">Télécharger la beta</a>
+        @defining(maybePrismicCtx.map( prismicCtx => Application.linkResolver(prismicCtx.api))) { maybeLinkResolver =>
+          @defining(maybeLinkResolver.flatMap(linkResolver => home.flatMap(_.getLink("home.android-store").map(_.getUrl(linkResolver))))) { maybeUrl =>
+            <a class="android-store" target="_blank" href="@maybeUrl.getOrElse("#")">Télécharger sur Android</a>
+          }
+        }
       </div>
     </header>
 
@@ -62,7 +66,7 @@
       <button class="stop-demo">X</button>
 
       @phone(masked = true) {
-        <iframe src="#"></iframe>
+        <iframe src="404"></iframe>
       }
 
     </section>

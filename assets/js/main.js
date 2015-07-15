@@ -95,19 +95,24 @@ qstart.then(function() {
 
     (function() {
 
-      var beta = document.querySelector('header .beta');
+      var androidStore = document.querySelectorAll('.android-store');
 
-      beta.addEventListener('click', function(e) {
+      for(var i=0; i<androidStore.length; i++) {
 
-        e.preventDefault();
+        var link = androidStore.item(i);
 
-        analytics.trackDownloadBeta().fin(function() {
+        link.addEventListener('click', function(e) {
 
-          window.location.href = beta.getAttribute('href');
+          e.preventDefault();
+
+          analytics.trackAndroidStore().fin(function() {
+
+            window.location.href = link.getAttribute('href');
+
+          });
 
         });
-
-      });
+      }
 
     })();
 

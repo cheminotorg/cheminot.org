@@ -42,11 +42,12 @@
 
           </div>
 
+          <a href="@routes.Cheminotm.app("index.html")" class="try-demo">Démarrer la démo</a>
+
+          @defining(home.getLink("home.android-store").map(_.getUrl(linkResolver))) { maybeUrl =>
+            <a class="android-store" target="_blank" href="@maybeUrl.getOrElse("#")">Télécharger sur Android</a>
+          }
         }
-
-        <a href="@routes.Cheminotm.app("index.html")" class="try-demo">Démarrer la démo</a>
-
-        <a class="download-beta" target="_blank" href="http://beta.cheminot.org">Télécharger la beta</a>
 
       </div>
 

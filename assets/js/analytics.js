@@ -36,9 +36,9 @@ exports.trackStartDemo = function() {
 
 };
 
-exports.trackDownloadBeta = function() {
+exports.trackAndroidStore = function() {
 
-  return triggerEvent('download-beta');
+  return triggerEvent('android-store');
 
 };
 

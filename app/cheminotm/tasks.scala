@@ -25,6 +25,8 @@ object Tasks {
 
   val threadPool = Executors.newFixedThreadPool(Config.threadPoolSize(Play.current)).asInstanceOf[ThreadPoolExecutor]
 
+  val defaultTimeout = Timeout(30 seconds)
+
   val executionContext = {
     import scala.concurrent.ExecutionContext
     ExecutionContext.fromExecutor(threadPool)
@@ -101,9 +103,10 @@ object CheminotcActor {
     Props(classOf[CheminotcActor], sessionId, app)
 
   def openConnection(sessionId: String)(implicit app: Application): Future[Either[Tasks.Status, String]] = {
-    implicit val timeout = Timeout(30 seconds)
+    implicit val timeout = Tasks.defaultTimeout
+    implicit val executionContext = Tasks.executionContext
     if(Tasks.activeSessions < Config.maxSessions) {
-      (ref(sessionId) ? Messages.OpenConnection(sessionId)).mapTo[String].map(meta => Right(meta))(Tasks.executionContext)
+      (ref(sessionId) ? Messages.OpenConnection(sessionId)).mapTo[Future[String]].flatMap(identity).map(meta => Right(meta))
     } else {
       cheminotorg.Mailer.notify("I can't accept more demo sessions", s"Limit is ${Config.maxSessions} and current value is ${Tasks.activeSessions}")
       Future successful Left(Tasks.Full)
@@ -111,18 +114,18 @@ object CheminotcActor {
   }
 
   def lookForBestDirectTrip(sessionId: String, vsId: String, veId: String, at: Int, te: Int)(implicit app: Application): Future[Either[Tasks.Status, String]] = {
-    implicit val timeout = Timeout(30 seconds)
+    implicit val timeout = Tasks.defaultTimeout
     implicit val executionContext = Tasks.executionContext
-    fref(sessionId) flatMap (ref => (ref ? Messages.LookForBestDirectTrip(vsId, veId, at, te)).mapTo[Either[Tasks.Status, String]])
+    fref(sessionId).flatMap(ref => (ref ? Messages.LookForBestDirectTrip(vsId, veId, at, te)).mapTo[Future[Either[Tasks.Status, String]]].flatMap(identity))
   }
 
   def lookForBestTrip(sessionId: String, vsId: String, veId: String, at: Int, te: Int, max: Int)(implicit app: Application): Future[Either[Tasks.Status, String]] = {
-    implicit val timeout = Timeout(Config.lookForBestTripTimeout)
+    implicit val timeout = Tasks.defaultTimeout
     implicit val executionContext = Tasks.executionContext
     val taskCounter = lookForBestTripCounter.get()
     if(taskCounter < Config.lookForBestTripLimit) {
       lookForBestTripCounter.incrementAndGet()
-      fref(sessionId) flatMap (ref => (ref ? Messages.LookForBestTrip(vsId, veId, at, te, max)).mapTo[Either[Tasks.Status, String]]) andThen {
+      fref(sessionId).flatMap(ref => (ref ? Messages.LookForBestTrip(vsId, veId, at, te, max)).mapTo[Future[Either[Tasks.Status, String]]]).flatMap(identity) andThen {
         case _ => lookForBestTripCounter.decrementAndGet()
       }
     } else {
@@ -132,7 +135,7 @@ object CheminotcActor {
   }
 
   def getStop(sessionId: String, stopId: String)(implicit app: Application): Future[Either[Tasks.Status, String]] = {
-    implicit val timeout = Timeout(30 seconds)
+    implicit val timeout = Tasks.defaultTimeout
     implicit val executionContext = Tasks.executionContext
     fref(sessionId) flatMap (ref => (ref ? Messages.GetStop(stopId)).mapTo[Either[Tasks.Status, String]])
   }
@@ -158,11 +161,14 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor with Han
   def idle: Receive = WithFailure {
 
     case OpenConnection(sessionId) =>
-      misc.Files.write(Tasks.cheminotDbFile, dbPath)
-      val metadata = m.cheminot.plugin.jni.CheminotLib.openConnection(dbPath)
-      meta = Some(metadata)
-      context become ready
-      sender ! metadata
+      val f = Future {
+        misc.Files.write(Tasks.cheminotDbFile, dbPath)
+        val metadata = m.cheminot.plugin.jni.CheminotLib.openConnection(dbPath)
+        meta = Some(metadata)
+        context become ready
+        metadata
+      }(Tasks.executionContext)
+      sender ! f
 
     case ReceiveTimeout =>
         context.stop(self)
@@ -177,22 +183,22 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor with Han
       sender ! meta.getOrElse("null")
 
     case LookForBestTrip(vsId, veId, at, te, max) =>
-      val s = sender
       context become busy
-      Future {
+      val f = Future {
         val trip = m.cheminot.plugin.jni.CheminotLib.lookForBestTrip(dbPath, vsId, veId, at, te, max)
         context become ready
-        s ! Right(trip)
+        trip
       }(Tasks.executionContext)
+      sender !  f
 
     case LookForBestDirectTrip(vsId, veId, at, te) =>
-      val s = sender
       context become busy
-      Future {
+      val f = Future {
         val trip = m.cheminot.plugin.jni.CheminotLib.lookForBestDirectTrip(dbPath, vsId, veId, at, te)
         context become ready
-        s ! Right(trip)
+        trip
       }(Tasks.executionContext)
+      sender ! Right(f)
 
     case GetStop(stopId) =>
       val stop = m.cheminot.plugin.jni.CheminotLib.getStop(stopId)
@@ -270,7 +276,7 @@ object CheminotcMonitorActor {
   }
 
   def abort(sessionId: String)(implicit app: Application): Future[Either[Tasks.Status, Unit]] = {
-    implicit val timeout = Timeout(30 seconds)
+    implicit val timeout = Tasks.defaultTimeout
     ref(sessionId) match {
       case Some(actorref) => (actorref ? Messages.Abort).mapTo[Either[Tasks.Status, Unit]]
       case None => Future successful Left(Tasks.NotInitialized)
@@ -278,7 +284,7 @@ object CheminotcMonitorActor {
   }
 
   def trace(sessionId: String)(implicit app: Application): Future[Either[Tasks.Status, Enumerator[String]]] = {
-    implicit val timeout = Timeout(30 seconds)
+    implicit val timeout = Tasks.defaultTimeout
     ref(sessionId) match {
       case Some(actorref) => (actorref ? Messages.Trace).mapTo[Either[Tasks.Status, Enumerator[String]]]
       case None => Future successful Left(Tasks.NotInitialized)

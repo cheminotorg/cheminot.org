@@ -61,11 +61,6 @@ object Config extends Settings {
     duration seconds
   }
 
-  def lookForBestTripTimeout(implicit app: Application): FiniteDuration = {
-    val duration = Play.configuration(app).getDouble("tasks.lookforbesttrip.timeout").getOrElse(120.toDouble)
-    duration seconds
-  }
-
   def lookForBestTripLimit(implicit app: Application): Int =
     Play.configuration(app).getInt("tasks.lookforbesttrip.max") getOrElse 10
 

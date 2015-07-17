@@ -1,6 +1,5 @@
 var gulp = require('gulp'),
     stylus = require('gulp-stylus'),
-    nib = require('nib'),
     del = require('del'),
     watchify = require('watchify'),
     browserify = require('browserify'),

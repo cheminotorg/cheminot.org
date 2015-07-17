@@ -11,9 +11,12 @@ responsive.init();
 
 qstart.then(function() {
 
-  var ua = window.navigator.userAgent;
+  var ua = window.navigator.userAgent,
+      isSafari = ua.indexOf("Safari") >= 0,
+      isChrome = ua.indexOf("Chrome") >= 0,
+      isIE = ua.indexOf("MSIE") >= 0;
 
-  if(!ua.indexOf("MSIE ") >= 0) {
+  if(!isIE && !(!isChrome && isSafari)) {
 
     sessionStorage.clear();
 

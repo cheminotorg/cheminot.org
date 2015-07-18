@@ -16,13 +16,13 @@ qstart.then(function() {
       isChrome = ua.indexOf("Chrome") >= 0,
       isIE = ua.indexOf("MSIE") >= 0;
 
+  map.init();
+
   if(!isIE && !(!isChrome && isSafari)) {
 
     sessionStorage.clear();
 
     phone.init();
-
-    map.init();
 
     window.addEventListener("message", function(message) {
 

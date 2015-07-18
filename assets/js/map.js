@@ -356,7 +356,11 @@ function staticMap() {
 
   var position = '2.4884033203125,46.822616668804926,7';
 
-  var size = document.body.scrollWidth + 'x' + document.body.scrollHeight + '.png';
+  var height = document.body.scrollHeight > 1280 ?  1280 : document.body.scrollHeight;
+
+  var width = document.body.scrollWidth > 1280 ?  1280 : document.body.scrollWidth;
+
+  var size = width + 'x' + height + '.png';
 
   var url = [baseURL, position, size].join('/') + '?access_token=' + accessToken;
 

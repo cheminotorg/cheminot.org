@@ -50,19 +50,6 @@ object Tasks {
   def activeSessions: Int = CheminotcActor.actors.size
 }
 
-trait HandlingFailure {
-  self: Actor =>
-
-  def WithFailure(f: PartialFunction[Any, Unit]): PartialFunction[Any, Unit] = {
-    case x =>
-      try { f(x) } catch {
-        case e: Exception =>
-          e.printStackTrace
-          sender ! akka.actor.Status.Failure(e)
-      }
-  }
-}
-
 object CheminotcActor {
 
   val actors = TrieMap.empty[String, ActorRef]
@@ -144,7 +131,7 @@ object CheminotcActor {
     actors.get(sessionId).foreach(_ ! PoisonPill)
 }
 
-class CheminotcActor(sessionId: String, app: Application) extends Actor with HandlingFailure {
+class CheminotcActor(sessionId: String, app: Application) extends Actor {
 
   import CheminotcActor.Messages._
 
@@ -158,7 +145,7 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor with Han
 
   context.setReceiveTimeout(Config.sessionDuration(app))
 
-  def idle: Receive = WithFailure {
+  def idle: Receive = {
 
     case OpenConnection(sessionId) =>
       val f = Future {
@@ -177,28 +164,30 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor with Han
       sender ! Left(Tasks.NotInitialized)
   }
 
-  def ready: Receive = WithFailure {
+  def ready: Receive = {
 
     case m: OpenConnection =>
-      sender ! meta.getOrElse("null")
+      sender ! (Future successful meta.getOrElse("null"))
 
     case LookForBestTrip(vsId, veId, at, te, max) =>
-      context become busy
+      val c = context
+      c become busy
       val f = Future {
         val trip = m.cheminot.plugin.jni.CheminotLib.lookForBestTrip(dbPath, vsId, veId, at, te, max)
-        context become ready
-        trip
+        c become ready
+        Right(trip)
       }(Tasks.executionContext)
       sender !  f
 
     case LookForBestDirectTrip(vsId, veId, at, te) =>
-      context become busy
+      val c = context
+      c become busy
       val f = Future {
         val trip = m.cheminot.plugin.jni.CheminotLib.lookForBestDirectTrip(dbPath, vsId, veId, at, te)
-        context become ready
-        trip
+        c become ready
+        Right(trip)
       }(Tasks.executionContext)
-      sender ! Right(f)
+      sender ! f
 
     case GetStop(stopId) =>
       val stop = m.cheminot.plugin.jni.CheminotLib.getStop(stopId)
@@ -208,16 +197,16 @@ class CheminotcActor(sessionId: String, app: Application) extends Actor with Han
       context.stop(self)
   }
 
-  def busy: Receive = WithFailure {
+  def busy: Receive = {
 
     case m: OpenConnection =>
-      sender ! meta.getOrElse("null")
+      sender ! (Future successful meta.getOrElse("null"))
 
     case LookForBestTrip(vsId, veId, at, te, max) =>
-      sender ! Left(Tasks.Busy)
+      sender ! (Future successful Left(Tasks.Busy))
 
     case LookForBestDirectTrip(vsId, veId, at, te) =>
-      sender ! Left(Tasks.Busy)
+      sender ! (Future successful Left(Tasks.Busy))
 
     case GetStop(stopId) =>
       sender ! Left(Tasks.Busy)
@@ -303,7 +292,7 @@ object CheminotcMonitorActor {
   )
 }
 
-class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor with HandlingFailure {
+class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor {
 
   import CheminotcMonitorActor.Messages._
 
@@ -336,7 +325,7 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor w
     sender ! Right(stream)
   }
 
-  def idle: Receive = WithFailure {
+  def idle: Receive = {
 
     case Init =>
       context become waiting
@@ -345,7 +334,7 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor w
       sender ! Left(Tasks.NotInitialized)
   }
 
-  def pulling: Receive = WithFailure {
+  def pulling: Receive = {
 
     case Init =>
 
@@ -360,7 +349,7 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor w
       shutdown()
   }
 
-  def waiting: Receive = WithFailure {
+  def waiting: Receive = {
 
     case Init =>
 
@@ -368,13 +357,14 @@ class CheminotcMonitorActor(sessionId: String, app: Application) extends Actor w
       trace(sender)
 
     case TracePulling(channel) =>
-      context become pulling
+      val c = context
+      c become pulling
       Future {
         val trace = m.cheminot.plugin.jni.CheminotLib.trace(dbPath);
         if(trace != "[]") {
           channel.push(trace)
         }
-        context become waiting
+        c become waiting
       }(Tasks.executionContext)
 
     case Abort =>

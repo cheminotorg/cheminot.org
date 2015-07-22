@@ -53,7 +53,9 @@
       --><div class="right">
         @defining(maybePrismicCtx.map( prismicCtx => Application.linkResolver(prismicCtx.api))) { maybeLinkResolver =>
           @defining(maybeLinkResolver.flatMap(linkResolver => home.flatMap(_.getLink("home.android-store").map(_.getUrl(linkResolver))))) { maybeUrl =>
-            <a class="android-store" target="_blank" href="@maybeUrl.getOrElse("#")">Télécharger sur Android</a>
+            <a class="android-store" target="_blank" href="@maybeUrl.getOrElse("#")">
+              @home.map(_.getText("home.android-store-label").getOrElse("Télécharger sur Android"))
+            </a>
           }
         }
       </div>

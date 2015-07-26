@@ -21,13 +21,6 @@ body {
   box-sizing: border-box
 }
 
-light-underline(position, color) {
-    background-image: linear-gradient(to bottom, rgba(0,0,0,0) 75%, transparentify(color, color, 0.8) 75%)
-    background-repeat: repeat-x
-    background-size: size(2px) size(2px);
-    background-position: 0 position
-}
-
 strong {
   font-weight: bold
 }
@@ -39,7 +32,7 @@ em {
 a, a:visited {
     cursor: pointer
     color: #FFF
-    text-decoration: none
+    text-decoration: underline
 }
 
 button {
@@ -214,10 +207,6 @@ body.playing {
 
     .wrapper {
         margin: auto
-    }
-
-    p a {
-        light-underline(size(19px), #FFF)
     }
 
     .roadmap {

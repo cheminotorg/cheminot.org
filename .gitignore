@@ -4,8 +4,7 @@ project/project
 project/target
 public/stylesheets
 public/javascripts
-data/app
-data/bucket
+data
 target
 *.log
 version

@@ -16,7 +16,7 @@ object Global extends GlobalSettings {
 
     CheminotDB.clean()(app)
 
-    cheminotm.Tasks.init(Config.graphPath(app), Config.calendardatesPath(app), Config.cheminotDbPath(app))
+    cheminotm.Tasks.init(Config.graphPaths(app), Config.calendardatesPaths(app), Config.cheminotDbPath(app))
 
     if(Play.mode(app) == Mode.Prod) {
 

@@ -6,6 +6,14 @@ import play.api.Logger
 
 object Config extends Settings {
 
+  case class CalendarDatesPaths(ter: String, trans: String, inter: String) {
+    def toSeq: Seq[String] = Seq(ter, trans, inter)
+  }
+
+  case class GraphPaths(ter: String, trans: String, inter: String) {
+    def toSeq: Seq[String] = Seq(ter, trans, inter)
+  }
+
   lazy val version = GIT_TAG
 
   lazy val cheminotcVersion =
@@ -29,15 +37,19 @@ object Config extends Settings {
       app.getFile("/data/libcheminot.so").getAbsolutePath
     }
 
-  def calendardatesPath(implicit app: Application): String =
-    Play.configuration(app).getString("calendardates.path").getOrElse {
-      app.getFile("/data/calendardates").getAbsolutePath
-    }
+  def calendardatesPaths(implicit app: Application): CalendarDatesPaths =
+    CalendarDatesPaths(
+      Play.configuration(app).getString("calendardates.ter.path") getOrElse app.getFile("/data/ter-calendardates").getAbsolutePath,
+      Play.configuration(app).getString("calendardates.trans.path") getOrElse app.getFile("/data/trans-calendardates").getAbsolutePath,
+      Play.configuration(app).getString("calendardates.inter.path") getOrElse app.getFile("/data/inter-calendardates").getAbsolutePath
+    )
 
-  def graphPath(implicit app: Application): String =
-    Play.configuration(app).getString("graph.path").getOrElse {
-      app.getFile("/data/graph").getAbsolutePath
-    }
+  def graphPaths(implicit app: Application): GraphPaths =
+    GraphPaths(
+      Play.configuration(app).getString("graph.ter.path") getOrElse app.getFile("/data/ter-graph").getAbsolutePath,
+      Play.configuration(app).getString("graph.trans.path") getOrElse app.getFile("/data/trans-graph").getAbsolutePath,
+      Play.configuration(app).getString("graph.inter.path") getOrElse app.getFile("/data/inter-graph").getAbsolutePath
+    )
 
   def cheminotDbPath(implicit app: Application): String =
     Play.configuration(app).getString("cheminotdb.path").getOrElse {
@@ -113,8 +125,8 @@ object Config extends Settings {
     Logger.info("---------------------------")
     Logger.info("[CONFIGURATION]")
     Logger.info("cheminotc.path: " + cheminotcPath)
-    Logger.info("calendardates.path: " + calendardatesPath)
-    Logger.info("graph.path: " + graphPath)
+    Logger.info("calendardates.paths: " + calendardatesPaths)
+    Logger.info("graph.paths: " + graphPaths)
     Logger.info("cheminotdb.path: " + cheminotDbPath)
     Logger.info("bucket.path: " + bucketPath)
     Logger.info("session.duration: " + sessionDuration)

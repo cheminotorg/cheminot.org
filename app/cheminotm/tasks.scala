@@ -38,9 +38,11 @@ object Tasks {
     throw new RuntimeException("cheminotDb not initialized!")
   }
 
-  def init(graphPath: String, calendardatesPath: String, cheminotDbPath: String) { // Blocking
+  def init(graphPaths: Config.GraphPaths, calendardatesPaths: Config.CalendarDatesPaths, cheminotDbPath: String) { // Blocking
+    import scala.collection.JavaConversions._
+
     _cheminotDbFile = Some(misc.Files.read(cheminotDbPath))
-    m.cheminot.plugin.jni.CheminotLib.load(graphPath, calendardatesPath)
+    m.cheminot.plugin.jni.CheminotLib.load(graphPaths.toSeq, calendardatesPaths.toSeq)
   }
 
   def shutdown(sessionId: String) {

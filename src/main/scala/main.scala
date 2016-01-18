@@ -1,25 +1,15 @@
-package org.cheminot.site
+package org.cheminot
 
 import rapture.core._
 import rapture.cli._
 import rapture.http._, httpBackends.jetty._
-import rapture.uri._
-import rapture.codec._
-import encodings.`UTF-8`._
-import RequestExtractors._
 
 object Main {
 
   def main(args: Array[String]): Unit = {
-    HttpServer.listen(Args(args).port) { route =>
-      route match {
-        case Path(^) =>
-          pages.Home()
-
-        case Path(^ / "api") =>
-          val trips = storage.Storage.fetchNextTrips().map(api.Trip.apply)
-          api.Entry.renderJson(trips)
-      }
+    HttpServer.listen(Args(args).port) {
+      router.Api.handle orElse
+      router.Site.handle
     }
   }
 }

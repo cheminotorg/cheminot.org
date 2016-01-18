@@ -1,14 +1,10 @@
-package org.cheminot.site.api
+package org.cheminot.api
 
 import rapture.json._, jsonBackends.jackson._
 
 object Entry {
 
-  case class Toto(id: String)
-
-  def renderJson(trips: List[Trip]): Json = {
-    json"""{
-             "results": ${trips}
-           }"""
+  def renderJson(meta: Meta): Json = {
+    json"""{ "ref": ${meta.version} }"""
   }
 }

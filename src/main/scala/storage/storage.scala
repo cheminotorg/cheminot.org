@@ -18,11 +18,23 @@ object Storage {
   }
 
   def fetchMeta(): Meta = {
-    ???
+    val query = "match p=(s:Meta)-[:HAS]->(m:MetaSubset) return s as Meta, m as MetaSubset;"
+    fetch(Statement(query)) { row =>
+      val subset = MetaSubset.fromJson(row(1))
+      val id = row(0).metaid.as[String]
+      val bundleDate = new DateTime(row(0).bundledate.as[Long] * 1000)
+      Meta(id, bundleDate, Seq(subset))
+    }.groupBy(_.metaid).headOption.flatMap {
+      case (_, meta :: rest) => Option(
+        meta.copy(subsets = rest.flatMap(_.subsets) ++: meta.subsets)
+      )
+      case _ => None
+    } getOrElse sys.error("Unable to fetch meta")
   }
 
-  def fetchNextTrips(ref: String, vs: String, ve: String, at: DateTime): List[Trip] = {
-    val day = at.toString(DateTimeFormat.forPattern("EEEE").withLocale(Locale.ENGLISH)).toLowerCase
+  def fetchNextTrips(ref: String, vs: String, ve: String, at: DateTime, limit: Option[Int]): List[Trip] = {
+    val pattern = DateTimeFormat.forPattern("EEEE").withLocale(Locale.ENGLISH)
+    val day = pattern.print(at).toLowerCase
     val start = at.withTimeAtStartOfDay.getMillis / 1000
     val end = at.withTimeAtStartOfDay.plusDays(1).getMillis / 1000
 
@@ -31,7 +43,8 @@ object Storage {
           MATCH (trip)-[:SCHEDULED_AT]->(c:Calendar { serviceid: trip.serviceid })-->(cd:CalendarDate)
           WHERE (c.${day} = false AND c.startdate <= ${start} AND c.enddate > ${end}) OR (c)-[:ON]->(:CalendarDate { date: ${start} })
           RETURN trip, stops, stoptimes
-          ORDER BY lastWay.arrival;
+          ORDER BY lastWay.arrival
+          LIMIT ${limit.getOrElse(10)};
        """
 
     val trips = fetch(Statement(query)) { row =>

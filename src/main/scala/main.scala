@@ -7,10 +7,15 @@ import rapture.http._, httpBackends.jetty._
 object Main {
 
   def main(args: Array[String]): Unit = {
+
     implicit val config = Config(args)
+
     HttpServer.listen(config.port) {
-      router.Api.handle orElse
-      router.Site.handle
+      router.Common.onError {
+        router.Api.handle orElse
+        router.Site.handle orElse
+        router.Common.notFound
+      }
     }
   }
 }

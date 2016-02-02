@@ -29,7 +29,7 @@ object Entry {
         ),
         Body(
           H1("cheminot.org - Api"),
-          (P("Build date: ", formatDateTime(apiEntry.buildDate)) +:
+          (Div("Build date: ", formatDateTime(apiEntry.buildDate)) +:
             H2("Subsets") +:
             apiEntry.subsets.map { subset =>
               Section(
@@ -52,23 +52,23 @@ object Entry {
             )(
               Fieldset(
                 Legend("Trips"),
-                P(
+                Div(
                   Label(`for` = 'name)("ref"),
                   Input(typ="text", name='ref, value=apiEntry.ref, required=true)
                 ),
-                P(
+                Div(
                   Label(`for` = 'departure)("departure"),
                   Input(typ = "text", name='vs, required=true)
                 ),
-                P(
+                Div(
                   Label(`for` = 'arrival)("arrival"),
                   Input(typ="text", name='ve, required=true)
                 ),
-                P(
+                Div(
                   Label(`for` = 'at)("at"),
                   Input(typ = "text", name='at, value=formatDateTime(DateTime.now), required=true)
                 ),
-                P(
+                Div(
                   Label(`for` = 'limit)("limit"),
                   Input(typ = "number", name='limit, value="10", required=true)
                 ),

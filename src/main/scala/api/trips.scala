@@ -6,7 +6,11 @@ import rapture.html._, htmlSyntax._
 object Trips {
 
   def renderJson(trips: List[Trip]): Json = {
-    json"""{ "results": ${trips.map(Trip.toJson)} }"""
+    json"""
+         {
+           "results": ${trips.map(Trip.toJson)}
+         }
+        """
   }
 
   def renderHtml(trips: List[Trip]): HtmlDoc = HtmlDoc {

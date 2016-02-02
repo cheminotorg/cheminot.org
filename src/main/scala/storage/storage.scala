@@ -1,9 +1,8 @@
 package org.cheminot.storage
 
-import java.util.Locale
 import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
 import rapture.json._, jsonBackends.jawn._
+import org.cheminot.misc
 
 object Storage {
 
@@ -22,7 +21,7 @@ object Storage {
     fetch(Statement(query)) { row =>
       val subset = MetaSubset.fromJson(row(1))
       val id = row(0).metaid.as[String]
-      val bundleDate = new DateTime(row(0).bundledate.as[Long] * 1000)
+      val bundleDate = misc.DateTime.fromSecs(row(0).bundledate.as[Long])
       Meta(id, bundleDate, Seq(subset))
     }.groupBy(_.metaid).headOption.flatMap {
       case (_, meta :: rest) => Option(
@@ -33,8 +32,7 @@ object Storage {
   }
 
   def fetchNextTrips(ref: String, vs: String, ve: String, at: DateTime, limit: Option[Int]): List[Trip] = {
-    val pattern = DateTimeFormat.forPattern("EEEE").withLocale(Locale.ENGLISH)
-    val day = pattern.print(at).toLowerCase
+    val day = misc.DateTime.forPattern("EEEE").print(at).toLowerCase
     val start = at.withTimeAtStartOfDay.getMillis / 1000
     val end = at.withTimeAtStartOfDay.plusDays(1).getMillis / 1000
 

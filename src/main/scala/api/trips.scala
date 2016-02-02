@@ -2,6 +2,7 @@ package org.cheminot.api
 
 import rapture.json._, jsonBackends.jackson._
 import rapture.html._, htmlSyntax._
+import org.cheminot.misc
 
 object Trips {
 
@@ -42,8 +43,8 @@ object Trips {
                     Td(stopTime.name),
                     Td(stopTime.lat.toString),
                     Td(stopTime.lng.toString),
-                    Td(formatDateTime(stopTime.arrival)),
-                    stopTime.departure.map(formatDateTime).map(Td(_)).getOrElse(Td("N/A"))
+                    Td(misc.DateTime.format(stopTime.arrival)),
+                    stopTime.departure.map(misc.DateTime.format).map(Td(_)).getOrElse(Td("N/A"))
                   )
                 }:_*
               )

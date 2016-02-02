@@ -1,6 +1,7 @@
 package org.cheminot
 
 import org.joda.time.DateTime
+import org.joda.time.format.ISODateTimeFormat
 import rapture.http._
 import rapture.mime.MimeTypes
 import rapture.mime.MimeTypes.MimeType
@@ -10,7 +11,7 @@ package object router {
   object AsDateTime {
     import org.joda.time.DateTime
     def unapply(s: String): Option[DateTime] =
-      scala.util.Try(s.toInt).map(new DateTime(_)).toOption
+      scala.util.Try(ISODateTimeFormat.dateTime.parseDateTime(s)).toOption
   }
 
   def ContentNegotiation[A](request: HttpRequest)(f: MimeType => A): A = {

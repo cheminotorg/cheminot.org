@@ -7,24 +7,28 @@ import rapture.http._, httpBackends.jetty._
 object Main {
 
   def main(args: Array[String]): Unit = {
-    HttpServer.listen(Args(args).port) {
+    implicit val config = Config(args)
+    HttpServer.listen(config.port) {
       router.Api.handle orElse
       router.Site.handle
     }
   }
 }
 
-case class Args(port: Int)
+case class Config(port: Int, domain: String)
 
-object Args {
+object Config {
 
   import modes.returnOption._
 
   val Port = New.Param[Int]('p', 'port)
 
-  def apply(args: Array[String]): Args = {
+  val Domain = New.Param[String]('d', 'domain)
+
+  def apply(args: Array[String]): Config = {
     val params = New.ParamMap(args:_*)
     val port = Port.parse(params) getOrElse 8080
-    Args(port = port)
+    val domain = Domain.parse(params) getOrElse "cheminot.org"
+    Config(port = port, domain = domain)
   }
 }

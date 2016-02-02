@@ -63,6 +63,7 @@ object Storage {
     val stations = fetchStationsById(stationIds).map { station =>
       station.stationid -> station
     }.toMap
+
     trips.map {
       case (tripId, serviceId, goesTo, stops) =>
         val tripStations = stops.flatMap(s => stations.get(s.stationid).toList)
@@ -72,10 +73,10 @@ object Storage {
 
   def fetchStationsById(stationIds: Seq[String]): List[Station] = {
     if(!stationIds.isEmpty) {
-      val ids = stationIds.map(s => s"""$s""").mkString(",")
+      val ids = stationIds.map(s => s""""$s"""").mkString(",")
       val query =
         s"""MATCH (station:Station)
-          WHERE station.stationid IN [${ids}]
+          WHERE station.stationid IN [$ids]
           return DISTINCT station;
         """;
       fetch(Statement(query))(_(0).as[Station])

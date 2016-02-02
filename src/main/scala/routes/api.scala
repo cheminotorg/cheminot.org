@@ -5,6 +5,7 @@ import rapture.http._, RequestExtractors._
 import rapture.codec._
 import rapture.mime._
 import encodings.`UTF-8`._
+import org.cheminot.Config
 import org.cheminot.api
 import org.cheminot.storage
 
@@ -15,7 +16,7 @@ object Api {
   val vsParam = getParam('vs)
   val veParam = getParam('ve)
 
-  def handle: PartialFunction[HttpRequest, Response] = {
+  def handle(implicit config: Config): PartialFunction[HttpRequest, Response] = {
 
     case req@Path(^ / "api") =>
       val apiEntry = api.ApiEntry(storage.Storage.fetchMeta())
@@ -28,9 +29,9 @@ object Api {
           api.Entry.renderHtml(apiEntry)
       }
 
-    case req@Path(^ / "api" / "trips" / "search") ~ refParam(ref) ~ vsParam(vs) ~ veParam(ve) ~ refParam(AsDateTime(at)) =>
+    case req@Path(^ / "api" / "trips" / "search") ~ refParam(ref) ~ vsParam(vs) ~ veParam(ve) ~ atParam(AsDateTime(at)) =>
       val limit = req.param('limit).map(_.toInt)
-      val trips = storage.Storage.fetchNextTrips(ref, vs, ve, at, limit).map(api.Trip.apply)
+      val trips = storage.Storage.fetchNextTrips(ref, vs, ve, at, limit).map(api.Trip.apply(_, at))
 
       ContentNegotiation(req) {
         case MimeTypes.`application/json` =>

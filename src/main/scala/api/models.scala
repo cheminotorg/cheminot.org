@@ -5,13 +5,19 @@ import org.joda.time.DateTime
 import org.cheminot.storage
 import rapture.json._, jsonBackends.jawn._
 
-case class StopTime(id: String, name: String, lat: Double, lng: Double, arrival: Int, departure: Option[Int])
+case class StopTime(id: String, name: String, lat: Double, lng: Double, arrival: DateTime, departure: Option[DateTime])
 
 case class Trip(id: String, serviceid: String, stopTimes: List[StopTime])
 
 case class ApiEntry(ref: String, buildDate: DateTime, subsets: Seq[Subset])
 
-case class Subset(id: String, name: String, updatedDate: Option[DateTime], startDate: Option[DateTime], endDate: Option[DateTime])
+case class Subset(
+  id: String,
+  name: String,
+  updatedDate: Option[DateTime],
+  startDate: Option[DateTime],
+  endDate: Option[DateTime]
+)
 
 object ApiEntry {
 
@@ -51,13 +57,34 @@ object Subset {
 
 object Trip {
 
-  def apply(trip: storage.Trip): Trip = {
+  private def withDate(at: DateTime, time: Int): DateTime = {
+    val (hours, minutes) = {
+      val str = time.toString
+      str.splitAt(if (str.length > 3) 2 else 1)
+    }
+    val d = at.withHourOfDay(hours.toInt).withMinuteOfHour(minutes.toInt)
+    if(d.isAfter(at)) d else d.plusDays(1)
+  }
+
+  def apply(trip: storage.Trip, at: DateTime): Trip = {
     val (goesTo, _) = trip.stopTimes.unzip
     val stopTimes = trip.stopTimes.zipWithIndex.map {
       case ((to, stop), index) =>
         val departure = goesTo.lift(index + 1).flatMap(_.departure)
-        StopTime(stop.stationid, stop.name, stop.lat, stop.lng, to.arrival, departure)
+        StopTime(
+          stop.stationid,
+          stop.name,
+          stop.lat,
+          stop.lng,
+          withDate(at, to.arrival),
+          departure.map(withDate(at, _))
+        )
     }
     Trip(trip.tripid, trip.serviceid, stopTimes)
+  }
+
+  def toJson(trip: Trip): Json = {
+    val json = JsonBuffer.empty
+    json.as[Json]
   }
 }

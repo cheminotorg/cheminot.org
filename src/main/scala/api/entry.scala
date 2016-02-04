@@ -49,7 +49,7 @@ object Entry {
             Form(
               name = 'trips,
               method = "GET",
-              action = router.Reverse.Api.search
+              action = router.Reverse.Api.search()
             )(
               Fieldset(
                 Legend("Trips"),

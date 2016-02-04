@@ -19,6 +19,7 @@ object Api {
   def handle(implicit config: Config): PartialFunction[HttpRequest, Response] = {
 
     case req@Path(^ / "api") =>
+
       val apiEntry = api.ApiEntry(storage.Storage.fetchMeta())
 
       ContentNegotiation(req) {
@@ -30,17 +31,25 @@ object Api {
       }
 
     case req@Path(^ / "api" / "trips" / "search") ~ refParam(ref) ~ vsParam(vs) ~ veParam(ve) ~ atParam(AsDateTime(at)) =>
+
       val limit = req.param('limit).map(_.toInt)
-      val trips = storage.Storage.fetchNextTrips(ref, vs, ve, at, limit).map { trips =>
-        api.Trip(trips, at)
-      }
+
+      val previous = req.param('previous).map(_.toBoolean) getOrElse false
+
+      val trips = (if(previous) {
+        storage.Storage.fetchPreviousTrips(ref, vs, ve, at, limit)
+      } else {
+        storage.Storage.fetchNextTrips(ref, vs, ve, at, limit)
+      }).map(api.Trip(_, at))
+
+      val query = api.Query(ref, vs, ve, limit, previous)
 
       ContentNegotiation(req) {
         case MimeTypes.`application/json` =>
           api.Trips.renderJson(trips)
 
         case _ =>
-          api.Trips.renderHtml(trips)
+          api.Trips.renderHtml(query, trips)
 
       }
   }

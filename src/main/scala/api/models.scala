@@ -74,7 +74,11 @@ object StopTime {
   }
 }
 
-case class Trip(id: String, serviceid: String, stopTimes: List[StopTime])
+case class Trip(id: String, serviceid: String, stopTimes: List[StopTime]) {
+
+  lazy val departure: Option[DateTime] =
+    stopTimes.headOption.flatMap(_.departure)
+}
 
 object Trip {
 
@@ -112,3 +116,5 @@ object Trip {
     json.as[Json]
   }
 }
+
+case class Query(ref: String, vs: String, ve: String, limit: Option[Int], previous: Boolean)

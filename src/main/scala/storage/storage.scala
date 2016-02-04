@@ -6,6 +6,10 @@ import org.cheminot.misc
 
 object Storage {
 
+  private val FETCH_TRIPS_MAX_LIMIT = 20
+
+  private val FETCH_TRIPS_DEFAULT_LIMIT = 10
+
   private def fetch[A](statement: Statement)(f: Row => A): List[A] = {
     val response = Cypher.commit(statement)
     for {
@@ -31,19 +35,26 @@ object Storage {
     } getOrElse sys.error("Unable to fetch meta")
   }
 
-  def fetchNextTrips(ref: String, vs: String, ve: String, at: DateTime, limit: Option[Int]): List[Trip] = {
+  private def fetchTrips(ref: String, vs: String, ve: String, at: DateTime, limit: Option[Int], filter: String, sortBy: String): List[Trip] = {
+    val l = if(limit.exists(_ > FETCH_TRIPS_MAX_LIMIT)) {
+      FETCH_TRIPS_MAX_LIMIT
+    } else {
+      limit getOrElse FETCH_TRIPS_DEFAULT_LIMIT
+    }
+
     val day = misc.DateTime.forPattern("EEEE").print(at).toLowerCase
     val start = at.withTimeAtStartOfDay.getMillis / 1000
     val end = at.withTimeAtStartOfDay.plusDays(1).getMillis / 1000
 
-    val query = s"""MATCH path=(trip:Trip)-[:GOES_TO*1..]->(a:Stop { stationid: '${vs}' })-[ways:GOES_TO*1..]->(b:Stop { stationid: '${ve}' })
-          WITH path, tail(nodes(path)) as stops, trip, tail(relationships(path)) as stoptimes, last(ways) AS lastWay
-          MATCH (trip)-[:SCHEDULED_AT]->(c:Calendar { serviceid: trip.serviceid })-->(cd:CalendarDate)
-          WHERE (c.${day} = false AND c.startdate <= ${start} AND c.enddate > ${end}) OR (c)-[:ON]->(:CalendarDate { date: ${start} })
-          RETURN trip, stops, stoptimes
-          ORDER BY lastWay.arrival
-          LIMIT ${limit.getOrElse(10)};
-       """
+    val query = s"""
+      MATCH path=(trip:Trip)-[:GOES_TO*1..]->(a:Stop { stationid: '${vs}' })-[:GOES_TO*1..]->(b:Stop { stationid: '${ve}' })
+      WITH trip, tail(nodes(path)) AS stops, tail(relationships(path)) AS stoptimes
+      MATCH (trip)-[:SCHEDULED_AT]->(c:Calendar { serviceid: trip.serviceid })-->(cd:CalendarDate)
+      WHERE $filter AND ((c.${day} = true AND c.startdate <= ${start} AND c.enddate > ${end}) OR (c)-[:ON]->(:CalendarDate { date: ${start} }))
+      RETURN distinct(trip), stops, stoptimes
+      ORDER BY $sortBy
+      LIMIT $l;
+    """
 
     val trips = fetch(Statement(query)) { row =>
       val tripId = row(0).tripid.as[String]
@@ -65,8 +76,23 @@ object Storage {
     trips.map {
       case (tripId, serviceId, goesTo, stops) =>
         val tripStations = stops.flatMap(s => stations.get(s.stationid).toList)
-        Trip(tripId, serviceId, (goesTo).zip(tripStations))
+        val stopTimes = (goesTo).zip(tripStations).dropWhile {
+          case (_, s) => s.stationid != vs
+        }
+        Trip(tripId, serviceId, stopTimes)
     }
+  }
+
+  def fetchPreviousTrips(ref: String, vs: String, ve: String, at: DateTime, limit: Option[Int]): List[Trip] = {
+    val departure = misc.DateTime.forPattern("HHmm").print(at).toInt
+    val filter = s"head(stoptimes).departure < $departure"
+    fetchTrips(ref, vs, ve, at, limit, filter = filter, sortBy = "-last(stoptimes).arrival").reverse
+  }
+
+  def fetchNextTrips(ref: String, vs: String, ve: String, at: DateTime, limit: Option[Int]): List[Trip] = {
+    val departure = misc.DateTime.forPattern("HHmm").print(at).toInt
+    val filter = s"head(stoptimes).departure > $departure"
+    fetchTrips(ref, vs, ve, at, limit, filter = filter, sortBy = "last(stoptimes).arrival")
   }
 
   def fetchStationsById(stationIds: Seq[String]): List[Station] = {

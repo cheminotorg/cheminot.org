@@ -25,6 +25,6 @@ case class Station(stationid: String, name: String, lat: Double, lng: Double)
 
 case class Stop(stopid: String, stationid: String, parentid: Option[String])
 
-case class GoesTo(arrival: Int, departure: Option[Int])
+case class GoesTo(arrival: Int, departure: Int)
 
-case class Trip(tripid: String, serviceid: String, stopTimes: List[(GoesTo, Station)])
+case class Trip(tripid: String, serviceid: String, stopTimes: List[(Option[GoesTo], Station)])

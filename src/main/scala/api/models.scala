@@ -95,14 +95,16 @@ object Trip {
     val (goesTo, _) = trip.stopTimes.unzip
     val stopTimes = trip.stopTimes.zipWithIndex.map {
       case ((to, stop), index) =>
-        val departure = goesTo.lift(index + 1).flatMap(_.departure)
+        val arrival = goesTo.lift(index - 1).flatten.map(_.arrival) getOrElse {
+          to.map(_.departure) getOrElse sys.error(s"Unable to get arrival for $stop")
+        }
         StopTime(
           stop.stationid,
           stop.name,
           stop.lat,
           stop.lng,
-          withDate(at, to.arrival),
-          departure.map(withDate(at, _))
+          arrival = withDate(at, arrival),
+          departure = to.map(_.departure).map(withDate(at, _))
         )
     }
     Trip(trip.tripid, trip.serviceid, stopTimes)

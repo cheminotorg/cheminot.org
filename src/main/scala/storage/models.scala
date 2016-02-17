@@ -25,6 +25,50 @@ case class Station(stationid: String, name: String, lat: Double, lng: Double)
 
 case class Stop(stopid: String, stationid: String, parentid: Option[String])
 
-case class GoesTo(arrival: Int, departure: Int)
+case class GoesTo(arrival: DateTime, departure: Option[DateTime])
 
-case class Trip(tripid: String, serviceid: String, stopTimes: List[(Option[GoesTo], Station)])
+object GoesTo {
+
+  private def withTime(at: DateTime, time: Int): DateTime = {
+    val (hours, minutes) = {
+      val str = time.toString
+      str.splitAt(if (str.length > 3) 2 else 1)
+    }
+    at.withHourOfDay(hours.toInt).withMinuteOfHour(minutes.toInt)
+  }
+
+  def toJson(json: Json, date: DateTime): GoesTo = {
+    GoesTo(
+      withTime(date, json.arrival.as[Int]),
+      json.departure.as[Option[Int]].map(withTime(date, _))
+    )
+  }
+}
+
+case class Trip(tripid: String, serviceid: String, stopTimes: List[(GoesTo, Station)]) {
+
+  override def equals(o: Any): Boolean =
+    o match {
+      case r: Trip if r.tripid == tripid => true
+      case r: Trip =>
+        (for {
+          firstStopTime <- stopTimes.headOption
+          otherFirstStopTime <- r.stopTimes.headOption
+          if firstStopTime == otherFirstStopTime
+
+          lastStopTime <- stopTimes.lastOption
+          otherLastStopTime <- r.stopTimes.lastOption
+          if lastStopTime == otherLastStopTime
+        } yield true).isDefined
+      case _ => false
+    }
+
+  override def hashCode =
+    (for {
+      firstStopTime <- stopTimes.headOption
+      lastStopTime <- stopTimes.lastOption
+      if firstStopTime != lastStopTime
+    } yield {
+      List(firstStopTime, lastStopTime, serviceid).map(_.hashCode).mkString("#").hashCode
+    }) getOrElse tripid.hashCode
+}

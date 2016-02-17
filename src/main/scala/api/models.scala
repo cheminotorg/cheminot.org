@@ -82,29 +82,18 @@ case class Trip(id: String, serviceid: String, stopTimes: List[StopTime]) {
 
 object Trip {
 
-  private def withDate(at: DateTime, time: Int): DateTime = {
-    val (hours, minutes) = {
-      val str = time.toString
-      str.splitAt(if (str.length > 3) 2 else 1)
-    }
-    val d = at.withHourOfDay(hours.toInt).withMinuteOfHour(minutes.toInt)
-    if(d.isAfter(at)) d else d.plusDays(1)
-  }
-
   def apply(trip: storage.Trip, at: DateTime): Trip = {
     val (goesTo, _) = trip.stopTimes.unzip
     val stopTimes = trip.stopTimes.zipWithIndex.map {
       case ((to, stop), index) =>
-        val arrival = goesTo.lift(index - 1).flatten.map(_.arrival) getOrElse {
-          to.map(_.departure) getOrElse sys.error(s"Unable to get arrival for $stop")
-        }
+        val departure = goesTo.lift(index + 1).flatMap(_.departure)
         StopTime(
           stop.stationid,
           stop.name,
           stop.lat,
           stop.lng,
-          arrival = withDate(at, arrival),
-          departure = to.map(_.departure).map(withDate(at, _))
+          arrival = to.arrival,
+          departure = departure
         )
     }
     Trip(trip.tripid, trip.serviceid, stopTimes)

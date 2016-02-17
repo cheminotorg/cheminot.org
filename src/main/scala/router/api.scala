@@ -40,7 +40,7 @@ object Api {
         storage.Storage.fetchPreviousTrips(ref, vs, ve, at, limit)
       } else {
         storage.Storage.fetchNextTrips(ref, vs, ve, at, limit)
-      }).map(api.Trip(_, at))
+      }).map(api.Trip(_, at)).sortBy(_.stopTimes.head.arrival.getMillis)
 
       val query = api.Query(ref, vs, ve, limit, previous)
 

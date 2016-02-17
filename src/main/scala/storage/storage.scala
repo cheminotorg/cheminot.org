@@ -35,7 +35,7 @@ object Storage {
     } getOrElse sys.error("Unable to fetch meta")
   }
 
-  private def fetchTrips(ref: String, vs: String, ve: String, at: DateTime, limit: Option[Int], filter: DateTime => String, sortBy: String): List[Trip] = {
+  private def fetchTrips(ref: String, vs: String, ve: String, at: DateTime, limit: Option[Int], filter: DateTime => String, nextAt: (Seq[Trip], DateTime) => DateTime, sortBy: String): List[Trip] = {
 
     val l = if(limit.exists(_ > FETCH_TRIPS_MAX_LIMIT)) {
       FETCH_TRIPS_MAX_LIMIT
@@ -50,19 +50,23 @@ object Storage {
       val end = at.withTimeAtStartOfDay.plusDays(1).getMillis / 1000
 
       val query = s"""
-      MATCH path=(trip:Trip)-[:GOES_TO*1..]->(a:Stop { stationid: '${vs}' })-[:GOES_TO*1..]->(b:Stop { stationid: '${ve}' })
-      WITH trip, tail(nodes(path)) AS stops, tail(relationships(path)) AS stoptimes
-      MATCH (trip)-[:SCHEDULED_AT]->(c:Calendar { serviceid: trip.serviceid })-->(cd:CalendarDate)
-      WHERE ${filter(at)} AND ((c.${day} = true AND c.startdate <= ${start} AND c.enddate > ${end}) OR (c)-[:ON]->(:CalendarDate { date: ${start} }))
-      RETURN distinct(trip), stops, stoptimes
+      MATCH path=(trip:Trip)-[:GOES_TO*1..]->(a:Stop { stationid: '${vs}' })-[stoptimes:GOES_TO*1..]->(b:Stop { stationid: '${ve}' })
+      WITH trip, tail(nodes(path)) AS stops, relationships(path) AS allstoptimes, stoptimes
+      MATCH (cd:CalendarDate { serviceid: trip.serviceid })<-[*0..]-(trip)-[:SCHEDULED_AT*0..]->(c:Calendar { serviceid: trip.serviceid })
+      WITH trip, stops, allstoptimes, head(stoptimes) AS vs
+      WHERE ${filter(at)}
+        AND ((c.${day} = true AND c.startdate <= ${start} AND c.enddate > ${end} AND NOT (trip)-[:OFF]->(:CalendarDate { date: ${start} }))
+        OR (trip)-[:ON]->(:CalendarDate { date: ${start} }))
+      RETURN distinct(trip), stops, allstoptimes, vs
       ORDER BY $sortBy
       LIMIT $limit;
-    """
+      """
+
       val trips = fetch(Statement(query)) { row =>
         val tripId = row(0).tripid.as[String]
         val serviceId = row(0).serviceid.as[String]
         val stops = row(1).as[List[Stop]]
-        val goesTo = row(2).as[List[GoesTo]]
+        val goesTo = row(2).as[List[Json]].map(GoesTo.toJson(_, at))
         (tripId, serviceId, goesTo, stops)
       }
 
@@ -78,7 +82,7 @@ object Storage {
       trips.map {
         case (tripId, serviceId, goesTo, stops) =>
           val tripStations = stops.flatMap(s => stations.get(s.stationid).toList)
-          val stopTimes = ((goesTo.map(Option(_)) :+ None)).zip(tripStations).dropWhile {
+          val stopTimes = goesTo.zip(tripStations).dropWhile {
             case (_, s) => s.stationid != vs
           }
           Trip(tripId, serviceId, stopTimes)
@@ -89,9 +93,9 @@ object Storage {
       case (at, l) =>
         if(l > 0) {
           val trips = f(at, l)
-          val remaining = l - trips.size
-          val nextAt = at.plusDays(1).withTimeAtStartOfDay
-          Some((trips, (nextAt, remaining)))
+          val distinctTrips = trips.distinct
+          val remaining = l - distinctTrips.size
+          Option((distinctTrips, (nextAt(trips, at), remaining)))
         } else None
     }.toList.flatten
   }
@@ -100,17 +104,45 @@ object Storage {
     val departure = misc.DateTime.forPattern("HHmm").print(at).toInt
     val filter = (t: DateTime) => {
       val departure = misc.DateTime.forPattern("HHmm").print(t).toInt
-      s"head(stoptimes).departure < $departure"
+      s"vs.departure < $departure"
     }
-    fetchTrips(ref, vs, ve, at, limit, filter = filter, sortBy = "-last(stoptimes).departure").reverse
+    val nextAt = (trips: Seq[Trip], t: DateTime) => {
+      val distinctTrips = trips.distinct
+      val e = trips.size - distinctTrips.size
+      if(e > 0) {
+        (for {
+          lastTrip <- trips.lastOption
+          departure <- lastTrip.stopTimes.lift(1).flatMap(_._1.departure)
+        } yield {
+          departure.minusMinutes(1)
+        }) getOrElse sys.error("Unable to compute nextAt")
+      } else {
+        at.minusDays(1).withTime(23, 59, 59, 999)
+      }
+    }
+    fetchTrips(ref, vs, ve, at, limit, filter = filter, nextAt = nextAt, sortBy = "-vs.departure").reverse
   }
 
   def fetchNextTrips(ref: String, vs: String, ve: String, at: DateTime, limit: Option[Int]): List[Trip] = {
     val filter = (t: DateTime) => {
       val departure = misc.DateTime.forPattern("HHmm").print(t).toInt
-      s"head(stoptimes).departure > $departure"
+      s"vs.departure > $departure"
     }
-    fetchTrips(ref, vs, ve, at, limit, filter = filter, sortBy = "last(stoptimes).departure")
+    val nextAt = (trips: Seq[Trip], t: DateTime) => {
+      val distinctTrips = trips.distinct
+      val e = trips.size - distinctTrips.size
+      if(e > 0) {
+        (for {
+          lastTrip <- trips.lastOption
+          departure <- lastTrip.stopTimes.lift(1).flatMap(_._1.departure)
+        } yield {
+          departure.plusMinutes(1)
+        }) getOrElse sys.error("Unable to compute nextAt")
+      } else {
+        at.plusDays(1).withTimeAtStartOfDay
+      }
+    }
+    fetchTrips(ref, vs, ve, at, limit, filter = filter, nextAt = nextAt, sortBy = "vs.departure")
   }
 
   def fetchStationsById(stationIds: Seq[String]): List[Station] = {

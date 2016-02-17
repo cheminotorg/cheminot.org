@@ -52,16 +52,16 @@ object Storage {
       val query = s"""
       MATCH path=(trip:Trip)-[:GOES_TO*1..]->(a:Stop { stationid: '${vs}' })-[stoptimes:GOES_TO*1..]->(b:Stop { stationid: '${ve}' })
       WITH trip, tail(nodes(path)) AS stops, relationships(path) AS allstoptimes, stoptimes
-      MATCH (cd:CalendarDate { serviceid: trip.serviceid })<-[*0..]-(trip)-[:SCHEDULED_AT*0..]->(c:Calendar { serviceid: trip.serviceid })
+      OPTIONAL MATCH (trip)-[:SCHEDULED_AT*0..]->(c:Calendar { serviceid: trip.serviceid })
       WITH trip, stops, allstoptimes, head(stoptimes) AS vs
       WHERE ${filter(at)}
-        AND ((c.${day} = true AND c.startdate <= ${start} AND c.enddate > ${end} AND NOT (trip)-[:OFF]->(:CalendarDate { date: ${start} }))
+        AND ((c IS NOT NULL AND (c.${day} = true AND c.startdate <= ${start} AND c.enddate > ${end} AND NOT (trip)-[:OFF]->(:CalendarDate { date: ${start} })))
         OR (trip)-[:ON]->(:CalendarDate { date: ${start} }))
       RETURN distinct(trip), stops, allstoptimes, vs
       ORDER BY $sortBy
       LIMIT $limit;
       """
-
+println(query)
       val trips = fetch(Statement(query)) { row =>
         val tripId = row(0).tripid.as[String]
         val serviceId = row(0).serviceid.as[String]
@@ -104,7 +104,7 @@ object Storage {
     val departure = misc.DateTime.forPattern("HHmm").print(at).toInt
     val filter = (t: DateTime) => {
       val departure = misc.DateTime.forPattern("HHmm").print(t).toInt
-      s"vs.departure < $departure"
+      s"vs.departure <= $departure"
     }
     val nextAt = (trips: Seq[Trip], t: DateTime) => {
       val distinctTrips = trips.distinct
@@ -126,7 +126,7 @@ object Storage {
   def fetchNextTrips(ref: String, vs: String, ve: String, at: DateTime, limit: Option[Int]): List[Trip] = {
     val filter = (t: DateTime) => {
       val departure = misc.DateTime.forPattern("HHmm").print(t).toInt
-      s"vs.departure > $departure"
+      s"vs.departure >= $departure"
     }
     val nextAt = (trips: Seq[Trip], t: DateTime) => {
       val distinctTrips = trips.distinct

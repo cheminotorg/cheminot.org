@@ -33,7 +33,16 @@ object Cypher {
 
       val response = endpoint.httpPost(body, headers = headers)
 
-      Json.parse(response.slurp[Char])
+      val json = Json.parse(response.slurp[Char])
+
+      val errors = json.errors.as[List[Json]]
+
+      if(!errors.isEmpty) {
+        println(errors)
+        sys.error(s"Unable to perform commitn \n: ${errors}")
+      }
+
+      json
     }
   }
 

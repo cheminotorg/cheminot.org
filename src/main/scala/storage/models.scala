@@ -69,6 +69,6 @@ case class Trip(tripid: String, serviceid: String, stopTimes: List[(GoesTo, Stat
       lastStopTime <- stopTimes.lastOption
       if firstStopTime != lastStopTime
     } yield {
-      List(firstStopTime, lastStopTime, serviceid).map(_.hashCode).mkString("#").hashCode
+      List(firstStopTime, lastStopTime).map(_.hashCode).mkString("#").hashCode
     }) getOrElse tripid.hashCode
 }

@@ -33,7 +33,7 @@ object Config {
   def apply(args: Array[String]): Config = {
     val params = New.ParamMap(args:_*)
     val port = Port.parse(params) getOrElse 8080
-    val domain = Domain.parse(params) getOrElse "cheminot.org"
+    val domain = Domain.parse(params) getOrElse "localhost:8080"
     Config(port = port, domain = domain)
   }
 }

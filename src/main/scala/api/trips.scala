@@ -12,16 +12,32 @@ import org.cheminot.Config
 object Trips {
 
   def renderJson(params: Params.FetchTrips, trips: List[Trip])(implicit config: Config): Json = {
+
+    val previousLink = if (trips.isEmpty) json"null" else {
+      json"${buildPreviousLink(params, trips).toString}"
+    }
+
+    val nextLink = if (trips.isEmpty) json"null" else {
+      json"${buildNextLink(params, trips).toString}"
+    }
+
     json"""
          {
-           "previous": ${previousLink(params, trips)},
-           "next": ${nextLink(params, trips)},
+           "previous": $previousLink,
+           "next": $nextLink,
            "results": ${trips.map(Trip.toJson)}
          }
         """
   }
 
   def renderHtml(params: Params.FetchTrips, trips: List[Trip])(implicit config: Config): HtmlDoc = {
+
+    val navigation = if(trips.isEmpty) P else {
+      val previousLink = A(href = buildPreviousLink(params, trips))("previous")
+      val nextLink = A(href = buildPreviousLink(params, trips))("next")
+      P(previousLink, " - ", nextLink)
+    }
+
     HtmlDoc {
       Html(
         Head(
@@ -58,12 +74,7 @@ object Trips {
                 )
               )
             )
-          } :+
-            P(
-              A(href = previousLink(params, trips))("previous"),
-              " # ",
-              A(href = nextLink(params, trips))("next")
-            )):_*
+          } :+ navigation):_*
         )
       )
     }
@@ -80,12 +91,12 @@ object Trips {
       json = params.json
     )
 
-  private def previousLink(params: Params.FetchTrips, trips: List[Trip])(implicit config: Config): HttpUrl = {
+  private def buildPreviousLink(params: Params.FetchTrips, trips: List[Trip])(implicit config: Config): HttpUrl = {
     val at = trips.headOption.flatMap(_.departure)
     link(params, at, previous = true)
   }
 
-  private def nextLink(params: Params.FetchTrips, trips: List[Trip])(implicit config: Config): HttpUrl = {
+  private def buildNextLink(params: Params.FetchTrips, trips: List[Trip])(implicit config: Config): HttpUrl = {
     val at = trips.lastOption.flatMap(_.departure)
     link(params, at, previous = false)
   }

@@ -90,14 +90,17 @@ object Storage {
       }
     }
 
-    scalaz.Scalaz.unfold((params.at, l)) {
-      case (at, l) =>
-        if(l > 0) {
-          val trips = f(at, l)
+    scalaz.Scalaz.unfold((params.at, l, 3)) {
+      case (at, todo, counter) =>
+        if(todo <= 0 || counter <= 0) {
+          None
+        } else {
+          val trips = f(at, todo)
           val distinctTrips = trips.distinct
-          val remaining = l - distinctTrips.size
-          Option((distinctTrips, (nextAt(trips, at), remaining)))
-        } else None
+          val remaining = todo - distinctTrips.size
+          val retries = if(trips.isEmpty) counter - 1 else counter
+          Option((distinctTrips, (nextAt(trips, at), remaining, retries)))
+        }
     }.toList.flatten
   }
 

@@ -33,6 +33,8 @@ object Subset {
 
     json.id = subset.id
 
+    json.name = subset.name
+
     subset.updatedDate.foreach { date =>
       json.updatedDate = misc.DateTime.format(date)
     }
@@ -107,5 +109,3 @@ object Trip {
     json.as[Json]
   }
 }
-
-case class Query(ref: String, vs: String, ve: String, limit: Option[Int], previous: Boolean)

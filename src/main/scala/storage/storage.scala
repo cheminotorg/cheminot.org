@@ -2,6 +2,7 @@ package org.cheminot.storage
 
 import org.joda.time.DateTime
 import rapture.json._, jsonBackends.jawn._
+import org.cheminot.Params
 import org.cheminot.misc
 
 object Storage {
@@ -35,12 +36,12 @@ object Storage {
     } getOrElse sys.error("Unable to fetch meta")
   }
 
-  private def fetchTrips(ref: String, vs: String, ve: String, at: DateTime, limit: Option[Int], filter: DateTime => String, nextAt: (Seq[Trip], DateTime) => DateTime, sortBy: String): List[Trip] = {
+  private def fetchTrips(params: Params.FetchTrips, filter: DateTime => String, nextAt: (Seq[Trip], DateTime) => DateTime, sortBy: String): List[Trip] = {
 
-    val l = if(limit.exists(_ > FETCH_TRIPS_MAX_LIMIT)) {
+    val l = if(params.limit.exists(_ > FETCH_TRIPS_MAX_LIMIT)) {
       FETCH_TRIPS_MAX_LIMIT
     } else {
-      limit getOrElse FETCH_TRIPS_DEFAULT_LIMIT
+      params.limit getOrElse FETCH_TRIPS_DEFAULT_LIMIT
     }
 
     def f(at: DateTime, limit: Int): List[Trip] = {
@@ -50,18 +51,18 @@ object Storage {
       val end = at.withTimeAtStartOfDay.plusDays(1).getMillis / 1000
 
       val query = s"""
-      MATCH path=(trip:Trip)-[:GOES_TO*1..]->(a:Stop { stationid: '${vs}' })-[stoptimes:GOES_TO*1..]->(b:Stop { stationid: '${ve}' })
+      MATCH path=(trip:Trip)-[:GOES_TO*1..]->(a:Stop { stationid: '${params.vs}' })-[stoptimes:GOES_TO*1..]->(b:Stop { stationid: '${params.ve}' })
       WITH trip, tail(nodes(path)) AS stops, relationships(path) AS allstoptimes, stoptimes
       OPTIONAL MATCH (trip)-[:SCHEDULED_AT*0..]->(c:Calendar { serviceid: trip.serviceid })
       WITH trip, stops, allstoptimes, head(stoptimes) AS vs
-      WHERE ${filter(at)}
+      WHERE ${filter(params.at)}
         AND ((c IS NOT NULL AND (c.${day} = true AND c.startdate <= ${start} AND c.enddate > ${end} AND NOT (trip)-[:OFF]->(:CalendarDate { date: ${start} })))
         OR (trip)-[:ON]->(:CalendarDate { date: ${start} }))
       RETURN distinct(trip), stops, allstoptimes, vs
       ORDER BY $sortBy
-      LIMIT $limit;
+      LIMIT $l;
       """
-println(query)
+
       val trips = fetch(Statement(query)) { row =>
         val tripId = row(0).tripid.as[String]
         val serviceId = row(0).serviceid.as[String]
@@ -83,13 +84,13 @@ println(query)
         case (tripId, serviceId, goesTo, stops) =>
           val tripStations = stops.flatMap(s => stations.get(s.stationid).toList)
           val stopTimes = goesTo.zip(tripStations).dropWhile {
-            case (_, s) => s.stationid != vs
+            case (_, s) => s.stationid != params.vs
           }
           Trip(tripId, serviceId, stopTimes)
       }
     }
 
-    scalaz.Scalaz.unfold((at, l)) {
+    scalaz.Scalaz.unfold((params.at, l)) {
       case (at, l) =>
         if(l > 0) {
           val trips = f(at, l)
@@ -100,10 +101,10 @@ println(query)
     }.toList.flatten
   }
 
-  def fetchPreviousTrips(ref: String, vs: String, ve: String, at: DateTime, limit: Option[Int]): List[Trip] = {
-    val departure = misc.DateTime.forPattern("HHmm").print(at).toInt
+  def fetchPreviousTrips(params: Params.FetchTrips): List[Trip] = {
+    val departure = misc.DateTime.forPattern("HHmm").print(params.at).toInt
     val filter = (t: DateTime) => {
-      val departure = misc.DateTime.forPattern("HHmm").print(t).toInt
+      val departure = misc.DateTime.forPattern("HHmm").print(params.at).toInt
       s"vs.departure <= $departure"
     }
     val nextAt = (trips: Seq[Trip], t: DateTime) => {
@@ -117,13 +118,13 @@ println(query)
           departure.minusMinutes(1)
         }) getOrElse sys.error("Unable to compute nextAt")
       } else {
-        at.minusDays(1).withTime(23, 59, 59, 999)
+        params.at.minusDays(1).withTime(23, 59, 59, 999)
       }
     }
-    fetchTrips(ref, vs, ve, at, limit, filter = filter, nextAt = nextAt, sortBy = "-vs.departure").reverse
+    fetchTrips(params, filter = filter, nextAt = nextAt, sortBy = "-vs.departure").reverse
   }
 
-  def fetchNextTrips(ref: String, vs: String, ve: String, at: DateTime, limit: Option[Int]): List[Trip] = {
+  def fetchNextTrips(params: Params.FetchTrips): List[Trip] = {
     val filter = (t: DateTime) => {
       val departure = misc.DateTime.forPattern("HHmm").print(t).toInt
       s"vs.departure >= $departure"
@@ -139,10 +140,10 @@ println(query)
           departure.plusMinutes(1)
         }) getOrElse sys.error("Unable to compute nextAt")
       } else {
-        at.plusDays(1).withTimeAtStartOfDay
+        params.at.plusDays(1).withTimeAtStartOfDay
       }
     }
-    fetchTrips(ref, vs, ve, at, limit, filter = filter, nextAt = nextAt, sortBy = "vs.departure")
+    fetchTrips(params, filter = filter, nextAt = nextAt, sortBy = "vs.departure")
   }
 
   def fetchStationsById(stationIds: Seq[String]): List[Station] = {

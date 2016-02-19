@@ -23,7 +23,8 @@ object Reverse {
       ve: Option[String] = None,
       at: Option[DateTime] = None,
       limit: Option[Int] = None,
-      previous: Boolean = false
+      previous: Boolean = false,
+      json: Boolean = false
     )(implicit config: Config): HttpUrl = {
       val params = buildParams(List(
         'ref -> ref,
@@ -33,7 +34,8 @@ object Reverse {
         'limit -> limit.map(_.toString),
         'previous -> Option(previous.toString))
       )
-      Http.parse(s"http://${config.domain}/api/trips/search").query(params)
+      val format = if (json) ".json" else ""
+      Http.parse(s"http://${config.domain}/api/trips/search${format}").query(params)
     }
   }
 }

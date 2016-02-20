@@ -36,6 +36,11 @@ object Storage {
     } getOrElse sys.error("Unable to fetch meta")
   }
 
+  private def isParentStation(stationId: String): Boolean = {
+    val query = s"match (s:ParentStation {parentstationid: '${stationId}'}) return s;"
+    fetch(Statement(query))(identity).headOption.isDefined
+  }
+
   private def fetchTrips(params: Params.FetchTrips, filter: DateTime => String, nextAt: (Seq[Trip], DateTime) => DateTime, sortBy: String): List[Trip] = {
 
     val l = if(params.limit.exists(_ > FETCH_TRIPS_MAX_LIMIT)) {
@@ -49,9 +54,10 @@ object Storage {
       val day = misc.DateTime.forPattern("EEEE").print(at).toLowerCase
       val start = at.withTimeAtStartOfDay.getMillis / 1000
       val end = at.withTimeAtStartOfDay.plusDays(1).getMillis / 1000
-
+      val vsfield = if (isParentStation(params.vs)) "parentid" else "stationid"
+      val vefield = if (isParentStation(params.ve)) "parentid" else "stationid"
       val query = s"""
-      MATCH path=(trip:Trip)-[:GOES_TO*1..]->(a:Stop { stationid: '${params.vs}' })-[stoptimes:GOES_TO*1..]->(b:Stop { stationid: '${params.ve}' })
+      MATCH path=(trip:Trip)-[:GOES_TO*1..]->(a:Stop { ${vsfield}: '${params.vs}' })-[stoptimes:GOES_TO*1..]->(b:Stop { ${vefield}: '${params.ve}' })
       WITH trip, tail(nodes(path)) AS stops, relationships(path) AS allstoptimes, stoptimes
       OPTIONAL MATCH (trip)-[:SCHEDULED_AT*0..]->(c:Calendar { serviceid: trip.serviceid })
       WITH trip, stops, allstoptimes, head(stoptimes) AS vs
@@ -60,7 +66,7 @@ object Storage {
         OR (trip)-[:ON]->(:CalendarDate { date: ${start} }))
       RETURN distinct(trip), stops, allstoptimes, vs
       ORDER BY $sortBy
-      LIMIT $l;
+      LIMIT ${l * 2};
       """
 
       val trips = fetch(Statement(query)) { row =>
@@ -101,7 +107,7 @@ object Storage {
           val retries = if(trips.isEmpty) counter - 1 else counter
           Option((distinctTrips, (nextAt(trips, at), remaining, retries)))
         }
-    }.toList.flatten
+    }.toList.flatten.take(l)
   }
 
   def fetchPreviousTrips(params: Params.FetchTrips): List[Trip] = {

@@ -1,6 +1,5 @@
 package org.cheminot.api
 
-import org.joda.time.format.ISODateTimeFormat
 import org.joda.time.DateTime
 import rapture.json._, jsonBackends.jawn._
 import org.cheminot.storage

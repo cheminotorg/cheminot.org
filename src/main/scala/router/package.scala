@@ -1,7 +1,6 @@
 package org.cheminot
 
 import org.joda.time.DateTime
-import org.joda.time.format.ISODateTimeFormat
 import rapture.http._
 import rapture.mime.MimeTypes
 import rapture.mime.MimeTypes.MimeType

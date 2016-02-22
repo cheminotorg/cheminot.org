@@ -1,7 +1,7 @@
 package org.cheminot.api
 
 import org.joda.time.DateTime
-import rapture.json._, jsonBackends.jackson._
+import rapture.json._, jsonBackends.jawn._
 import rapture.html._, htmlSyntax._
 import rapture.codec._
 import org.cheminot.Config

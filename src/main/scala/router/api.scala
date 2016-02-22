@@ -11,7 +11,6 @@ import org.cheminot.storage
 
 object Api {
 
-  val refParam = getParam('ref)
   val atParam = getParam('at)
   val vsParam = getParam('vs)
   val veParam = getParam('ve)
@@ -44,21 +43,21 @@ object Api {
 
   private def handleFetchTrips(fetch: Params.FetchTrips => List[api.Trip])(implicit config: Config): PartialFunction[HttpRequest, Response] = {
 
-    case req@Path(^ / "api" / "trips" / "search.json") ~ refParam(ref) ~ vsParam(vs) ~ veParam(ve) ~ atParam(AsDateTime(at)) =>
+    case req@Path(^ / "api" / "trips" / "search.json") ~ vsParam(vs) ~ veParam(ve) ~ atParam(AsDateTime(at)) =>
       val limit = req.param('limit).map(_.toInt)
       val previous = req.param('previous).map(_.toBoolean) getOrElse false
-      val params = Params.FetchTrips(ref, vs, ve, at, limit, previous, json = true)
+      val params = Params.FetchTrips(vs, ve, at, limit, previous, json = true)
       api.Trips.renderJson(params, fetch(params))
 
-    case req@Path(^ / "api" / "trips" / "search") ~ refParam(ref) ~ vsParam(vs) ~ veParam(ve) ~ atParam(AsDateTime(at)) =>
+    case req@Path(^ / "api" / "trips" / "search") ~ vsParam(vs) ~ veParam(ve) ~ atParam(AsDateTime(at)) =>
       val limit = req.param('limit).map(_.toInt)
       val previous = req.param('previous).map(_.toBoolean) getOrElse false
       ContentNegotiation(req) {
         case MimeTypes.`application/json` =>
-          val params = Params.FetchTrips(ref, vs, ve, at, limit, previous, json = true)
+          val params = Params.FetchTrips(vs, ve, at, limit, previous, json = true)
           api.Trips.renderJson(params, fetch(params))
         case _ =>
-          val params = Params.FetchTrips(ref, vs, ve, at, limit, previous)
+          val params = Params.FetchTrips(vs, ve, at, limit, previous)
           api.Trips.renderHtml(params, fetch(params))
       }
   }

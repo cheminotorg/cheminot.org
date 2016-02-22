@@ -54,10 +54,6 @@ object Entry {
               Fieldset(
                 Legend("Trips"),
                 P(
-                  Label(`for` = 'name)("ref"),
-                  Input(typ="text", name='ref, value=apiEntry.ref, required=true)
-                ),
-                P(
                   Label(`for` = 'departure)("departure"),
                   Input(typ = "text", name='vs, required=true)
                 ),

@@ -18,7 +18,6 @@ object Reverse {
   object Api {
 
     def search(
-      ref: Option[String] = None,
       vs: Option[String] = None,
       ve: Option[String] = None,
       at: Option[DateTime] = None,
@@ -27,7 +26,6 @@ object Reverse {
       json: Boolean = false
     )(implicit config: Config): HttpUrl = {
       val params = buildParams(List(
-        'ref -> ref,
         'vs -> vs,
         've -> ve,
         'at -> at.map(misc.DateTime.format),

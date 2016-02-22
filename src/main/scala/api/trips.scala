@@ -82,7 +82,6 @@ object Trips {
 
   private def link(params: Params.FetchTrips, at: Option[DateTime], previous: Boolean)(implicit config: Config): HttpUrl =
     router.Reverse.Api.search(
-      ref = Option(params.ref),
       vs = Option(params.vs),
       ve = Option(params.ve),
       at = at,

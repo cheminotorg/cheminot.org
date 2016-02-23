@@ -1,9 +1,9 @@
-package org.cheminot.api
+package org.cheminot.web.api
 
 import org.joda.time.DateTime
 import rapture.json._, jsonBackends.jawn._
-import org.cheminot.storage
-import org.cheminot.misc
+import org.cheminot.web.storage
+import org.cheminot.web.misc
 
 case class ApiEntry(ref: String, buildDate: DateTime, subsets: Seq[Subset])
 

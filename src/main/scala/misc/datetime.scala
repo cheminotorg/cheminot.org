@@ -1,4 +1,4 @@
-package org.cheminot.misc
+package org.cheminot.web.misc
 
 import java.util.Locale
 import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}

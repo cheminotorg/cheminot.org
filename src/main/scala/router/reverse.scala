@@ -1,9 +1,9 @@
-package org.cheminot.router
+package org.cheminot.web.router
 
 import org.joda.time.DateTime
 import rapture.net._
-import org.cheminot.misc
-import org.cheminot.Config
+import org.cheminot.web.misc
+import org.cheminot.web.Config
 
 object Reverse {
 

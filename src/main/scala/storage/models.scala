@@ -1,9 +1,9 @@
-package org.cheminot.storage
+package org.cheminot.web.storage
 
 import org.joda.time.DateTime
 import rapture.core._
 import rapture.json._
-import org.cheminot.misc
+import org.cheminot.web.misc
 
 case class Meta(metaid: String, bundledate: DateTime, subsets: Seq[MetaSubset])
 

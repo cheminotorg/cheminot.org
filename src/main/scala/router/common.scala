@@ -1,8 +1,8 @@
-package org.cheminot.router
+package org.cheminot.web.router
 
-import scala.util.{Try, Success, Failure}
+import scala.util.{ Try, Success, Failure }
 import rapture.http._
-import org.cheminot.pages
+import org.cheminot.web.pages
 
 object Common {
 

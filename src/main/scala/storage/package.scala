@@ -1,4 +1,4 @@
-package org.cheminot
+package org.cheminot.web
 
 import scalaz._
 import rapture.json._

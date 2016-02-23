@@ -1,6 +1,6 @@
-package org
+package org.cheminot
 
-package object cheminot {
+package object web {
 
   import scalaz._
 

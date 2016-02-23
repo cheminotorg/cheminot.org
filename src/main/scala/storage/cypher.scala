@@ -1,4 +1,4 @@
-package org.cheminot.storage
+package org.cheminot.web.storage
 
 import scalaz._
 import rapture.json._, jsonBackends.jawn._

@@ -1,4 +1,4 @@
-package org.cheminot
+package org.cheminot.web
 
 import org.joda.time.DateTime
 

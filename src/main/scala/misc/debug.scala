@@ -1,4 +1,4 @@
-package org.cheminot.misc
+package org.cheminot.web.misc
 
 object Debug {
 

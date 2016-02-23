@@ -1,4 +1,4 @@
-package org.cheminot
+package org.cheminot.web
 
 import rapture.core._
 import rapture.cli._

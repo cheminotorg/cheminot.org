@@ -1,4 +1,4 @@
-package org.cheminot.pages
+package org.cheminot.web.pages
 
 import rapture.html._, htmlSyntax._
 

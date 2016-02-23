@@ -1,13 +1,11 @@
-package org.cheminot.router
+package org.cheminot.web.router
 
 import rapture.uri._
 import rapture.http._, RequestExtractors._
 import rapture.codec._
 import rapture.mime._
 import encodings.`UTF-8`._
-import org.cheminot.{ Config, Params }
-import org.cheminot.api
-import org.cheminot.storage
+import org.cheminot.web.{ api, storage, Config, Params }
 
 object Api {
 

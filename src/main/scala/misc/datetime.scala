@@ -19,7 +19,10 @@ object DateTime {
     isoFormatter.print(dateTime)
 
   def parse(s: String): Option[JDateTime] =
-    scala.util.Try(isoFormatter.parseDateTime(s)).toOption
+    scala.util.Try(parseOrFail(s)).toOption
+
+  def parseOrFail(s: String): JDateTime =
+    isoFormatter.parseDateTime(s)
 
   def fromSecs(t: Long): JDateTime =
     new JDateTime(t * 1000).withZone(parisZone)

@@ -24,7 +24,8 @@ lazy val root = (project in file(".")).
   settings(name := "web").
   settings(cheminotorgSettings:_*).
   settings(libraryDependencies += "com.propensive" %% "rapture" % "2.1.0-SNAPSHOT" exclude("com.propensive", "rapture-json-lift_2.11")).
-  settings(libraryDependencies += "joda-time" % "joda-time" % "2.9.1")
+  settings(libraryDependencies += "joda-time" % "joda-time" % "2.9.1").
+  settings(libraryDependencies += "org.jsoup" % "jsoup" % "1.8.3")
 
 resolvers ++= Seq(
   Resolver.sonatypeRepo("snapshots"),

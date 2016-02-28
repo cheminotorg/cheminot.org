@@ -27,7 +27,8 @@ lazy val root = (project in file(".")).
   settings(libraryDependencies += "com.propensive" %% "rapture-http-jetty" % "2.0.0-M5").
   settings(libraryDependencies += "joda-time" % "joda-time" % "2.9.1").
   settings(libraryDependencies += "org.joda" % "joda-convert" % "1.8").
-  settings(libraryDependencies += "org.jsoup" % "jsoup" % "1.8.3")
+  settings(libraryDependencies += "org.jsoup" % "jsoup" % "1.8.3").
+  settings(com.github.retronym.SbtOneJar.oneJarSettings: _*)
 
 resolvers ++= Seq(
   Resolver.sonatypeRepo("snapshots"),

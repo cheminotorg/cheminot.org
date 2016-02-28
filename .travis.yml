@@ -14,5 +14,6 @@ before_install:
     - docker ps -a
 
 script:
+  - chmod a+x ./docker/test/changepassword.sh
   - ./docker/test/changepassword.sh
   - sbt test

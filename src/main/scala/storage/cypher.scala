@@ -47,6 +47,6 @@ object Cypher {
   }
 
   def withAuthentication[A](f: HttpBasicAuthentication => A): A = {
-    f(new HttpBasicAuthentication(Option("neo4j" -> "poihon")))
+    f(new HttpBasicAuthentication(Option("neo4j" -> "cheminotorg")))
   }
 }

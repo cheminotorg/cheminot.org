@@ -12,6 +12,7 @@ before_install:
     - docker pull cheminotorg/dbtest:latest
     - docker run -d -p 127.0.0.1:7474:7474 cheminotorg/dbtest
     - docker ps -a
+    - sleep 10
 
 script:
   - chmod a+x ./docker/test/changepassword.sh

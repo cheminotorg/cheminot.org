@@ -1,7 +1,6 @@
 language: scala
 
-scala:
-  2.11.7
+scala: 2.11.7
 
 sudo: required
 
@@ -9,12 +8,16 @@ services:
   - docker
 
 before_install:
-    - docker pull cheminotorg/dbtest:latest
-    - docker run -d -p 127.0.0.1:7474:7474 cheminotorg/dbtest
-    - docker ps -a
-    - sleep 10
+  - openssl aes-256-cbc -K $encrypted_bd976e462827_key -iv $encrypted_bd976e462827_iv  -in ./dist/.dropbox_uploader.enc -out dropbox_uploader -d
+  - docker pull cheminotorg/dbtest:latest
+  - docker run -d -p 127.0.0.1:7474:7474 cheminotorg/dbtest
+  - docker ps -a
+  - sleep 10
 
 script:
   - chmod a+x ./docker/test/changepassword.sh
   - ./docker/test/changepassword.sh
   - sbt test
+  - sbt one-jar
+  - chmod a+x ./dist/upload.sh
+  - dist/upload.sh

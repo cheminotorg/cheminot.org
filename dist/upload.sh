@@ -2,4 +2,8 @@
 
 chmod a+x ./dist/dropbox_uploader.sh
 
-./dist/dropbox_uploader.sh -f ./dropbox_uploader -p upload target/scala-2.11/web_2.11-0.1.0-one-jar.jar cheminotorg.jar
+if [ -n "${TRAVIS_TAG}" ]; then
+    ./dist/dropbox_uploader.sh -f ./dropbox_uploader -p upload target/*-one-jar.jar cheminotorg-${TRAVIS_TAG}.jar
+else
+    ./dist/dropbox_uploader.sh -f ./dropbox_uploader -p upload target/*-one-jar.jar cheminotorg-test.jar
+fi

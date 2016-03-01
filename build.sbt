@@ -1,7 +1,9 @@
+enablePlugins(GitVersioning, GitBranchPrompt)
+
 lazy val buildSettings = Seq(
   organization := "org.cheminot",
-  version := "0.1.0",
-  scalaVersion := "2.11.7"
+  scalaVersion := "2.11.7",
+  crossPaths := false
 )
 
 lazy val commonSettings = Seq(
@@ -21,7 +23,7 @@ lazy val cheminotorgSettings = buildSettings ++ commonSettings
 
 lazy val root = (project in file(".")).
   settings(commonSettings: _*).
-  settings(name := "web").
+  settings(name := "cheminotorg").
   settings(cheminotorgSettings:_*).
   settings(libraryDependencies += "com.propensive" %% "rapture" % "2.0.0-M5").
   settings(libraryDependencies += "com.propensive" %% "rapture-http-jetty" % "2.0.0-M5").
@@ -29,6 +31,11 @@ lazy val root = (project in file(".")).
   settings(libraryDependencies += "org.joda" % "joda-convert" % "1.8").
   settings(libraryDependencies += "org.jsoup" % "jsoup" % "1.8.3").
   settings(com.github.retronym.SbtOneJar.oneJarSettings: _*)
+
+// versioning
+git.baseVersion := "0.1.0"
+git.useGitDescribe := true
+git.formattedShaVersion := git.gitHeadCommit.value map { sha => s"$sha".take(7) }
 
 resolvers ++= Seq(
   Resolver.sonatypeRepo("snapshots"),

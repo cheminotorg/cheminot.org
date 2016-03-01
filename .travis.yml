@@ -21,3 +21,12 @@ script:
   - sbt one-jar
   - chmod a+x ./dist/upload.sh
   - dist/upload.sh
+
+deploy:
+  provider: releases
+  api_key:
+    secure: VZ2aXVwwsEm/XQrrL2WewNewSYrjYhqlzc7hOg1lr3ak+2irJ/PpZbOZ0TPjqETlP6HKMwHBRWWnNlOJXggQ3bcUE1Yop3BasOIuJz212pwdkM6Dupi6G9iRDz9TnZ9fmXrqv8y8dJEd4Lw4fzL9vVnixtgaaDSdG+AWs7xg5yE=
+  file: target/*one-jar.jar
+  on:
+    repo: cheminotorg/cheminot.org
+    tag: true

@@ -25,8 +25,8 @@ lazy val root = (project in file(".")).
   settings(commonSettings: _*).
   settings(name := "cheminotorg").
   settings(cheminotorgSettings:_*).
-  settings(libraryDependencies += "com.propensive" %% "rapture" % "2.0.0-M5").
-  settings(libraryDependencies += "com.propensive" %% "rapture-http-jetty" % "2.0.0-M5").
+  settings(libraryDependencies += "com.propensive" %% "rapture" % "2.0.0-SNAPSHOTS").
+  settings(libraryDependencies += "com.propensive" %% "rapture-http-jetty" % "2.0.0-SNAPSHOTS").
   settings(libraryDependencies += "joda-time" % "joda-time" % "2.9.1").
   settings(libraryDependencies += "org.joda" % "joda-convert" % "1.8").
   settings(libraryDependencies += "org.jsoup" % "jsoup" % "1.8.3").
@@ -38,6 +38,7 @@ git.useGitDescribe := true
 git.formattedShaVersion := git.gitHeadCommit.value map { sha => s"$sha".take(7) }
 
 resolvers ++= Seq(
+  Resolver.file("local", file(Path.userHome.absolutePath + "/.ivy2/local"))(Resolver.ivyStylePatterns),
   Resolver.sonatypeRepo("snapshots"),
   Resolver.typesafeRepo("releases")
 )

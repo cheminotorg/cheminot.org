@@ -4,6 +4,7 @@ import rapture.uri._
 import rapture.http._, RequestExtractors._
 import rapture.codec._
 import rapture.mime._
+import rapture.json._, jsonBackends.jawn._
 import encodings.`UTF-8`._
 import org.cheminot.web.{ api, storage, Config, Params }
 
@@ -24,6 +25,12 @@ object Api {
       trips.map(api.Trip(_, params.at)).sortBy(_.stopTimes.head.arrival.getMillis)
     }
 
+  private def formatJson(json: Json): String = {
+    import rapture.json.formatters.humanReadable._
+    import rapture.core.decimalFormats.exact._
+    Json.format(json)
+  }
+
   private def handleApiEntry(implicit config: Config): PartialFunction[HttpRequest, Response] = {
     case req@Path(^ / "api") =>
       val apiEntry = api.ApiEntry(storage.Storage.fetchMeta())
@@ -36,7 +43,7 @@ object Api {
 
     case req@Path(^ / "api.json") =>
       val apiEntry = api.ApiEntry(storage.Storage.fetchMeta())
-      api.Entry.renderJson(apiEntry)
+      formatJson(api.Entry.renderJson(apiEntry))
   }
 
   private def handleFetchTrips(fetch: Params.FetchTrips => List[api.Trip])(implicit config: Config): PartialFunction[HttpRequest, Response] = {
@@ -45,7 +52,7 @@ object Api {
       val limit = req.param('limit).map(_.toInt)
       val previous = req.param('previous).map(_.toBoolean) getOrElse false
       val params = Params.FetchTrips(vs, ve, at, limit, previous, json = true)
-      api.Trips.renderJson(params, fetch(params))
+      api.Trips.renderJson(params, fetch(params)).toString
 
     case req@Path(^ / "api" / "trips" / "search") ~ vsParam(vs) ~ veParam(ve) ~ atParam(AsDateTime(at)) =>
       val limit = req.param('limit).map(_.toInt)
@@ -53,7 +60,7 @@ object Api {
       ContentNegotiation(req) {
         case MimeTypes.`application/json` =>
           val params = Params.FetchTrips(vs, ve, at, limit, previous, json = true)
-          api.Trips.renderJson(params, fetch(params))
+          formatJson(api.Trips.renderJson(params, fetch(params)))
         case _ =>
           val params = Params.FetchTrips(vs, ve, at, limit, previous)
           api.Trips.renderHtml(params, fetch(params))

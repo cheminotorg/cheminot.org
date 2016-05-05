@@ -4,6 +4,11 @@ import org.jsoup._
 import org.joda.time.DateTime
 import scala.collection.JavaConverters._
 import org.scalatest._
+import rapture.json._, jsonBackends.jawn._
+import rapture.io._
+import rapture.fs._
+import rapture.uri._
+import rapture.codec._, encodings.`UTF-8`._
 import org.cheminot.web.storage
 import org.cheminot.web.api
 import org.cheminot.web.misc
@@ -19,12 +24,49 @@ object Stations {
   lazy val paris = "PARISXX"
 }
 
-object Trip {
+class StorageSpec extends CheminotSpec {
+
+  behavior of "fetchNextTrips"
+
+  it should "find next 10 trips from Chartres to Paris Montparnasse" in {
+    val at = misc.DateTime.parseOrFail("2016-03-02T04:00:00.000+01:00")
+    val params = Params.FetchTrips(
+      vs = Stations.chartres,
+      ve = Stations.paris,
+      at = at,
+      limit = Option(20),
+      previous = false
+    )
+    val trips = Storage.fetchNextTrips(params).map(api.Trip.apply(_, at))
+    val testTrips = Trips.fromData("test1.json")
+    assert(trips.size === testTrips.size)
+    trips.zip(testTrips).foreach {
+      case (a, b) => assert(a === b)
+    }
+  }
+}
+
+object Trips {
+
+  lazy val dir = {
+    val currentDir = new java.io.File(".")
+    val path = "file:/" / currentDir.getAbsolutePath / ".." / ".." / ".." / "data" / "test"
+    println(path)
+    File.parse(path.toString)
+  }
+
+  def fromData(name: String): List[api.Trip] = {
+    val file = dir / name
+    val json = Json.parse(file.slurp[Char])
+    json.results.as[List[Json]].map(api.Trip.fromJson)
+  }
+}
+
+object CaptainTrain {
 
   private def fetchTrips(vs: String, ve: String, date: DateTime): Seq[Seq[(String, DateTime)]] = {
     val datestr = misc.DateTime.forPattern("yyyy-MM-dd").print(date)
     val url = s"https://horaires.captaintrain.com/trains/${vs}/${ve}?date=${datestr}"
-    println(url)
     val doc = Jsoup.connect(url).get()
     val itineraries = doc.getElementById("itineraries").getElementsByClass("itinerary")
     itineraries.asScala.map { itinerary =>
@@ -67,22 +109,5 @@ object Trip {
         }) getOrElse false
       }
     }
-  }
-}
-
-class StorageSpec extends CheminotSpec {
-
-  behavior of "fetchNextTrips"
-
-  it should "find next 10 trips from Chartres to Paris Montparnasse" in {
-    val params = Params.FetchTrips(
-      vs = Stations.chartres,
-      ve = Stations.paris,
-      at = misc.DateTime.parseOrFail("2016-02-24T22:33:00.000+01:00"),
-      limit = Option(10),
-      previous = false
-    )
-    val trips = Storage.fetchNextTrips(params)
-    assert(Trip.matches("chartres", "paris", params.at)(trips))
   }
 }

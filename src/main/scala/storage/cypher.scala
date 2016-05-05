@@ -33,6 +33,8 @@ object Cypher {
 
       val response = endpoint.httpPost(body, headers = headers)
 
+      println(response.slurp[Char]);
+
       val json = Json.parse(response.slurp[Char])
 
       val errors = json.errors.as[List[Json]]

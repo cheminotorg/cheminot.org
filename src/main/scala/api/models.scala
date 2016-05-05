@@ -61,6 +61,17 @@ case class StopTime(
 
 object StopTime {
 
+  def fromJson(json: Json): StopTime = {
+    StopTime(
+      json.id.as[String],
+      json.name.as[String],
+      json.lat.as[Double],
+      json.lng.as[Double],
+      misc.DateTime.parseOrFail(json.arrival.as[String]),
+      json.departure.as[Option[String]].map(misc.DateTime.parseOrFail)
+    )
+  }
+
   def toJson(stopTime: StopTime): Json = {
     val json = JsonBuffer.empty
     json.id = stopTime.id
@@ -106,5 +117,10 @@ object Trip {
     json.serviceid = trip.serviceid
     json.stopTimes = trip.stopTimes.map(StopTime.toJson)
     json.as[Json]
+  }
+
+  def fromJson(json: Json): Trip = {
+    val stopTimes = json.stopTimes.as[List[Json]].map(StopTime.fromJson)
+    Trip(json.id.as[String], json.serviceid.as[String], stopTimes)
   }
 }

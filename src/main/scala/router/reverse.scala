@@ -32,8 +32,14 @@ object Reverse {
         'limit -> limit.map(_.toString),
         'previous -> Option(previous.toString))
       )
+      val queryString = params.foldLeft("") {
+        case ("", (param, value)) =>
+          s"?${param.name}=${value}"
+        case (acc, (param, value)) =>
+          s"${acc}&${param.name}=${value}"
+      }
       val format = if (json) ".json" else ""
-      Http.parse(s"http://${config.domain}/api/trips/search${format}").query(params)
+      Http.parse(s"http://${config.domain}/api/trips/search${format}${queryString}")
     }
   }
 }

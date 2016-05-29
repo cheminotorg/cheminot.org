@@ -1,6 +1,7 @@
 package org.cheminot.web.pages
 
 import rapture.html._, htmlSyntax._
+import rapture.uri._
 import rapture.dom._
 import rapture.codec._
 

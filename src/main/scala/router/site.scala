@@ -2,7 +2,7 @@ package org.cheminot.web.router
 
 import rapture.uri._
 import rapture.http._
-import RequestExtractors._
+import requestExtractors._
 import org.cheminot.web.pages
 
 object Site {

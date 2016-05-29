@@ -1,6 +1,7 @@
 package org.cheminot.web.storage
 
 import scalaz._
+import rapture.http.jsonInterop._
 import rapture.json._, jsonBackends.jawn._
 import rapture.uri._
 import rapture.net._
@@ -16,6 +17,7 @@ object Cypher {
 
   def commitn(statements: Seq[Statement]): Json = {
     withAuthentication { implicit basicAuthentication =>
+
       val s = statements.map { statement =>
         val st = Tag.unwrap(statement)
         json"""{ "statement": ${st} }"""
@@ -23,7 +25,7 @@ object Cypher {
 
       val body = json"""{ "statements": ${s} }"""
 
-      val endpoint: HttpUrl = uri"http://localhost:7474/db/data/transaction/commit"
+      val endpoint: HttpQuery = uri"http://localhost:7474/db/data/transaction/commit"
 
       val headers = Map(
         "X-stream" -> "true",
@@ -32,8 +34,6 @@ object Cypher {
       )
 
       val response = endpoint.httpPost(body, headers = headers)
-
-      println(response.slurp[Char]);
 
       val json = Json.parse(response.slurp[Char])
 

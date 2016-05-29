@@ -1,7 +1,7 @@
 package org.cheminot.web.router
 
 import rapture.uri._
-import rapture.http._, RequestExtractors._
+import rapture.http._, requestExtractors._
 import rapture.codec._
 import rapture.mime._
 import rapture.json._, jsonBackends.jawn._

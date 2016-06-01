@@ -38,7 +38,6 @@ git.useGitDescribe := true
 git.formattedShaVersion := git.gitHeadCommit.value map { sha => s"$sha".take(7) }
 
 resolvers ++= Seq(
-  Resolver.file("local", file(Path.userHome.absolutePath + "/.ivy2/local"))(Resolver.ivyStylePatterns),
-  Resolver.sonatypeRepo("snapshots"),
-  Resolver.typesafeRepo("releases")
+  Resolver.typesafeRepo("releases"),
+  Resolver.url("rapture", new URL("https://raw.githubusercontent.com/srenault/central/master"))(Resolver.ivyStylePatterns)
 )

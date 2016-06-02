@@ -40,8 +40,10 @@ class StorageSpec extends CheminotSpec {
     val trips = Storage.fetchNextTrips(params).map(api.Trip.apply(_, at))
     val testTrips = Trips.fromData("test1.json")
     assert(trips.size === testTrips.size)
+    var i = 0;
     trips.zip(testTrips).foreach {
-      case (a, b) => assert(a === b)
+      case (a, b) =>
+        assert(a === b)
     }
   }
 }

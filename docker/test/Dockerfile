@@ -48,7 +48,7 @@ RUN awk -F"=" -v value="false" 'BEGIN {OFS="=";} /org.neo4j.server.webserver.htt
 
 RUN rm neo4j-server.properties.bk
 
-RUN echo "org.neo4j.server.webserver.address=0.0.0.0" > neo4j-server.properties
+RUN echo "org.neo4j.server.webserver.address=0.0.0.0" >> neo4j-server.properties
 
 EXPOSE 7474
 

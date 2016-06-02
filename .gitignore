@@ -4,7 +4,6 @@ project/project
 project/target
 public/stylesheets
 public/javascripts
-data
 target
 *.log
 version

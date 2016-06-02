@@ -28,7 +28,7 @@ class StorageSpec extends CheminotSpec {
 
   behavior of "fetchNextTrips"
 
-  it should "find next 10 trips from Chartres to Paris Montparnasse" in {
+  it should "find next 20 trips from Chartres to Paris Montparnasse" in {
     val at = misc.DateTime.parseOrFail("2016-03-02T04:00:00.000+01:00")
     val params = Params.FetchTrips(
       vs = Stations.chartres,
@@ -50,8 +50,7 @@ object Trips {
 
   lazy val dir = {
     val currentDir = new java.io.File(".")
-    val path = "file:/" / currentDir.getAbsolutePath / ".." / ".." / ".." / "data" / "test"
-    println(path)
+    val path = "file:/" / currentDir.getAbsolutePath / "data" / "test"
     File.parse(path.toString)
   }
 

@@ -26,7 +26,7 @@ object Api {
     }
 
   private def formatJson(json: Json): String = {
-    import rapture.json.formatters.humanReadable._
+    import rapture.json.formatters.compact._
     import rapture.core.decimalFormats.exact._
     Json.format(json)
   }
@@ -36,7 +36,7 @@ object Api {
       val apiEntry = api.ApiEntry(storage.Storage.fetchMeta())
       ContentNegotiation(req) {
         case MimeTypes.`application/json` =>
-          api.Entry.renderJson(apiEntry)
+          formatJson(api.Entry.renderJson(apiEntry))
         case _ =>
           api.Entry.renderHtml(apiEntry)
       }
@@ -52,7 +52,7 @@ object Api {
       val limit = req.param('limit).map(_.toInt)
       val previous = req.param('previous).map(_.toBoolean) getOrElse false
       val params = Params.FetchTrips(vs, ve, at, limit, previous, json = true)
-      api.Trips.renderJson(params, fetch(params)).toString
+      formatJson(api.Trips.renderJson(params, fetch(params)))
 
     case req@Path(^ / "api" / "trips" / "search") ~ vsParam(vs) ~ veParam(ve) ~ atParam(AsDateTime(at)) =>
       val limit = req.param('limit).map(_.toInt)

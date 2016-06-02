@@ -11,20 +11,21 @@ object Trips {
   def renderJson(params: Params.FetchTrips, trips: List[Trip])(implicit config: Config): Json = {
 
     val previousLink = if (trips.isEmpty) json"null" else {
-      json"${buildPreviousLink(params, trips).toString}"
+      Json(buildPreviousLink(params, trips).toString)
     }
 
     val nextLink = if (trips.isEmpty) json"null" else {
-      json"${buildNextLink(params, trips).toString}"
+      Json(buildNextLink(params, trips).toString)
     }
 
-    json"""
-         {
-           "previous": $previousLink,
-           "next": $nextLink,
-           "results": ${trips.map(Trip.toJson)}
-         }
-        """
+    val results = Trip.toJsonSeq(trips)
+    val json = JsonBuffer.empty
+
+    json.previous = previousLink
+    json.next = nextLink
+    json.results = results
+
+    json.as[Json]
   }
 
   def renderHtml(params: Params.FetchTrips, trips: List[Trip])(implicit config: Config): HtmlDoc = {

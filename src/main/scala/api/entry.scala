@@ -11,13 +11,11 @@ import org.cheminot.web.misc
 object Entry {
 
   def renderJson(apiEntry: ApiEntry)(implicit config: Config): Json = {
-    json"""
-        {
-          "ref": ${apiEntry.ref},
-          "buildAt": ${misc.DateTime.format(apiEntry.buildDate)},
-          "subsets": ${apiEntry.subsets.map(Subset.toJson)}
-        }
-        """
+    val json = JsonBuffer.empty
+    json.ref = apiEntry.ref
+    json.buildAt = misc.DateTime.format(apiEntry.buildDate)
+    json.subsets = apiEntry.subsets.map(Subset.toJson)
+    json.as[Json]
   }
 
   def renderHtml(apiEntry: ApiEntry)(implicit config: Config): HtmlDoc = {

@@ -8,7 +8,7 @@ import org.cheminot.web.pages
 object Site {
 
   def handle: PartialFunction[HttpRequest, Response] = {
-    case Path(^) =>
+    case Path(^ / "") =>
       pages.Home()
   }
 }

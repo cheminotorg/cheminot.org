@@ -119,6 +119,10 @@ object Trip {
     json.as[Json]
   }
 
+  def toJsonSeq(trips: Seq[Trip]): Json = {
+    Json(trips.map(toJson))
+  }
+
   def fromJson(json: Json): Trip = {
     val stopTimes = json.stopTimes.as[List[Json]].map(StopTime.fromJson)
     Trip(json.id.as[String], json.serviceid.as[String], stopTimes)

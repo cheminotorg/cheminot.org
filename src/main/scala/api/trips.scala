@@ -3,7 +3,7 @@ package org.cheminot.web.api
 import org.joda.time.DateTime
 import rapture.json._, jsonBackends.jawn._
 import rapture.html._, htmlSyntax.{ Option => HOption, _ }
-import rapture.net.HttpUrl
+import rapture.net.HttpQuery
 import org.cheminot.web.{ misc, router, Params, Config }
 
 object Trips {
@@ -32,7 +32,7 @@ object Trips {
 
     val navigation = if(trips.isEmpty) P else {
       val previousLink = A(href = buildPreviousLink(params, trips))("previous")
-      val nextLink = A(href = buildPreviousLink(params, trips))("next")
+      val nextLink = A(href = buildNextLink(params, trips))("next")
       P(previousLink, " - ", nextLink)
     }
 
@@ -78,7 +78,7 @@ object Trips {
     }
   }
 
-  private def link(params: Params.FetchTrips, at: Option[DateTime], previous: Boolean)(implicit config: Config): HttpUrl =
+  private def link(params: Params.FetchTrips, at: Option[DateTime], previous: Boolean)(implicit config: Config): HttpQuery = {
     router.Reverse.Api.search(
       vs = Option(params.vs),
       ve = Option(params.ve),
@@ -87,13 +87,14 @@ object Trips {
       previous = previous,
       json = params.json
     )
+  }
 
-  private def buildPreviousLink(params: Params.FetchTrips, trips: List[Trip])(implicit config: Config): HttpUrl = {
+  private def buildPreviousLink(params: Params.FetchTrips, trips: List[Trip])(implicit config: Config): HttpQuery = {
     val at = trips.headOption.flatMap(_.departure)
     link(params, at, previous = true)
   }
 
-  private def buildNextLink(params: Params.FetchTrips, trips: List[Trip])(implicit config: Config): HttpUrl = {
+  private def buildNextLink(params: Params.FetchTrips, trips: List[Trip])(implicit config: Config): HttpQuery = {
     val at = trips.lastOption.flatMap(_.departure)
     link(params, at, previous = false)
   }

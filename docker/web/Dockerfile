@@ -14,6 +14,4 @@ WORKDIR /app
 
 RUN wget https://www.dropbox.com/s/arawxpbz6bwyhbx/cheminotorg-latest.jar?dl=1 -O cheminotorg.jar
 
-EXPOSE 8080
-
 CMD [ "java", "-jar", "cheminotorg.jar"]

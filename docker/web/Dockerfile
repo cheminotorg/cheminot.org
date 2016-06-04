@@ -14,4 +14,4 @@ WORKDIR /app
 
 RUN wget https://www.dropbox.com/s/arawxpbz6bwyhbx/cheminotorg-latest.jar?dl=1 -O cheminotorg.jar
 
-CMD [ "java", "-jar", "cheminotorg.jar"]
+ENTRYPOINT [ "java", "-jar", "cheminotorg.jar"]

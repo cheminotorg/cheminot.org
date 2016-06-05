@@ -25,7 +25,7 @@ lazy val root = (project in file(".")).
   settings(commonSettings: _*).
   settings(name := "cheminotorg").
   settings(cheminotorgSettings:_*).
-  settings(libraryDependencies += "com.propensive" %% "rapture" % "2.0.0-M7").
+  settings(libraryDependencies += "com.propensive" %% "rapture" % "2.0.0-M7" exclude ("javax.servlet", "servlet-api")).
   settings(libraryDependencies += "com.propensive" %% "rapture-http-jetty" % "2.0.0-M7").
   settings(libraryDependencies += "joda-time" % "joda-time" % "2.9.1").
   settings(libraryDependencies += "org.joda" % "joda-convert" % "1.8").

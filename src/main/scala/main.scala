@@ -10,6 +10,8 @@ object Main {
 
     implicit val config = Config(args)
 
+    println(s"Starting http server...")
+
     HttpServer.listen(config.port) {
       router.Common.onError {
         router.Api.handle orElse
@@ -17,6 +19,8 @@ object Main {
         router.Common.notFound
       }
     }
+
+    println(s"Listening on port ${config.port}")
   }
 }
 

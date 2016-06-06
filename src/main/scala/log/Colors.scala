@@ -21,5 +21,4 @@ object Colors {
   def white(str: String): String = if (isANSISupported) (WHITE + str + RESET) else str
   def black(str: String): String = if (isANSISupported) (BLACK + str + RESET) else str
   def yellow(str: String): String = if (isANSISupported) (YELLOW + str + RESET) else str
-
 }

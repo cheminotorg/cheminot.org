@@ -1,9 +1,3 @@
 logs
-node_modules
-project/project
-project/target
-public/stylesheets
-public/javascripts
+project
 target
-*.log
-version

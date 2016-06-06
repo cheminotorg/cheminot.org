@@ -30,6 +30,7 @@ lazy val root = (project in file(".")).
   settings(libraryDependencies += "joda-time" % "joda-time" % "2.9.1").
   settings(libraryDependencies += "org.joda" % "joda-convert" % "1.8").
   settings(libraryDependencies += "org.jsoup" % "jsoup" % "1.8.3").
+  settings(libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.0.13").
   settings(com.github.retronym.SbtOneJar.oneJarSettings: _*)
 
 // versioning

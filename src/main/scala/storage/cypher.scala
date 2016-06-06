@@ -10,8 +10,6 @@ import rapture.mime._
 
 object Cypher {
 
-  case class Row()
-
   def commit(statement: Statement): Json =
     commitn(Seq(statement))
 
@@ -40,7 +38,6 @@ object Cypher {
       val errors = json.errors.as[List[Json]]
 
       if(!errors.isEmpty) {
-        println(errors)
         sys.error(s"Unable to perform commitn \n: ${errors}")
       }
 

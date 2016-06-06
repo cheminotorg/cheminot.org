@@ -3,14 +3,13 @@ package org.cheminot.web
 import rapture.core._
 import rapture.cli._
 import rapture.http._, httpBackends.jetty._
+import org.cheminot.web.log.Logger
 
 object Main {
 
   def main(args: Array[String]): Unit = {
 
     implicit val config = Config(args)
-
-    println(s"Starting http server...")
 
     HttpServer.listen(config.port) {
       router.Common.onError {
@@ -20,7 +19,7 @@ object Main {
       }
     }
 
-    println(s"Listening on port ${config.port}")
+    Logger.info(s"Listening on port ${config.port}")
   }
 }
 

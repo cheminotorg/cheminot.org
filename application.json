@@ -1,0 +1,13 @@
+{
+  "mailgun": {
+    "from": "xxxx@xxx.xx",
+    "to": "xxxx@xxx.xx",
+    "endpoint": "http://xxxxx.xx",
+    "username": "xxxx",
+    "password": "xxxx"
+  },
+  "mailer": {
+    "delay": 0,
+    "period": 10
+  }
+}

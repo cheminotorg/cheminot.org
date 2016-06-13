@@ -33,6 +33,7 @@ lazy val root = (project in file(".")).
   settings(libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.0.13").
   settings(libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.4").
   settings(libraryDependencies += "org.scala-stm" %% "scala-stm" % "0.7").
+  settings(libraryDependencies += "org.cheminot" % "misc" % "0.1-SNAPSHOT").
   settings(com.github.retronym.SbtOneJar.oneJarSettings: _*)
 
 // versioning

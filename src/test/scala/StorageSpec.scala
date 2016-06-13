@@ -9,10 +9,8 @@ import rapture.io._
 import rapture.fs._
 import rapture.uri._
 import rapture.codec._, encodings.`UTF-8`._
-import org.cheminot.web.storage
-import org.cheminot.web.api
-import org.cheminot.web.misc
-import org.cheminot.web.Params
+import org.cheminot.misc
+import org.cheminot.web.{storage, api, Params}
 import org.cheminot.web.storage.Storage
 
 abstract class CheminotSpec extends FlatSpec
@@ -40,7 +38,6 @@ class StorageSpec extends CheminotSpec {
     val trips = Storage.fetchNextTrips(params).map(api.Trip.apply(_, at))
     val testTrips = Trips.fromData("test1.json")
     assert(trips.size === testTrips.size)
-    var i = 0;
     trips.zip(testTrips).foreach {
       case (a, b) =>
         assert(a === b)
@@ -51,9 +48,8 @@ class StorageSpec extends CheminotSpec {
 object Trips {
 
   lazy val dir = {
-    val currentDir = new java.io.File(".")
-    val path = "file:/" / currentDir.getAbsolutePath / "data" / "test"
-    File.parse(path.toString)
+    val currentDir = new java.io.File("")
+    File.parse(s"${currentDir.getAbsolutePath}/data/test")
   }
 
   def fromData(name: String): List[api.Trip] = {

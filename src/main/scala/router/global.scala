@@ -2,10 +2,8 @@ package org.cheminot.web.router
 
 import scala.util.{ Try, Success, Failure }
 import rapture.http._
-import org.cheminot.web.Config
-import org.cheminot.web.pages
-import org.cheminot.web.misc.Mailer
-import org.cheminot.web.log.Logger
+import org.cheminot.misc
+import org.cheminot.web.{Logger, Config, pages}
 
 object Global {
 
@@ -21,7 +19,7 @@ object Global {
           response
         case Failure(e) =>
           Logger.error(e.getMessage, e)
-          Mailer.sendException(e)(request, config.mailgun)
+          misc.mailer.Mailer.sendException(e)(request, config.mailgun)
           pages.InternalServerError()
       }
   }

@@ -3,7 +3,7 @@ package org.cheminot.web.storage
 import org.joda.time.DateTime
 import rapture.core._
 import rapture.json._
-import org.cheminot.web.misc
+import org.cheminot.misc
 
 case class Meta(metaid: String, bundledate: DateTime, subsets: Seq[MetaSubset])
 

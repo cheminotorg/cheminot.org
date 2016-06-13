@@ -2,7 +2,7 @@ package org.cheminot.web
 
 import rapture.core._
 import rapture.http._, httpBackends.jetty._
-import org.cheminot.web.log.Logger
+import org.cheminot.misc
 
 object Main {
 
@@ -10,7 +10,9 @@ object Main {
 
     implicit val config = Config(args)
 
-    misc.Mailer.init(config)
+    misc.mailer.Mailer.init(config, onError = {
+      case e: Exception => Logger.error(s"Unable to send email: ${e.getMessage}", e)
+    })
 
     HttpServer.listen(config.port) {
       router.Global.catchError {

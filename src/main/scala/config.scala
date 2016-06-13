@@ -9,14 +9,14 @@ import rapture.json._, jsonBackends.jawn._
 import rapture.fs._
 import rapture.io._
 import rapture.codec._, encodings.`UTF-8`._
-import org.cheminot.web.log.Logger
+import org.cheminot.misc
 
 case class Config(
   port: Int,
   domain: String,
-  mailgun: MailgunConfig,
-  mailer: MailerConfig
-)
+  mailgun: misc.mailer.MailgunConfig,
+  mailer: misc.mailer.MailerConfig
+) extends misc.mailer.Config
 
 object Config {
 
@@ -42,24 +42,11 @@ object Config {
   }
 }
 
-case class MailerConfig(
-  delay: FiniteDuration,
-  period: FiniteDuration
-)
-
-case class MailgunConfig(
-  from: String,
-  to: String,
-  endpoint: HttpQuery,
-  username: String,
-  password: String
-)
-
 case class ConfigFile(
   port: Option[Int],
   domain: Option[String],
-  mailgun: MailgunConfig,
-  mailer: MailerConfig
+  mailgun: misc.mailer.MailgunConfig,
+  mailer: misc.mailer.MailerConfig
 )
 
 object ConfigFile {
@@ -70,7 +57,6 @@ object ConfigFile {
   }
 
   def parse(path: FsUrl): ConfigFile = {
-    Logger.info(s"Reading application.json ($path)")
     val file = File.parse(path.toString)
     val json = Json.parse(file.slurp[Char])
     val mailgun = json.mailgun
@@ -78,14 +64,14 @@ object ConfigFile {
     ConfigFile(
       port = json.port.as[Option[Int]],
       domain = json.domain.as[Option[String]],
-      mailgun = MailgunConfig(
+      mailgun = misc.mailer.MailgunConfig(
         from = mailgun.from.as[String],
         to = mailgun.to.as[String],
         endpoint = HttpQuery.parse(mailgun.endpoint.as[String]),
         username = mailgun.username.as[String],
         password = mailgun.password.as[String]
       ),
-      mailer = MailerConfig(
+      mailer = misc.mailer.MailerConfig(
         delay = mailer.delay.as[Int] seconds,
         period = mailer.delay.as[Int] seconds
       )

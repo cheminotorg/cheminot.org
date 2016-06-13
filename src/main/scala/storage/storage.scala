@@ -3,7 +3,7 @@ package org.cheminot.web.storage
 import org.joda.time.DateTime
 import rapture.json._, jsonBackends.jawn._
 import org.cheminot.web.Params
-import org.cheminot.web.misc
+import org.cheminot.misc
 
 object Storage {
 

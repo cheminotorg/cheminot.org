@@ -4,6 +4,7 @@ import org.joda.time.DateTime
 import rapture.http._
 import rapture.mime.MimeTypes
 import rapture.mime.MimeTypes.MimeType
+import org.cheminot.misc
 
 package object router {
 

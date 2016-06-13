@@ -4,9 +4,8 @@ import org.joda.time.DateTime
 import rapture.json._, jsonBackends.jawn._
 import rapture.html._, htmlSyntax._
 import rapture.codec._
-import org.cheminot.web.Config
-import org.cheminot.web.router
-import org.cheminot.web.misc
+import org.cheminot.misc
+import org.cheminot.web.{Config, router}
 
 object Entry {
 

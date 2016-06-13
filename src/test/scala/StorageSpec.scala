@@ -47,10 +47,8 @@ class StorageSpec extends CheminotSpec {
 
 object Trips {
 
-  lazy val dir = {
-    val currentDir = new java.io.File("")
-    File.parse(s"${currentDir.getAbsolutePath}/data/test")
-  }
+  lazy val dir =
+    org.cheminot.misc.File.currentDir / "data" / "test"
 
   def fromData(name: String): List[api.Trip] = {
     val file = dir / name

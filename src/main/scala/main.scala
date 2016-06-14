@@ -11,7 +11,9 @@ object Main {
     implicit val config = Config(args)
 
     misc.mailer.Mailer.init(config, onError = {
-      case e: Exception => Logger.error(s"Unable to send email: ${e.getMessage}", e)
+      case e: Exception =>
+        println("on error")
+        Logger.error(s"Unable to send email: ${e.getMessage}", e)
     })
 
     HttpServer.listen(config.port) {

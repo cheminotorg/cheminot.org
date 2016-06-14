@@ -18,23 +18,17 @@ RUN apt-get -y update
 
 RUN apt-get -y install neo4j=2.3.1
 
-WORKDIR /db
+WORKDIR /data
 
 RUN wget 'https://www.dropbox.com/s/hger98hlxarq8fp/cheminotdb-test.tar.gz?dl=1' -O cheminotdb-test.tar.gz
 
 RUN tar -xvf cheminotdb-test.tar.gz
 
-RUN chmod u+rw -R /db/cheminot.db
+RUN chmod u+rw -R /data/cheminot.db
 
-RUN chown neo4j:adm -R /db/cheminot.db
+RUN chown neo4j:adm -R /data/cheminot.db
 
 WORKDIR /etc/neo4j/
-
-RUN cp neo4j-server.properties neo4j-server.properties.bk
-
-RUN awk -F"=" -v value="/db/cheminot.db" 'BEGIN {OFS="=";} /org.neo4j.server.database.location/{$2=value;print;next}1' neo4j-server.properties.bk > neo4j-server.properties
-
-RUN rm neo4j-server.properties.bk
 
 RUN cp neo4j-server.properties neo4j-server.properties.bk
 
@@ -50,6 +44,10 @@ RUN rm neo4j-server.properties.bk
 
 RUN echo "org.neo4j.server.webserver.address=0.0.0.0" >> neo4j-server.properties
 
-EXPOSE 7474
+WORKDIR /app
 
-CMD [ "/var/lib/neo4j/bin/neo4j", "console"]
+RUN wget https://raw.githubusercontent.com/cheminotorg/cheminot.db/master/scripts/neo4j -O neo4j
+
+RUN chmod +x ./neo4j
+
+ENTRYPOINT ["/app/neo4j"]

@@ -73,7 +73,7 @@ object ConfigFile {
       ),
       mailer = misc.mailer.MailerConfig(
         delay = mailer.delay.as[Int] seconds,
-        period = mailer.delay.as[Int] seconds
+        period = mailer.period.as[Int] seconds
       )
     )
   }

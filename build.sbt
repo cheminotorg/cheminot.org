@@ -30,7 +30,6 @@ lazy val root = (project in file(".")).
   settings(libraryDependencies += "joda-time" % "joda-time" % "2.9.1").
   settings(libraryDependencies += "org.joda" % "joda-convert" % "1.8").
   settings(libraryDependencies += "org.jsoup" % "jsoup" % "1.8.3").
-  settings(libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.0.13").
   settings(libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.4").
   settings(libraryDependencies += "org.scala-stm" %% "scala-stm" % "0.7").
   settings(libraryDependencies += "org.cheminot" % "misc" % "0.1-SNAPSHOT").

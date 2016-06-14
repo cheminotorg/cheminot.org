@@ -12,6 +12,6 @@ RUN apt-get -y install openjdk-7-jre
 
 WORKDIR /app
 
-RUN wget https://www.dropbox.com/s/arawxpbz6bwyhbx/cheminotorg-latest.jar?dl=1 -O cheminotorg.jar
+RUN wget https://www.dropbox.com/s/arawxpbz6bwyhbx/cheminotweb-latest.jar?dl=1 -O cheminotweb.jar
 
-ENTRYPOINT [ "java", "-jar", "cheminotorg.jar"]
+ENTRYPOINT [ "java", "-jar", "cheminotweb.jar"]

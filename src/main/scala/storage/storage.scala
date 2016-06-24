@@ -4,6 +4,7 @@ import org.joda.time.DateTime
 import rapture.json._, jsonBackends.jawn._
 import org.cheminot.web.Params
 import org.cheminot.misc
+import org.cheminot.web.Config
 
 object Storage {
 
@@ -11,7 +12,7 @@ object Storage {
 
   private val FETCH_TRIPS_DEFAULT_LIMIT = 10
 
-  private def fetch[A](statement: Statement)(f: Row => A): List[A] = {
+  private def fetch[A](statement: Statement)(f: Row => A)(implicit config: Config): List[A] = {
     val response = Cypher.commit(statement)
     for {
       result <- response.results.as[List[Json]]
@@ -21,7 +22,7 @@ object Storage {
     }
   }
 
-  def fetchMeta(): Meta = {
+  def fetchMeta()(implicit config: Config): Meta = {
     val query = "match p=(s:Meta)-[:HAS]->(m:MetaSubset) return s as Meta, m as MetaSubset;"
     fetch(Statement(query)) { row =>
       val subset = MetaSubset.fromJson(row(1))
@@ -36,12 +37,12 @@ object Storage {
     } getOrElse sys.error("Unable to fetch meta")
   }
 
-  private def isParentStation(stationId: String): Boolean = {
+  private def isParentStation(stationId: String)(implicit config: Config): Boolean = {
     val query = s"match (s:ParentStation {parentstationid: '${stationId}'}) return s;"
     fetch(Statement(query))(identity).headOption.isDefined
   }
 
-  private def fetchTrips(params: Params.FetchTrips, filter: DateTime => String, nextAt: (Seq[Trip], DateTime) => DateTime, sortBy: String): List[Trip] = {
+  private def fetchTrips(params: Params.FetchTrips, filter: DateTime => String, nextAt: (Seq[Trip], DateTime) => DateTime, sortBy: String)(implicit config: Config): List[Trip] = {
 
     val l = if(params.limit.exists(_ > FETCH_TRIPS_MAX_LIMIT)) {
       FETCH_TRIPS_MAX_LIMIT
@@ -110,7 +111,7 @@ object Storage {
     }.toList.flatten.take(l)
   }
 
-  def fetchPreviousTrips(params: Params.FetchTrips): List[Trip] = {
+  def fetchPreviousTrips(params: Params.FetchTrips)(implicit config: Config): List[Trip] = {
     val departure = misc.DateTime.forPattern("HHmm").print(params.at).toInt
     val filter = (t: DateTime) => {
       val departure = misc.DateTime.forPattern("HHmm").print(params.at).toInt
@@ -133,7 +134,7 @@ object Storage {
     fetchTrips(params, filter = filter, nextAt = nextAt, sortBy = "-vs.departure").reverse
   }
 
-  def fetchNextTrips(params: Params.FetchTrips): List[Trip] = {
+  def fetchNextTrips(params: Params.FetchTrips)(implicit config: Config): List[Trip] = {
     val filter = (t: DateTime) => {
       val departure = misc.DateTime.forPattern("HHmm").print(t).toInt
       s"vs.departure >= $departure"
@@ -155,7 +156,7 @@ object Storage {
     fetchTrips(params, filter = filter, nextAt = nextAt, sortBy = "vs.departure")
   }
 
-  def fetchStationsById(stationIds: Seq[String]): List[Station] = {
+  def fetchStationsById(stationIds: Seq[String])(implicit config: Config): List[Station] = {
     if(!stationIds.isEmpty) {
       val ids = stationIds.map(s => s""""$s"""").mkString(",")
       val query =

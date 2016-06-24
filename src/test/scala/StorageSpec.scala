@@ -10,11 +10,10 @@ import rapture.fs._
 import rapture.uri._
 import rapture.codec._, encodings.`UTF-8`._
 import org.cheminot.misc
-import org.cheminot.web.{storage, api, Params}
+import org.cheminot.web.{storage, api, Params, Config}
 import org.cheminot.web.storage.Storage
 
 abstract class CheminotSpec extends FlatSpec
-// with Matchers with OptionValues with Inside with Inspectors
 
 object Stations {
   lazy val chartres = "8739400"
@@ -23,6 +22,8 @@ object Stations {
 }
 
 class StorageSpec extends CheminotSpec {
+
+  implicit val config = Config.default
 
   behavior of "fetchNextTrips"
 

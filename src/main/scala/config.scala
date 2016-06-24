@@ -14,17 +14,30 @@ import org.cheminot.misc
 case class Config(
   port: Int,
   domain: String,
+  dbhost: String,
   mailgun: misc.mailer.MailgunConfig,
   mailer: misc.mailer.MailerConfig
-) extends misc.mailer.Config
+) extends misc.mailer.Config {
+  def print(): Unit = {
+    Logger.info(s"""
+      |port: $port
+      |domain: $domain
+      |dbhost: $dbhost
+      |mailgun.from: ${mailgun.from}
+      |mailgun.to: ${mailgun.to}
+      |mailgun.endpoint: ${mailgun.endpoint}
+      |mailgun.username: ${mailgun.username}
+      |mailgun.password: ${mailgun.password}
+    """.stripMargin)
+  }
+}
 
 object Config {
 
   val Port = New.Param[Int]('p', 'port)
-
   val Domain = New.Param[String]('d', 'domain)
-
   val ConfigFilePath = New.Param[String]('c', 'config)
+  val Dbhost = New.Param[String]('h', 'dbhost)
 
   def apply(args: Array[String]): Config = {
     import modes.returnOption._
@@ -33,18 +46,24 @@ object Config {
     val configFile = ConfigFile.parse(configFilePath)
     val port = Port.parse(params) orElse configFile.port getOrElse 8080
     val domain = Domain.parse(params) orElse configFile.domain getOrElse "localhost:8080"
+    val dbhost = Dbhost.parse(params) orElse configFile.dbhost getOrElse "localhost"
     Config(
       port = port,
       domain = domain,
+      dbhost = dbhost,
       mailgun = configFile.mailgun,
       mailer = configFile.mailer
     )
   }
+
+  def default: Config =
+    apply(Array.empty)
 }
 
 case class ConfigFile(
   port: Option[Int],
   domain: Option[String],
+  dbhost: Option[String],
   mailgun: misc.mailer.MailgunConfig,
   mailer: misc.mailer.MailerConfig
 )
@@ -64,6 +83,7 @@ object ConfigFile {
     ConfigFile(
       port = json.port.as[Option[Int]],
       domain = json.domain.as[Option[String]],
+      dbhost = json.dbhost.as[Option[String]],
       mailgun = misc.mailer.MailgunConfig(
         from = mailgun.from.as[String],
         to = mailgun.to.as[String],

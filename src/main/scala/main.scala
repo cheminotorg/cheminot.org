@@ -10,6 +10,8 @@ object Main {
 
     implicit val config = Config(args)
 
+    config.print
+
     misc.mailer.Mailer.init(config, onError = {
       case e: Exception =>
         println("on error")

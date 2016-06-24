@@ -3,17 +3,17 @@ package org.cheminot.web.storage
 import scalaz._
 import rapture.http.jsonInterop._
 import rapture.json._, jsonBackends.jawn._
-import rapture.uri._
 import rapture.net._
 import rapture.io._
 import rapture.mime._
+import org.cheminot.web.Config
 
 object Cypher {
 
-  def commit(statement: Statement): Json =
+  def commit(statement: Statement)(implicit config: Config): Json =
     commitn(Seq(statement))
 
-  def commitn(statements: Seq[Statement]): Json = {
+  def commitn(statements: Seq[Statement])(implicit config: Config): Json = {
     withAuthentication { implicit basicAuthentication =>
 
       val s = statements.map { statement =>
@@ -23,7 +23,7 @@ object Cypher {
 
       val body = json"""{ "statements": ${s} }"""
 
-      val endpoint: HttpQuery = uri"http://localhost:7474/db/data/transaction/commit"
+      val endpoint = Http.parse(s"http://${config.dbhost}:7474/db/data/transaction/commit")
 
       val headers = Map(
         "X-stream" -> "true",

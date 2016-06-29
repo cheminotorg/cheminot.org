@@ -12,14 +12,11 @@ object MetaSubset {
   def fromJson(json: Json): MetaSubset =
     MetaSubset(
       json.metasubsetid.as[String],
-      json.metasubsetname.as[String],
-      json.updateddate.as[Option[Long]].map(misc.DateTime.fromSecs),
-      json.startdate.as[Option[Long]].map(misc.DateTime.fromSecs),
-      json.enddate.as[Option[Long]].map(misc.DateTime.fromSecs)
+      misc.DateTime.fromSecs(json.timestamp.as[Long])
     )
 }
 
-case class MetaSubset(metasubsetid: String, metasubsetname: String, updateddate: Option[DateTime], startdate: Option[DateTime], enddate: Option[DateTime])
+case class MetaSubset(metasubsetid: String, timestamp: DateTime)
 
 case class Station(stationid: String, name: String, lat: Double, lng: Double)
 

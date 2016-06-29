@@ -16,36 +16,18 @@ object ApiEntry {
 
 case class Subset(
   id: String,
-  name: String,
-  updatedDate: Option[DateTime],
-  startDate: Option[DateTime],
-  endDate: Option[DateTime]
+  timestamp: DateTime
 )
 
 object Subset {
 
   def apply(s: storage.MetaSubset): Subset =
-    Subset(s.metasubsetid, s.metasubsetname, s.updateddate, s.startdate, s.enddate)
+    Subset(s.metasubsetid, s.timestamp)
 
   def toJson(subset: Subset): Json = {
     val json = JsonBuffer.empty
-
     json.id = subset.id
-
-    json.name = subset.name
-
-    subset.updatedDate.foreach { date =>
-      json.updatedDate = misc.DateTime.format(date)
-    }
-
-    subset.startDate.foreach { date =>
-      json.startDate = misc.DateTime.format(date)
-    }
-
-    subset.endDate.foreach { date =>
-      json.endDate = misc.DateTime.format(date)
-    }
-
+    json.timestamp = misc.DateTime.format(subset.timestamp)
     json.as[Json]
   }
 }

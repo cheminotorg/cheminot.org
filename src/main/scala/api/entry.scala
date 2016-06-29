@@ -30,14 +30,10 @@ object Entry {
             H2("Subsets") +:
             apiEntry.subsets.map { subset =>
               Section(
-                H3(subset.name),
-                Dl(
-                  Dt("Updated date"),
-                  Dd(subset.updatedDate.map(misc.DateTime.format).getOrElse("N/A")),
-                  Dt("Start date"),
-                  Dd(subset.startDate.map(misc.DateTime.format).getOrElse("N/A")),
-                  Dt("End date"),
-                  Dd(subset.endDate.map(misc.DateTime.format).getOrElse("N/A"))
+                H3(subset.id),
+                P(
+                  Label(`for`='timestamp)("timestamp: "),
+                  Span(misc.DateTime.format(subset.timestamp))
                 )
               )
             } :+

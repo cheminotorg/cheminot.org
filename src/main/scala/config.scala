@@ -18,21 +18,10 @@ case class Config(
   mailgun: misc.mailer.MailgunConfig,
   mailer: misc.mailer.MailerConfig
 ) extends misc.mailer.Config {
-  def print(): Unit = {
-    Logger.info(s"""
-      |port: $port
-      |domain: $domain
-      |dbhost: $dbhost
-      |mailgun.from: ${mailgun.from}
-      |mailgun.to: ${mailgun.to}
-      |mailgun.endpoint: ${mailgun.endpoint}
-      |mailgun.username: ${mailgun.username}
-      |mailgun.password: ${mailgun.password}
-    """.stripMargin)
-  }
+  def print(): Unit = Config.print(this)
 }
 
-object Config {
+object Config extends Settings {
 
   val Port = New.Param[Int]('p', 'port)
   val Domain = New.Param[String]('d', 'domain)
@@ -58,6 +47,20 @@ object Config {
 
   def default: Config =
     apply(Array.empty)
+
+  def print(config: Config): Unit = {
+    Logger.info(s"""
+      |[cheminot.web - ${GIT_TAG}]
+      |port: ${config.port}
+      |domain: ${config.domain}
+      |dbhost: ${config.dbhost}
+      |mailgun.from: ${config.mailgun.from}
+      |mailgun.to: ${config.mailgun.to}
+      |mailgun.endpoint: ${config.mailgun.endpoint}
+      |mailgun.username: ${config.mailgun.username}
+      |mailgun.password: ${config.mailgun.password}
+    """.stripMargin)
+  }
 }
 
 case class ConfigFile(

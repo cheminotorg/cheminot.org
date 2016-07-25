@@ -28,7 +28,7 @@ class StorageSpec extends CheminotSpec {
   behavior of "fetchNextTrips"
 
   it should "find next 20 trips from Chartres to Paris Montparnasse" in {
-    val at = misc.DateTime.parseOrFail("2016-03-02T04:00:00.000+01:00")
+    val at = misc.DateTime.parseOrFail("2016-07-25T04:00:00.000+02:00")
     val params = Params.FetchTrips(
       vs = Stations.chartres,
       ve = Stations.paris,
@@ -43,6 +43,7 @@ class StorageSpec extends CheminotSpec {
       case (a, b) =>
         assert(a === b)
     }
+    //assert(CaptainTrain.matches("chartres", "paris", at)(trips) === true)
   }
 }
 
@@ -69,7 +70,7 @@ object CaptainTrain {
       itinerary.getElementsByTag("tr").asScala.toList.map { tr =>
         tr.getElementsByTag("td").asScala.map(_.text).toList match {
           case time :: station :: _ =>
-            val t = misc.DateTime.forPattern("HH:mm").parseDateTime(time)
+            val t = misc.DateTime.forPattern("HH'h'mm").parseDateTime(time)
             station -> date.withTime(t.toLocalTime)
           case x =>
             sys.error(s"Unable to read stop time $x")
@@ -78,8 +79,7 @@ object CaptainTrain {
     }
   }
 
-  def matches(vs: String, ve: String, date: DateTime)(ttt: List[storage.Trip]): Boolean = {
-    val trips = ttt.map(api.Trip.apply(_, date))
+  def matches(vs: String, ve: String, date: DateTime)(trips: List[api.Trip]): Boolean = {
     val tripsFromCapitaineTrain = {
       val upperBound = date.withTime(23, 59, 59, 999)
       val lowerBound = date.withTimeAtStartOfDay

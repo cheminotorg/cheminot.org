@@ -111,11 +111,12 @@ object Storage {
     }.toList.flatten.take(l)
   }
 
+  private def formatTime(time: DateTime): String =
+    org.cheminot.misc.DateTime.minutesOfDay(time).toString
+
   def fetchPreviousTrips(params: Params.FetchTrips)(implicit config: Config): List[Trip] = {
-    val departure = misc.DateTime.forPattern("HHmm").print(params.at).toInt
     val filter = (t: DateTime) => {
-      val departure = misc.DateTime.forPattern("HHmm").print(params.at).toInt
-      s"vs.departure <= $departure"
+      s"vs.departure <= ${formatTime(t)}"
     }
     val nextAt = (trips: Seq[Trip], t: DateTime) => {
       val distinctTrips = trips.distinct
@@ -136,8 +137,7 @@ object Storage {
 
   def fetchNextTrips(params: Params.FetchTrips)(implicit config: Config): List[Trip] = {
     val filter = (t: DateTime) => {
-      val departure = misc.DateTime.forPattern("HHmm").print(t).toInt
-      s"vs.departure >= $departure"
+      s"vs.departure >= ${formatTime(t)}"
     }
     val nextAt = (trips: Seq[Trip], t: DateTime) => {
       val distinctTrips = trips.distinct

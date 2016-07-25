@@ -27,11 +27,7 @@ case class GoesTo(arrival: DateTime, departure: Option[DateTime])
 object GoesTo {
 
   private def withTime(at: DateTime, time: Int): DateTime = {
-    val (hours, minutes) = {
-      val str = time.toString
-      str.splitAt(if (str.length > 3) 2 else 1)
-    }
-    at.withHourOfDay(hours.toInt).withMinuteOfHour(minutes.toInt)
+    at.withTimeAtStartOfDay.plusMinutes(time)
   }
 
   def toJson(json: Json, date: DateTime): GoesTo = {

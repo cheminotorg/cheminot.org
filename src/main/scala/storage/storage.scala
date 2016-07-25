@@ -51,7 +51,6 @@ object Storage {
     }
 
     def f(at: DateTime, limit: Int): List[Trip] = {
-
       val day = misc.DateTime.forPattern("EEEE").print(at).toLowerCase
       val start = at.withTimeAtStartOfDay.getMillis / 1000
       val end = at.withTimeAtStartOfDay.plusDays(1).getMillis / 1000
@@ -62,7 +61,7 @@ object Storage {
       WITH trip, tail(nodes(path)) AS stops, relationships(path) AS allstoptimes, stoptimes
       OPTIONAL MATCH (trip)-[:SCHEDULED_AT*0..]->(c:Calendar { serviceid: trip.serviceid })
       WITH trip, stops, allstoptimes, head(stoptimes) AS vs
-      WHERE ${filter(params.at)}
+      WHERE ${filter(at)}
         AND ((c IS NOT NULL AND (c.${day} = true AND c.startdate <= ${start} AND c.enddate > ${end} AND NOT (trip)-[:OFF]->(:CalendarDate { date: ${start} })))
         OR (trip)-[:ON]->(:CalendarDate { date: ${start} }))
       RETURN distinct(trip), stops, allstoptimes, vs
@@ -116,7 +115,7 @@ object Storage {
 
   def fetchPreviousTrips(params: Params.FetchTrips)(implicit config: Config): List[Trip] = {
     val filter = (t: DateTime) => {
-      s"vs.departure <= ${formatTime(t)}"
+      s"vs.departure < ${formatTime(t)}"
     }
     val nextAt = (trips: Seq[Trip], t: DateTime) => {
       val distinctTrips = trips.distinct
@@ -137,7 +136,7 @@ object Storage {
 
   def fetchNextTrips(params: Params.FetchTrips)(implicit config: Config): List[Trip] = {
     val filter = (t: DateTime) => {
-      s"vs.departure >= ${formatTime(t)}"
+      s"vs.departure > ${formatTime(t)}"
     }
     val nextAt = (trips: Seq[Trip], t: DateTime) => {
       val distinctTrips = trips.distinct

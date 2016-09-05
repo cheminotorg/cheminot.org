@@ -60,11 +60,11 @@ object Storage {
       MATCH path=(trip:Trip)-[:GOES_TO*1..]->(a:Stop { ${vsfield}: '${params.vs}' })-[stoptimes:GOES_TO*1..]->(b:Stop { ${vefield}: '${params.ve}' })
       WITH trip, tail(nodes(path)) AS stops, relationships(path) AS allstoptimes, stoptimes
       OPTIONAL MATCH (trip)-[:SCHEDULED_AT*0..]->(c:Calendar { serviceid: trip.serviceid })
-      WITH trip, stops, allstoptimes, head(stoptimes) AS vs
+      WITH trip, stops, allstoptimes, head(stoptimes) AS vs, c
       WHERE ${filter(at)}
         AND ((c IS NOT NULL AND (c.${day} = true AND c.startdate <= ${start} AND c.enddate > ${end} AND NOT (trip)-[:OFF]->(:CalendarDate { date: ${start} })))
         OR (trip)-[:ON]->(:CalendarDate { date: ${start} }))
-      RETURN distinct(trip), stops, allstoptimes, vs
+      RETURN distinct(trip), stops, allstoptimes, vs, c
       ORDER BY $sortBy
       LIMIT ${l * 2};
       """
@@ -73,12 +73,13 @@ object Storage {
         val tripId = row(0).tripid.as[String]
         val serviceId = row(0).serviceid.as[String]
         val stops = row(1).as[List[Stop]]
-        val goesTo = row(2).as[List[Json]].map(GoesTo.toJson(_, at))
-        (tripId, serviceId, goesTo, stops)
+        val goesTo = row(2).as[List[Json]].map(GoesTo.fromJson(_, at))
+        val maybeCalendar = row(4).as[Option[Json]].map(Calendar.fromJson)
+        (tripId, serviceId, goesTo, stops, maybeCalendar)
       }
 
       val stationIds = trips.flatMap {
-        case (_, _, _, stops) =>
+        case (_, _, _, stops, _) =>
           stops.map(_.stationid)
       }.distinct
 
@@ -87,12 +88,12 @@ object Storage {
       }.toMap
 
       trips.map {
-        case (tripId, serviceId, goesTo, stops) =>
+        case (tripId, serviceId, goesTo, stops, maybeCalendar) =>
           val tripStations = stops.flatMap(s => stations.get(s.stationid).toList)
           val stopTimes = goesTo.zip(tripStations).dropWhile {
             case (_, s) => s.stationid != params.vs
           }
-          Trip(tripId, serviceId, stopTimes)
+          Trip(tripId, serviceId, stopTimes, maybeCalendar)
       }
     }
 

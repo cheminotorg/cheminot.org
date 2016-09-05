@@ -53,7 +53,8 @@ object Trips {
           H1("Trips"),
           (trips.map { trip =>
             Section(
-              H2(s"${trip.id}"),
+              Hr,
+              H2(s"Trajet ${trip.id}"),
               Table(
                 Thead(
                   Tr(Td("id"), Td("name"), Td("lat"), Td("lng"), Td("arrival"), Td("departure"))
@@ -68,6 +69,26 @@ object Trips {
                       Td(stopTime.lng.toString),
                       Td(misc.DateTime.format(stopTime.arrival)),
                       stopTime.departure.map(misc.DateTime.format).map(Td(_)).getOrElse(Td("N/A"))
+                    )
+                  }:_*
+                )
+              ),
+              H3(s"Service ${trip.serviceid}"),
+              Table(
+                Thead(
+                  Tr(Td("Lundi"), Td("Mardi"), Td("Mercredi"), Td("Jeudi"), Td("Vendredi"), Td("Samedi"), Td("Dimanche"))
+                ),
+                Tbody(
+                  Tr,
+                  trip.calendar.toSeq.map { calendar =>
+                    Tr(
+                      Td(if(calendar.monday) "OK" else "N/A"),
+                      Td(if(calendar.tuesday) "OK" else "N/A"),
+                      Td(if(calendar.wednesday) "OK" else "N/A"),
+                      Td(if(calendar.thursday) "OK" else "N/A"),
+                      Td(if(calendar.friday) "OK" else "N/A"),
+                      Td(if(calendar.saturday) "OK" else "N/A"),
+                      Td(if(calendar.sunday) "OK" else "N/A")
                     )
                   }:_*
                 )

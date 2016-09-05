@@ -68,7 +68,32 @@ object StopTime {
   }
 }
 
-case class Trip(id: String, serviceid: String, stopTimes: List[StopTime]) {
+case class Calendar(
+  monday: Boolean,
+  tuesday: Boolean,
+  wednesday: Boolean,
+  thursday: Boolean,
+  friday: Boolean,
+  saturday: Boolean,
+  sunday: Boolean
+)
+
+object Calendar {
+
+  def toJson(calendar: Calendar): Json = {
+    val json = JsonBuffer.empty
+    json.monday = calendar.monday
+    json.tuesday = calendar.tuesday
+    json.wednesday = calendar.wednesday
+    json.thursday = calendar.thursday
+    json.friday = calendar.friday
+    json.saturday = calendar.saturday
+    json.sunday = calendar.sunday
+    json.as[Json]
+  }
+}
+
+case class Trip(id: String, serviceid: String, stopTimes: List[StopTime], calendar: Option[Calendar]) {
 
   lazy val departure: Option[DateTime] =
     stopTimes.headOption.flatMap(_.departure)
@@ -90,7 +115,20 @@ object Trip {
           departure = departure
         )
     }
-    Trip(trip.tripid, trip.serviceid, stopTimes)
+
+    val maybeCalendar = trip.calendar.map { calendar =>
+      Calendar(
+        calendar.monday,
+        calendar.tuesday,
+        calendar.wednesday,
+        calendar.thursday,
+        calendar.friday,
+        calendar.saturday,
+        calendar.sunday
+      )
+    }
+
+    Trip(trip.tripid, trip.serviceid, stopTimes, maybeCalendar)
   }
 
   def toJson(trip: Trip): Json = {
@@ -98,15 +136,13 @@ object Trip {
     json.id = trip.id
     json.serviceid = trip.serviceid
     json.stopTimes = trip.stopTimes.map(StopTime.toJson)
+    trip.calendar.foreach { calendar =>
+      json.calendar = Calendar.toJson(calendar)
+    }
     json.as[Json]
   }
 
   def toJsonSeq(trips: Seq[Trip]): Json = {
     Json(trips.map(toJson))
-  }
-
-  def fromJson(json: Json): Trip = {
-    val stopTimes = json.stopTimes.as[List[Json]].map(StopTime.fromJson)
-    Trip(json.id.as[String], json.serviceid.as[String], stopTimes)
   }
 }

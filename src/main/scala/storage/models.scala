@@ -30,7 +30,7 @@ object GoesTo {
     at.withTimeAtStartOfDay.plusMinutes(time)
   }
 
-  def toJson(json: Json, date: DateTime): GoesTo = {
+  def fromJson(json: Json, date: DateTime): GoesTo = {
     GoesTo(
       withTime(date, json.arrival.as[Int]),
       json.departure.as[Option[Int]].map(withTime(date, _))
@@ -38,7 +38,36 @@ object GoesTo {
   }
 }
 
-case class Trip(tripid: String, serviceid: String, stopTimes: List[(GoesTo, Station)]) {
+case class Calendar(
+  monday: Boolean,
+  tuesday: Boolean,
+  wednesday: Boolean,
+  thursday: Boolean,
+  friday: Boolean,
+  saturday: Boolean,
+  sunday: Boolean,
+  startdate: DateTime,
+  enddate: DateTime
+)
+
+object Calendar {
+
+  def fromJson(json: Json): Calendar = {
+    Calendar(
+      json.monday.as[Boolean],
+      json.tuesday.as[Boolean],
+      json.wednesday.as[Boolean],
+      json.thursday.as[Boolean],
+      json.friday.as[Boolean],
+      json.saturday.as[Boolean],
+      json.sunday.as[Boolean],
+      new DateTime(json.startdate.as[Long]),
+      new DateTime(json.enddate.as[Long])
+    )
+  }
+}
+
+case class Trip(tripid: String, serviceid: String, stopTimes: List[(GoesTo, Station)], calendar: Option[Calendar]) {
 
   override def equals(o: Any): Boolean =
     o match {

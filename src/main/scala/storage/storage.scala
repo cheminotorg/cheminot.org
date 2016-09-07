@@ -156,6 +156,34 @@ object Storage {
     fetchTrips(params, filter = filter, nextAt = nextAt, sortBy = "vs.departure")
   }
 
+  def fetchDepartureTimes(params: Params.FetchDepartureTimes)(implicit config: Config): List[Long] = {
+    val filters = Map(
+      "monday" -> params.monday,
+      "tuesday" -> params.tuesday,
+      "thursday" -> params.thursday,
+      "wednesday" -> params.wednesday,
+      "thursday" -> params.thursday,
+      "friday" -> params.friday,
+      "saturday" -> params.saturday,
+      "sunday" -> params.sunday
+    ).collect {
+      case (day, Some(value)) =>
+        s"calendar.${day} = ${value}"
+    }.mkString(" OR ")
+
+    val query = s"""
+      MATCH path=(calendar:Calendar)<-[:SCHEDULED_AT*1..]-(trip:Trip)-[:GOES_TO*1..]->(:Stop { stationid: '${params.vs}' })-[:GOES_TO*1..]->(:Stop { stationid: '${params.ve}' })
+      WHERE ${filters}
+      WITH head(tail(tail(relationships(path)))) AS stoptimeA
+      RETURN stoptimeA
+      ORDER BY stoptimeA.departure
+    """
+
+    fetch(Statement(query)) { row =>
+      row(0).departure.as[Long]
+    }
+  }
+
   def fetchStationsById(stationIds: Seq[String])(implicit config: Config): List[Station] = {
     if(!stationIds.isEmpty) {
       val ids = stationIds.map(s => s""""$s"""").mkString(",")

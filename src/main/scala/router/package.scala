@@ -14,6 +14,12 @@ package object router {
       misc.DateTime.parse(s)
   }
 
+  def getBooleanParam(request: HttpRequest)(param: Symbol) =
+    request.param(param) map {
+      case "true" | "1" => true
+      case _ => false
+    }
+
   def ContentNegotiation[A](request: HttpRequest)(f: MimeType => A): A = {
     val mime = request.headers.get("Accept")
       .flatMap(_.headOption.flatMap(_.split(",").headOption))

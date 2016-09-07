@@ -12,4 +12,16 @@ object Params {
     previous: Boolean,
     json: Boolean = false
   )
+
+  case class FetchDepartureTimes(
+    vs: String,
+    ve: String,
+    monday: Option[Boolean],
+    tuesday: Option[Boolean],
+    wednesday: Option[Boolean],
+    thursday: Option[Boolean],
+    friday: Option[Boolean],
+    saturday: Option[Boolean],
+    sunday: Option[Boolean]
+  )
 }

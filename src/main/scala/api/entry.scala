@@ -9,15 +9,15 @@ import org.cheminot.web.{Config, router}
 
 object Entry {
 
-  def renderJson(apiEntry: ApiEntry)(implicit config: Config): Json = {
+  def renderJson(apiEntry: models.ApiEntry)(implicit config: Config): Json = {
     val json = JsonBuffer.empty
     json.ref = apiEntry.ref
     json.buildAt = misc.DateTime.format(apiEntry.buildDate)
-    json.subsets = apiEntry.subsets.map(Subset.toJson)
+    json.subsets = apiEntry.subsets.map(models.Subset.toJson)
     json.as[Json]
   }
 
-  def renderHtml(apiEntry: ApiEntry)(implicit config: Config): HtmlDoc = {
+  def renderHtml(apiEntry: models.ApiEntry)(implicit config: Config): HtmlDoc = {
     HtmlDoc {
       Html(
         Head(

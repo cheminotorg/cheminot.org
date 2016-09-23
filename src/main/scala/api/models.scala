@@ -1,4 +1,4 @@
-package org.cheminot.web.api
+package org.cheminot.web.api.models
 
 import org.joda.time.{ DateTime, Minutes }
 import org.joda.time.format.{PeriodFormat, PeriodFormatterBuilder}
@@ -11,7 +11,7 @@ case class ApiEntry(ref: String, buildDate: DateTime, subsets: Seq[Subset])
 
 object ApiEntry {
 
-  def apply(m: storage.Meta): ApiEntry = {
+  def apply(m: storage.models.Meta): ApiEntry = {
     ApiEntry(m.metaid, m.bundledate, m.subsets.map(Subset.apply))
   }
 }
@@ -23,7 +23,7 @@ case class Subset(
 
 object Subset {
 
-  def apply(s: storage.MetaSubset): Subset =
+  def apply(s: storage.models.MetaSubset): Subset =
     Subset(s.metasubsetid, s.timestamp)
 
   def toJson(subset: Subset): Json = {
@@ -82,7 +82,7 @@ case class Calendar(
 
 object Calendar {
 
-  def apply(calendar: storage.Calendar): Calendar = {
+  def apply(calendar: storage.models.Calendar): Calendar = {
     Calendar(
       calendar.monday,
       calendar.tuesday,
@@ -135,7 +135,7 @@ case class Trip(id: String, serviceid: String, stopTimes: List[StopTime], calend
 
 object Trip {
 
-  def apply(trip: storage.Trip, at: DateTime): Trip = {
+  def apply(trip: storage.models.Trip, at: DateTime): Trip = {
     val (goesTo, _) = trip.stopTimes.unzip
     val stopTimes = trip.stopTimes.zipWithIndex.map {
       case ((to, stop), index) =>
@@ -176,7 +176,7 @@ case class DepartureTime(at: Minutes, calendar: Calendar)
 
 object DepartureTime {
 
-  def apply(departureTime: storage.DepartureTime): DepartureTime = {
+  def apply(departureTime: storage.models.DepartureTime): DepartureTime = {
     DepartureTime(departureTime.at, Calendar(departureTime.calendar))
   }
 

@@ -7,13 +7,13 @@ import org.cheminot.web.{ Params, Config }
 
 object DepartureTimes {
 
-  def renderJson(departureTimes: List[DepartureTime])(implicit config: Config): Json = {
+  def renderJson(departureTimes: List[models.DepartureTime])(implicit config: Config): Json = {
     val json = JsonBuffer.empty
-    json.results = DepartureTime.toJsonSeq(departureTimes)
+    json.results = models.DepartureTime.toJsonSeq(departureTimes)
     json.as[Json]
   }
 
-  def renderHtml(departureTimes: List[DepartureTime])(implicit config: Config): HtmlDoc = {
+  def renderHtml(departureTimes: List[models.DepartureTime])(implicit config: Config): HtmlDoc = {
     HtmlDoc {
       Html(
         Head(
@@ -30,7 +30,7 @@ object DepartureTimes {
           H1("Departures"),
           departureTimes.map { departureTime =>
             val minutes = departureTime.at.getMinutes
-            val at = DepartureTime.formatMinutes(departureTime.at)
+            val at = models.DepartureTime.formatMinutes(departureTime.at)
             Section(
               Dl(
                 Dt("minutes"),
@@ -38,7 +38,7 @@ object DepartureTimes {
                 Dt("horaire"),
                 Dd(at)
               ),
-              Calendar.toHtml(departureTime.calendar),
+              models.Calendar.toHtml(departureTime.calendar),
               Hr
             )
           }

@@ -18,14 +18,14 @@ object Api {
     handleApiEntry orElse
     handleSearchTrips { params =>
       val trips = if(params.previous) {
-        storage.Storage.searchPreviousTrips(params)
+        storage.Trips.searchPrevious(params)
       } else {
-        storage.Storage.searchNextTrips(params)
+        storage.Trips.searchNext(params)
       }
-      trips.map(api.Trip(_, params.at)).sortBy(_.stopTimes.head.arrival.getMillis)
+      trips.map(api.models.Trip(_, params.at)).sortBy(_.stopTimes.head.arrival.getMillis)
     } orElse
     handleSearchDepartureTimes { params =>
-      storage.Storage.searchDepartureTimes(params).map(api.DepartureTime.apply)
+      storage.DepartureTimes.search(params).map(api.models.DepartureTime.apply)
     }
 
   private def formatJson(json: Json): String = {
@@ -36,7 +36,7 @@ object Api {
 
   private def handleApiEntry(implicit config: Config): PartialFunction[HttpRequest, Response] = {
     case req@Path(^ / "api") =>
-      val apiEntry = api.ApiEntry(storage.Storage.fetchMeta())
+      val apiEntry = api.models.ApiEntry(storage.Meta.fetch())
       ContentNegotiation(req) {
         case MimeTypes.`application/json` =>
           formatJson(api.Entry.renderJson(apiEntry))
@@ -45,11 +45,11 @@ object Api {
       }
 
     case req@Path(^ / "api.json") =>
-      val apiEntry = api.ApiEntry(storage.Storage.fetchMeta())
+      val apiEntry = api.models.ApiEntry(storage.Meta.fetch())
       formatJson(api.Entry.renderJson(apiEntry))
   }
 
-  private def handleSearchTrips(fetch: Params.SearchTrips => List[api.Trip])(implicit config: Config): PartialFunction[HttpRequest, Response] = {
+  private def handleSearchTrips(fetch: Params.SearchTrips => List[api.models.Trip])(implicit config: Config): PartialFunction[HttpRequest, Response] = {
     case req@Path(^ / "api" / "trips" / "search.json") ~ vsParam(vs) ~ veParam(ve) ~ atParam(AsDateTime(at)) =>
       val limit = req.param('limit).map(_.toInt)
       val previous = req.param('previous).map(_.toBoolean) getOrElse false
@@ -69,7 +69,7 @@ object Api {
       }
   }
 
-  private def handleSearchDepartureTimes(fetch: Params.SearchDepartureTimes => List[api.DepartureTime])(implicit config: Config): PartialFunction[HttpRequest, Response] = {
+  private def handleSearchDepartureTimes(fetch: Params.SearchDepartureTimes => List[api.models.DepartureTime])(implicit config: Config): PartialFunction[HttpRequest, Response] = {
     val buildParams = (request: HttpRequest, vs: String, ve: String) => {
       val booleanParam = getBooleanParam(request)(_)
       val monday = booleanParam('monday)
@@ -98,7 +98,6 @@ object Api {
             api.DepartureTimes.renderHtml(fetch(params))
         }
     }
-
     handle
   }
 }

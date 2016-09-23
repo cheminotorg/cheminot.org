@@ -1,4 +1,4 @@
-package org.cheminot.web.storage
+package org.cheminot.web.storage.models
 
 import org.joda.time.{DateTime, Minutes}
 import rapture.core._

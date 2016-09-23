@@ -9,7 +9,7 @@ import org.cheminot.web.{ router, Params, Config }
 
 object Trips {
 
-  def renderJson(params: Params.SearchTrips, trips: List[Trip])(implicit config: Config): Json = {
+  def renderJson(params: Params.SearchTrips, trips: List[models.Trip])(implicit config: Config): Json = {
 
     val previousLink = if (trips.isEmpty) json"null" else {
       Json(buildPreviousLink(params, trips).toString)
@@ -19,7 +19,7 @@ object Trips {
       Json(buildNextLink(params, trips).toString)
     }
 
-    val results = Trip.toJsonSeq(trips)
+    val results = models.Trip.toJsonSeq(trips)
     val json = JsonBuffer.empty
 
     json.previous = previousLink
@@ -29,7 +29,7 @@ object Trips {
     json.as[Json]
   }
 
-  def renderHtml(params: Params.SearchTrips, trips: List[Trip])(implicit config: Config): HtmlDoc = {
+  def renderHtml(params: Params.SearchTrips, trips: List[models.Trip])(implicit config: Config): HtmlDoc = {
 
     val navigation = if(trips.isEmpty) P else {
       val previousLink = A(href = buildPreviousLink(params, trips))("previous")
@@ -74,7 +74,7 @@ object Trips {
                 )
               ),
               H3(s"Service ${trip.serviceid}"),
-              Calendar.toHtml(trip.calendar)
+              models.Calendar.toHtml(trip.calendar)
             )
           } :+ navigation):_*
         )
@@ -93,12 +93,12 @@ object Trips {
     )
   }
 
-  private def buildPreviousLink(params: Params.SearchTrips, trips: List[Trip])(implicit config: Config): HttpQuery = {
+  private def buildPreviousLink(params: Params.SearchTrips, trips: List[models.Trip])(implicit config: Config): HttpQuery = {
     val at = trips.headOption.flatMap(_.departure)
     link(params, at, previous = true)
   }
 
-  private def buildNextLink(params: Params.SearchTrips, trips: List[Trip])(implicit config: Config): HttpQuery = {
+  private def buildNextLink(params: Params.SearchTrips, trips: List[models.Trip])(implicit config: Config): HttpQuery = {
     val at = trips.lastOption.flatMap(_.departure)
     link(params, at, previous = false)
   }

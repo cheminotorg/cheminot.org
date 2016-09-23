@@ -1,6 +1,5 @@
 package org.cheminot.web.router
 
-import org.joda.time.Duration
 import rapture.uri._
 import rapture.http._, requestExtractors._
 import rapture.codec._
@@ -26,7 +25,7 @@ object Api {
       trips.map(api.Trip(_, params.at)).sortBy(_.stopTimes.head.arrival.getMillis)
     } orElse
     handleFetchDepartureTimes { params =>
-      storage.Storage.fetchDepartureTimes(params)
+      storage.Storage.fetchDepartureTimes(params).map(api.DepartureTime.apply)
     }
 
   private def formatJson(json: Json): String = {
@@ -70,7 +69,7 @@ object Api {
       }
   }
 
-  private def handleFetchDepartureTimes(fetch: Params.FetchDepartureTimes => List[Long])(implicit config: Config): PartialFunction[HttpRequest, Response] = {
+  private def handleFetchDepartureTimes(fetch: Params.FetchDepartureTimes => List[api.DepartureTime])(implicit config: Config): PartialFunction[HttpRequest, Response] = {
     val buildParams = (request: HttpRequest, vs: String, ve: String) => {
       val booleanParam = getBooleanParam(request)(_)
       val monday = booleanParam('monday)
@@ -84,23 +83,19 @@ object Api {
         thursday, friday, saturday, sunday)
     }
 
-    val fetchDepartureTimes = (params: Params.FetchDepartureTimes) => {
-      fetch(params).map(Duration.standardMinutes)
-    }
-
     val handle: PartialFunction[HttpRequest, Response] = {
       case req@Path(^ / "api" / "departures" / "search.json") ~ vsParam(vs) ~ veParam(ve) =>
-        api.DepartureTimes.renderJson(fetchDepartureTimes(buildParams(req, vs, ve)))
+        api.DepartureTimes.renderJson(fetch(buildParams(req, vs, ve)))
 
       case req@Path(^ / "api" / "departures" / "search") ~ vsParam(vs) ~ veParam(ve)  =>
         ContentNegotiation(req) {
           case MimeTypes.`application/json` =>
             val params = buildParams(req, vs, ve)
-            api.DepartureTimes.renderJson(fetchDepartureTimes(params))
+            api.DepartureTimes.renderJson(fetch(params))
 
           case _ =>
             val params = buildParams(req, vs, ve)
-            api.DepartureTimes.renderHtml(fetchDepartureTimes(params))
+            api.DepartureTimes.renderHtml(fetch(params))
         }
     }
 

@@ -18,6 +18,7 @@ object Global {
         case Success(response) =>
           response
         case Failure(e) =>
+          e.printStackTrace
           Logger.error(e.getMessage, e)
           misc.mailer.Mailer.sendException(e)(request, config.mailgun)
           pages.InternalServerError()

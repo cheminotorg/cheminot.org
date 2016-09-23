@@ -1,6 +1,6 @@
 package org.cheminot.web.storage
 
-import org.joda.time.DateTime
+import org.joda.time.{DateTime, Minutes}
 import rapture.core._
 import rapture.json._
 import org.cheminot.misc
@@ -23,6 +23,8 @@ case class Station(stationid: String, name: String, lat: Double, lng: Double)
 case class Stop(stopid: String, stationid: String, parentid: Option[String])
 
 case class GoesTo(arrival: DateTime, departure: Option[DateTime])
+
+case class DepartureTime(at: Minutes, calendar: Calendar)
 
 object GoesTo {
 
@@ -48,9 +50,34 @@ case class Calendar(
   sunday: Boolean,
   startdate: DateTime,
   enddate: DateTime
-)
+) {
+  def merge(calendarB: Calendar) =
+    Calendar.merge(this, calendarB)
+}
 
 object Calendar {
+
+  def merge(calendarA: Calendar, calendarB: Calendar): Calendar = {
+    val startdate = if(calendarB.startdate.isAfter(calendarA.startdate)) {
+      calendarA.startdate
+    } else calendarB.startdate
+
+    val enddate = if(calendarB.enddate.isBefore(calendarA.enddate)) {
+      calendarA.enddate
+    } else calendarB.enddate
+
+    Calendar(
+      calendarA.monday || calendarB.monday,
+      calendarA.tuesday || calendarB.tuesday,
+      calendarA.wednesday || calendarB.wednesday,
+      calendarA.thursday || calendarB.thursday,
+      calendarA.friday || calendarB.friday,
+      calendarA.saturday || calendarB.saturday,
+      calendarA.sunday || calendarB.sunday,
+      startdate,
+      enddate
+    )
+  }
 
   def fromJson(json: Json): Calendar = {
     Calendar(
@@ -67,8 +94,12 @@ object Calendar {
   }
 }
 
-case class Trip(tripid: String, serviceid: String, stopTimes: List[(GoesTo, Station)], calendar: Option[Calendar]) {
-
+case class Trip(
+  tripid: String,
+  serviceid: String,
+  stopTimes: List[(GoesTo, Station)],
+  calendar: Calendar
+) {
   override def equals(o: Any): Boolean =
     o match {
       case r: Trip if r.tripid == tripid => true

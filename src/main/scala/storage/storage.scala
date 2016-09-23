@@ -1,6 +1,6 @@
 package org.cheminot.web.storage
 
-import org.joda.time.DateTime
+import org.joda.time.{DateTime, Duration}
 import rapture.json._, jsonBackends.jawn._
 import org.cheminot.web.Params
 import org.cheminot.misc
@@ -57,14 +57,12 @@ object Storage {
       val vsfield = if (isParentStation(params.vs)) "parentid" else "stationid"
       val vefield = if (isParentStation(params.ve)) "parentid" else "stationid"
       val query = s"""
-      MATCH path=(trip:Trip)-[:GOES_TO*1..]->(a:Stop { ${vsfield}: '${params.vs}' })-[stoptimes:GOES_TO*1..]->(b:Stop { ${vefield}: '${params.ve}' })
-      WITH trip, tail(nodes(path)) AS stops, relationships(path) AS allstoptimes, stoptimes
-      OPTIONAL MATCH (trip)-[:SCHEDULED_AT*0..]->(c:Calendar { serviceid: trip.serviceid })
-      WITH trip, stops, allstoptimes, head(stoptimes) AS vs, c
+      MATCH path=(calendar:Calendar)<-[:SCHEDULED_AT*1..]-(trip:Trip)-[:GOES_TO*1..]->(a:Stop { ${vsfield}: '${params.vs}' })-[stoptimes:GOES_TO*1..]->(b:Stop { ${vefield}: '${params.ve}' })
+      WITH calendar, trip, tail(tail(nodes(path))) AS stops, tail(relationships(path)) AS allstoptimes, head(stoptimes) AS vs
       WHERE ${filter(at)}
-        AND ((c IS NOT NULL AND (c.${day} = true AND c.startdate <= ${start} AND c.enddate > ${end} AND NOT (trip)-[:OFF]->(:CalendarDate { date: ${start} })))
+        AND ((calendar.${day} = true AND calendar.startdate <= ${start} AND calendar.enddate > ${end} AND NOT (trip)-[:OFF]->(:CalendarDate { date: ${start} }))
         OR (trip)-[:ON]->(:CalendarDate { date: ${start} }))
-      RETURN distinct(trip), stops, allstoptimes, vs, c
+      RETURN distinct(trip), stops, allstoptimes, vs, calendar
       ORDER BY $sortBy
       LIMIT ${l * 2};
       """
@@ -74,8 +72,8 @@ object Storage {
         val serviceId = row(0).serviceid.as[String]
         val stops = row(1).as[List[Stop]]
         val goesTo = row(2).as[List[Json]].map(GoesTo.fromJson(_, at))
-        val maybeCalendar = row(4).as[Option[Json]].map(Calendar.fromJson)
-        (tripId, serviceId, goesTo, stops, maybeCalendar)
+        val calendar = Calendar.fromJson(row(4).as[Json])
+        (tripId, serviceId, goesTo, stops, calendar)
       }
 
       val stationIds = trips.flatMap {
@@ -88,12 +86,12 @@ object Storage {
       }.toMap
 
       trips.map {
-        case (tripId, serviceId, goesTo, stops, maybeCalendar) =>
+        case (tripId, serviceId, goesTo, stops, calendar) =>
           val tripStations = stops.flatMap(s => stations.get(s.stationid).toList)
           val stopTimes = goesTo.zip(tripStations).dropWhile {
             case (_, s) => s.stationid != params.vs
           }
-          Trip(tripId, serviceId, stopTimes, maybeCalendar)
+          Trip(tripId, serviceId, stopTimes, calendar)
       }
     }
 
@@ -156,7 +154,7 @@ object Storage {
     fetchTrips(params, filter = filter, nextAt = nextAt, sortBy = "vs.departure")
   }
 
-  def fetchDepartureTimes(params: Params.FetchDepartureTimes)(implicit config: Config): List[Long] = {
+  def fetchDepartureTimes(params: Params.FetchDepartureTimes)(implicit config: Config): List[DepartureTime] = {
     val filters = Map(
       "monday" -> params.monday,
       "tuesday" -> params.tuesday,
@@ -167,21 +165,30 @@ object Storage {
       "saturday" -> params.saturday,
       "sunday" -> params.sunday
     ).collect {
-      case (day, Some(value)) =>
-        s"calendar.${day} = ${value}"
-    }.mkString(" OR ")
+      case (day, Some(value)) if value =>
+        s"calendar.${day}=${value}"
+    }
+
+    val filtersStr = if(filters.isEmpty) "" else {
+      s"""WHERE ${filters.mkString(" OR ")}"""
+    }
 
     val query = s"""
-      MATCH path=(calendar:Calendar)<-[:SCHEDULED_AT*1..]-(trip:Trip)-[:GOES_TO*1..]->(:Stop { stationid: '${params.vs}' })-[:GOES_TO*1..]->(:Stop { stationid: '${params.ve}' })
-      WHERE ${filters}
-      WITH head(tail(tail(relationships(path)))) AS stoptimeA
-      RETURN stoptimeA
+      MATCH path=(calendar:Calendar)<-[:SCHEDULED_AT*1..]-(trip:Trip)-[:GOES_TO*1..]->(:Stop { stationid: '${params.vs}' })-[stoptimes:GOES_TO*1..]->(:Stop { stationid: '${params.ve}' })
+      ${filtersStr}
+      WITH head(stoptimes) AS stoptimeA, calendar
+      RETURN distinct(stoptimeA.departure), calendar
       ORDER BY stoptimeA.departure
     """
 
     fetch(Statement(query)) { row =>
-      row(0).departure.as[Long]
-    }
+      val minutes = Duration.standardMinutes(row(0).as[Long]).toStandardMinutes
+      val calendar = Calendar.fromJson(row(1).as[Json])
+      DepartureTime(minutes, calendar)
+    }.groupBy(_.at).toList.map {
+      case (minutes, departureTimes) =>
+        DepartureTime(minutes, departureTimes.map(_.calendar).reduce(_ merge _))
+    }.sortBy(_.at.getMinutes)
   }
 
   def fetchStationsById(stationIds: Seq[String])(implicit config: Config): List[Station] = {

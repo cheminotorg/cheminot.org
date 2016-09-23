@@ -74,25 +74,7 @@ object Trips {
                 )
               ),
               H3(s"Service ${trip.serviceid}"),
-              Table(
-                Thead(
-                  Tr(Td("Lundi"), Td("Mardi"), Td("Mercredi"), Td("Jeudi"), Td("Vendredi"), Td("Samedi"), Td("Dimanche"))
-                ),
-                Tbody(
-                  Tr,
-                  trip.calendar.toSeq.map { calendar =>
-                    Tr(
-                      Td(if(calendar.monday) "OK" else "N/A"),
-                      Td(if(calendar.tuesday) "OK" else "N/A"),
-                      Td(if(calendar.wednesday) "OK" else "N/A"),
-                      Td(if(calendar.thursday) "OK" else "N/A"),
-                      Td(if(calendar.friday) "OK" else "N/A"),
-                      Td(if(calendar.saturday) "OK" else "N/A"),
-                      Td(if(calendar.sunday) "OK" else "N/A")
-                    )
-                  }:_*
-                )
-              )
+              Calendar.toHtml(trip.calendar)
             )
           } :+ navigation):_*
         )

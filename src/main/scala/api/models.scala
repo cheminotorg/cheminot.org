@@ -1,6 +1,8 @@
 package org.cheminot.web.api
 
-import org.joda.time.DateTime
+import org.joda.time.{ DateTime, Minutes }
+import org.joda.time.format.{PeriodFormat, PeriodFormatterBuilder}
+import rapture.html._, htmlSyntax.{ Option => HOption, _ }
 import rapture.json._, jsonBackends.jawn._
 import org.cheminot.misc
 import org.cheminot.web.storage
@@ -80,6 +82,38 @@ case class Calendar(
 
 object Calendar {
 
+  def apply(calendar: storage.Calendar): Calendar = {
+    Calendar(
+      calendar.monday,
+      calendar.tuesday,
+      calendar.wednesday,
+      calendar.thursday,
+      calendar.friday,
+      calendar.saturday,
+      calendar.sunday
+    )
+  }
+
+  def toHtml(calendar: Calendar) = {
+    Table(
+      Thead(
+        Tr(Td("Lundi"), Td("Mardi"), Td("Mercredi"), Td("Jeudi"), Td("Vendredi"), Td("Samedi"), Td("Dimanche"))
+      ),
+      Tbody(
+        Tr,
+        Tr(
+          Td(if(calendar.monday) "OK" else "N/A"),
+          Td(if(calendar.tuesday) "OK" else "N/A"),
+          Td(if(calendar.wednesday) "OK" else "N/A"),
+          Td(if(calendar.thursday) "OK" else "N/A"),
+          Td(if(calendar.friday) "OK" else "N/A"),
+          Td(if(calendar.saturday) "OK" else "N/A"),
+          Td(if(calendar.sunday) "OK" else "N/A")
+        )
+      )
+    )
+  }
+
   def toJson(calendar: Calendar): Json = {
     val json = JsonBuffer.empty
     json.monday = calendar.monday
@@ -93,7 +127,7 @@ object Calendar {
   }
 }
 
-case class Trip(id: String, serviceid: String, stopTimes: List[StopTime], calendar: Option[Calendar]) {
+case class Trip(id: String, serviceid: String, stopTimes: List[StopTime], calendar: Calendar) {
 
   lazy val departure: Option[DateTime] =
     stopTimes.headOption.flatMap(_.departure)
@@ -116,19 +150,7 @@ object Trip {
         )
     }
 
-    val maybeCalendar = trip.calendar.map { calendar =>
-      Calendar(
-        calendar.monday,
-        calendar.tuesday,
-        calendar.wednesday,
-        calendar.thursday,
-        calendar.friday,
-        calendar.saturday,
-        calendar.sunday
-      )
-    }
-
-    Trip(trip.tripid, trip.serviceid, stopTimes, maybeCalendar)
+    Trip(trip.tripid, trip.serviceid, stopTimes, Calendar(trip.calendar))
   }
 
   def toJson(trip: Trip): Json = {
@@ -136,13 +158,46 @@ object Trip {
     json.id = trip.id
     json.serviceid = trip.serviceid
     json.stopTimes = trip.stopTimes.map(StopTime.toJson)
-    trip.calendar.foreach { calendar =>
-      json.calendar = Calendar.toJson(calendar)
-    }
+    json.calendar = Calendar.toJson(trip.calendar)
     json.as[Json]
   }
 
   def toJsonSeq(trips: Seq[Trip]): Json = {
     Json(trips.map(toJson))
+  }
+
+  def fromJson(json: Json): Trip = {
+    val stopTimes = json.stopTimes.as[List[Json]].map(StopTime.fromJson)
+    Trip(json.id.as[String], json.serviceid.as[String], stopTimes, ???) // For tests purpose
+  }
+}
+
+case class DepartureTime(at: Minutes, calendar: Calendar)
+
+object DepartureTime {
+
+  def apply(departureTime: storage.DepartureTime): DepartureTime = {
+    DepartureTime(departureTime.at, Calendar(departureTime.calendar))
+  }
+
+  def formatMinutes(minutes: Minutes): String = {
+    val formatter = new PeriodFormatterBuilder()
+      .printZeroAlways()
+      .appendHours()
+      .appendSeparator(":")
+      .appendMinutes()
+      .toFormatter();
+    formatter.print(minutes.toStandardDuration.toPeriod)
+  }
+
+  def toJson(departureTime: DepartureTime): Json = {
+    val json = JsonBuffer.empty
+    json.at = departureTime.at.getMinutes
+    json.calendar = Calendar.toJson(departureTime.calendar)
+    json.as[Json]
+  }
+
+  def toJsonSeq(departureTimes: Seq[DepartureTime]): Json = {
+    Json(departureTimes.map(toJson))
   }
 }

@@ -16,16 +16,16 @@ object Api {
 
   def handle(implicit config: Config): PartialFunction[HttpRequest, Response] =
     handleApiEntry orElse
-    handleFetchTrips { params =>
+    handleSearchTrips { params =>
       val trips = if(params.previous) {
-        storage.Storage.fetchPreviousTrips(params)
+        storage.Storage.searchPreviousTrips(params)
       } else {
-        storage.Storage.fetchNextTrips(params)
+        storage.Storage.searchNextTrips(params)
       }
       trips.map(api.Trip(_, params.at)).sortBy(_.stopTimes.head.arrival.getMillis)
     } orElse
-    handleFetchDepartureTimes { params =>
-      storage.Storage.fetchDepartureTimes(params).map(api.DepartureTime.apply)
+    handleSearchDepartureTimes { params =>
+      storage.Storage.searchDepartureTimes(params).map(api.DepartureTime.apply)
     }
 
   private def formatJson(json: Json): String = {
@@ -49,11 +49,11 @@ object Api {
       formatJson(api.Entry.renderJson(apiEntry))
   }
 
-  private def handleFetchTrips(fetch: Params.FetchTrips => List[api.Trip])(implicit config: Config): PartialFunction[HttpRequest, Response] = {
+  private def handleSearchTrips(fetch: Params.SearchTrips => List[api.Trip])(implicit config: Config): PartialFunction[HttpRequest, Response] = {
     case req@Path(^ / "api" / "trips" / "search.json") ~ vsParam(vs) ~ veParam(ve) ~ atParam(AsDateTime(at)) =>
       val limit = req.param('limit).map(_.toInt)
       val previous = req.param('previous).map(_.toBoolean) getOrElse false
-      val params = Params.FetchTrips(vs, ve, at, limit, previous, json = true)
+      val params = Params.SearchTrips(vs, ve, at, limit, previous, json = true)
       formatJson(api.Trips.renderJson(params, fetch(params)))
 
     case req@Path(^ / "api" / "trips" / "search") ~ vsParam(vs) ~ veParam(ve) ~ atParam(AsDateTime(at)) =>
@@ -61,15 +61,15 @@ object Api {
       val previous = req.param('previous).map(_.toBoolean) getOrElse false
       ContentNegotiation(req) {
         case MimeTypes.`application/json` =>
-          val params = Params.FetchTrips(vs, ve, at, limit, previous, json = true)
+          val params = Params.SearchTrips(vs, ve, at, limit, previous, json = true)
           formatJson(api.Trips.renderJson(params, fetch(params)))
         case _ =>
-          val params = Params.FetchTrips(vs, ve, at, limit, previous)
+          val params = Params.SearchTrips(vs, ve, at, limit, previous)
           api.Trips.renderHtml(params, fetch(params))
       }
   }
 
-  private def handleFetchDepartureTimes(fetch: Params.FetchDepartureTimes => List[api.DepartureTime])(implicit config: Config): PartialFunction[HttpRequest, Response] = {
+  private def handleSearchDepartureTimes(fetch: Params.SearchDepartureTimes => List[api.DepartureTime])(implicit config: Config): PartialFunction[HttpRequest, Response] = {
     val buildParams = (request: HttpRequest, vs: String, ve: String) => {
       val booleanParam = getBooleanParam(request)(_)
       val monday = booleanParam('monday)
@@ -79,7 +79,7 @@ object Api {
       val friday = booleanParam('friday)
       val saturday = booleanParam('saturday)
       val sunday = booleanParam('sunday)
-      Params.FetchDepartureTimes(vs, ve, monday, tuesday, wednesday,
+      Params.SearchDepartureTimes(vs, ve, monday, tuesday, wednesday,
         thursday, friday, saturday, sunday)
     }
 

@@ -4,7 +4,7 @@ import org.joda.time.DateTime
 
 object Params {
 
-  case class FetchTrips(
+  case class SearchTrips(
     vs: String,
     ve: String,
     at: DateTime,
@@ -13,7 +13,7 @@ object Params {
     json: Boolean = false
   )
 
-  case class FetchDepartureTimes(
+  case class SearchDepartureTimes(
     vs: String,
     ve: String,
     monday: Option[Boolean],

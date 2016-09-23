@@ -9,7 +9,7 @@ import org.cheminot.web.{ router, Params, Config }
 
 object Trips {
 
-  def renderJson(params: Params.FetchTrips, trips: List[Trip])(implicit config: Config): Json = {
+  def renderJson(params: Params.SearchTrips, trips: List[Trip])(implicit config: Config): Json = {
 
     val previousLink = if (trips.isEmpty) json"null" else {
       Json(buildPreviousLink(params, trips).toString)
@@ -29,7 +29,7 @@ object Trips {
     json.as[Json]
   }
 
-  def renderHtml(params: Params.FetchTrips, trips: List[Trip])(implicit config: Config): HtmlDoc = {
+  def renderHtml(params: Params.SearchTrips, trips: List[Trip])(implicit config: Config): HtmlDoc = {
 
     val navigation = if(trips.isEmpty) P else {
       val previousLink = A(href = buildPreviousLink(params, trips))("previous")
@@ -82,7 +82,7 @@ object Trips {
     }
   }
 
-  private def link(params: Params.FetchTrips, at: Option[DateTime], previous: Boolean)(implicit config: Config): HttpQuery = {
+  private def link(params: Params.SearchTrips, at: Option[DateTime], previous: Boolean)(implicit config: Config): HttpQuery = {
     router.Reverse.Api.search(
       vs = Option(params.vs),
       ve = Option(params.ve),
@@ -93,12 +93,12 @@ object Trips {
     )
   }
 
-  private def buildPreviousLink(params: Params.FetchTrips, trips: List[Trip])(implicit config: Config): HttpQuery = {
+  private def buildPreviousLink(params: Params.SearchTrips, trips: List[Trip])(implicit config: Config): HttpQuery = {
     val at = trips.headOption.flatMap(_.departure)
     link(params, at, previous = true)
   }
 
-  private def buildNextLink(params: Params.FetchTrips, trips: List[Trip])(implicit config: Config): HttpQuery = {
+  private def buildNextLink(params: Params.SearchTrips, trips: List[Trip])(implicit config: Config): HttpQuery = {
     val at = trips.lastOption.flatMap(_.departure)
     link(params, at, previous = false)
   }

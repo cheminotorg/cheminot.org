@@ -8,9 +8,9 @@ import org.cheminot.web.Config
 
 object Storage {
 
-  private val FETCH_TRIPS_MAX_LIMIT = 20
+  private val SEARCH_TRIPS_MAX_LIMIT = 20
 
-  private val FETCH_TRIPS_DEFAULT_LIMIT = 10
+  private val SEARCH_TRIPS_DEFAULT_LIMIT = 10
 
   private def fetch[A](statement: Statement)(f: Row => A)(implicit config: Config): List[A] = {
     val response = Cypher.commit(statement)
@@ -42,12 +42,12 @@ object Storage {
     fetch(Statement(query))(identity).headOption.isDefined
   }
 
-  private def fetchTrips(params: Params.FetchTrips, filter: DateTime => String, nextAt: (Seq[Trip], DateTime) => DateTime, sortBy: String)(implicit config: Config): List[Trip] = {
+  private def searchTrips(params: Params.SearchTrips, filter: DateTime => String, nextAt: (Seq[Trip], DateTime) => DateTime, sortBy: String)(implicit config: Config): List[Trip] = {
 
-    val l = if(params.limit.exists(_ > FETCH_TRIPS_MAX_LIMIT)) {
-      FETCH_TRIPS_MAX_LIMIT
+    val l = if(params.limit.exists(_ > SEARCH_TRIPS_MAX_LIMIT)) {
+      SEARCH_TRIPS_MAX_LIMIT
     } else {
-      params.limit getOrElse FETCH_TRIPS_DEFAULT_LIMIT
+      params.limit getOrElse SEARCH_TRIPS_DEFAULT_LIMIT
     }
 
     def f(at: DateTime, limit: Int): List[Trip] = {
@@ -112,7 +112,7 @@ object Storage {
   private def formatTime(time: DateTime): String =
     org.cheminot.misc.DateTime.minutesOfDay(time).toString
 
-  def fetchPreviousTrips(params: Params.FetchTrips)(implicit config: Config): List[Trip] = {
+  def searchPreviousTrips(params: Params.SearchTrips)(implicit config: Config): List[Trip] = {
     val filter = (t: DateTime) => {
       s"vs.departure < ${formatTime(t)}"
     }
@@ -130,10 +130,10 @@ object Storage {
         params.at.minusDays(1).withTime(23, 59, 59, 999)
       }
     }
-    fetchTrips(params, filter = filter, nextAt = nextAt, sortBy = "-vs.departure").reverse
+    searchTrips(params, filter = filter, nextAt = nextAt, sortBy = "-vs.departure").reverse
   }
 
-  def fetchNextTrips(params: Params.FetchTrips)(implicit config: Config): List[Trip] = {
+  def searchNextTrips(params: Params.SearchTrips)(implicit config: Config): List[Trip] = {
     val filter = (t: DateTime) => {
       s"vs.departure > ${formatTime(t)}"
     }
@@ -151,10 +151,10 @@ object Storage {
         params.at.plusDays(1).withTimeAtStartOfDay
       }
     }
-    fetchTrips(params, filter = filter, nextAt = nextAt, sortBy = "vs.departure")
+    searchTrips(params, filter = filter, nextAt = nextAt, sortBy = "vs.departure")
   }
 
-  def fetchDepartureTimes(params: Params.FetchDepartureTimes)(implicit config: Config): List[DepartureTime] = {
+  def searchDepartureTimes(params: Params.SearchDepartureTimes)(implicit config: Config): List[DepartureTime] = {
     val filters = Map(
       "monday" -> params.monday,
       "tuesday" -> params.tuesday,

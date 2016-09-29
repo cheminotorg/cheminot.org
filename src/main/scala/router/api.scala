@@ -7,6 +7,7 @@ import rapture.mime._
 import rapture.json._, jsonBackends.jawn._
 import encodings.`UTF-8`._
 import org.cheminot.web.{ api, storage, Config, Params }
+import org.cheminot.misc
 
 object Api {
 
@@ -16,13 +17,16 @@ object Api {
 
   def handle(implicit config: Config): PartialFunction[HttpRequest, Response] =
     handleApiEntry orElse
+    handleFetchTrips { params =>
+      storage.Trips.fetch(params).map(api.models.Trip.apply)
+    } orElse
     handleSearchTrips { params =>
       val trips = if(params.previous) {
         storage.Trips.searchPrevious(params)
       } else {
         storage.Trips.searchNext(params)
       }
-      trips.map(api.models.Trip(_, params.at)).sortBy(_.stopTimes.head.arrival.getMillis)
+      trips.map(api.models.Trip.apply).sortBy(_.stopTimes.head.arrival.getMillis)
     } orElse
     handleSearchDepartureTimes { params =>
       storage.DepartureTimes.search(params).map(api.models.DepartureTime.apply)
@@ -49,12 +53,35 @@ object Api {
       formatJson(api.Entry.renderJson(apiEntry))
   }
 
+  private def handleFetchTrips(fetch: Params.FetchTrips => List[api.models.Trip])(implicit config: Config): PartialFunction[HttpRequest, Response] = {
+    case req@Path(^ / "api" / "trips.json") ~ vsParam(vs) ~ veParam(ve) =>
+      val params = Params.FetchTrips(vs, ve, Nil)
+      formatJson(api.FetchTrips.renderJson(params, fetch(params)))
+
+    case req@Path(^ / "api" / "trips") ~ vsParam(vs) ~ veParam(ve) =>
+      ContentNegotiation(req) {
+        case MimeTypes.`application/json` =>
+          val params = Params.FetchTrips(vs, ve, Nil)
+          formatJson(api.FetchTrips.renderJson(params, fetch(params)))
+        case _ =>
+          val departureTimes = req.param('departureTimes).toList
+            .flatMap(_.split(",")).flatMap(misc.DateTime.parse)
+
+          if (departureTimes.isEmpty) {
+            Global.badRequest("Please specify at least one departure time")
+          } else {
+            val params = Params.FetchTrips(vs, ve, departureTimes)
+            api.FetchTrips.renderHtml(params, fetch(params))
+          }
+      }
+  }
+
   private def handleSearchTrips(fetch: Params.SearchTrips => List[api.models.Trip])(implicit config: Config): PartialFunction[HttpRequest, Response] = {
     case req@Path(^ / "api" / "trips" / "search.json") ~ vsParam(vs) ~ veParam(ve) ~ atParam(AsDateTime(at)) =>
       val limit = req.param('limit).map(_.toInt)
       val previous = req.param('previous).map(_.toBoolean) getOrElse false
       val params = Params.SearchTrips(vs, ve, at, limit, previous, json = true)
-      formatJson(api.Trips.renderJson(params, fetch(params)))
+      formatJson(api.SearchTrips.renderJson(params, fetch(params)))
 
     case req@Path(^ / "api" / "trips" / "search") ~ vsParam(vs) ~ veParam(ve) ~ atParam(AsDateTime(at)) =>
       val limit = req.param('limit).map(_.toInt)
@@ -62,10 +89,10 @@ object Api {
       ContentNegotiation(req) {
         case MimeTypes.`application/json` =>
           val params = Params.SearchTrips(vs, ve, at, limit, previous, json = true)
-          formatJson(api.Trips.renderJson(params, fetch(params)))
+          formatJson(api.SearchTrips.renderJson(params, fetch(params)))
         case _ =>
           val params = Params.SearchTrips(vs, ve, at, limit, previous)
-          api.Trips.renderHtml(params, fetch(params))
+          api.SearchTrips.renderHtml(params, fetch(params))
       }
   }
 

@@ -11,9 +11,8 @@ case class ApiEntry(ref: String, buildDate: DateTime, subsets: Seq[Subset])
 
 object ApiEntry {
 
-  def apply(m: storage.models.Meta): ApiEntry = {
+  def apply(m: storage.models.Meta): ApiEntry =
     ApiEntry(m.metaid, m.bundledate, m.subsets.map(Subset.apply))
-  }
 }
 
 case class Subset(
@@ -45,28 +44,31 @@ case class StopTime(
 
 object StopTime {
 
-  def fromJson(json: Json): StopTime = {
-    StopTime(
-      json.id.as[String],
-      json.name.as[String],
-      json.lat.as[Double],
-      json.lng.as[Double],
-      misc.DateTime.parseOrFail(json.arrival.as[String]),
-      json.departure.as[Option[String]].map(misc.DateTime.parseOrFail)
-    )
-  }
+  object json {
 
-  def toJson(stopTime: StopTime): Json = {
-    val json = JsonBuffer.empty
-    json.id = stopTime.id
-    json.name = stopTime.name
-    json.lat = stopTime.lat
-    json.lng = stopTime.lng
-    json.arrival = misc.DateTime.format(stopTime.arrival)
-    stopTime.departure.foreach { departure =>
-      json.departure = misc.DateTime.format(departure)
+    def reads(json: Json): StopTime = {
+      StopTime(
+        json.id.as[String],
+        json.name.as[String],
+        json.lat.as[Double],
+        json.lng.as[Double],
+        misc.DateTime.parseOrFail(json.arrival.as[String]),
+        json.departure.as[Option[String]].map(misc.DateTime.parseOrFail)
+      )
     }
-    json.as[Json]
+
+    def writes(stopTime: StopTime): Json = {
+      val json = JsonBuffer.empty
+      json.id = stopTime.id
+      json.name = stopTime.name
+      json.lat = stopTime.lat
+      json.lng = stopTime.lng
+      json.arrival = misc.DateTime.format(stopTime.arrival)
+      stopTime.departure.foreach { departure =>
+        json.departure = misc.DateTime.format(departure)
+      }
+      json.as[Json]
+    }
   }
 }
 
@@ -82,7 +84,7 @@ case class Calendar(
 
 object Calendar {
 
-  def apply(calendar: storage.models.Calendar): Calendar = {
+  def apply(calendar: storage.models.Calendar): Calendar =
     Calendar(
       calendar.monday,
       calendar.tuesday,
@@ -92,38 +94,55 @@ object Calendar {
       calendar.saturday,
       calendar.sunday
     )
-  }
 
-  def toHtml(calendar: Calendar) = {
-    Table(
-      Thead(
-        Tr(Td("Lundi"), Td("Mardi"), Td("Mercredi"), Td("Jeudi"), Td("Vendredi"), Td("Samedi"), Td("Dimanche"))
-      ),
-      Tbody(
-        Tr,
-        Tr(
-          Td(if(calendar.monday) "OK" else "N/A"),
-          Td(if(calendar.tuesday) "OK" else "N/A"),
-          Td(if(calendar.wednesday) "OK" else "N/A"),
-          Td(if(calendar.thursday) "OK" else "N/A"),
-          Td(if(calendar.friday) "OK" else "N/A"),
-          Td(if(calendar.saturday) "OK" else "N/A"),
-          Td(if(calendar.sunday) "OK" else "N/A")
+  object html {
+
+    def writes(calendar: Calendar) = {
+      Table(
+        Thead(
+          Tr(Td("Lundi"), Td("Mardi"), Td("Mercredi"), Td("Jeudi"), Td("Vendredi"), Td("Samedi"), Td("Dimanche"))
+        ),
+        Tbody(
+          Tr,
+          Tr(
+            Td(if(calendar.monday) "OK" else "N/A"),
+            Td(if(calendar.tuesday) "OK" else "N/A"),
+            Td(if(calendar.wednesday) "OK" else "N/A"),
+            Td(if(calendar.thursday) "OK" else "N/A"),
+            Td(if(calendar.friday) "OK" else "N/A"),
+            Td(if(calendar.saturday) "OK" else "N/A"),
+            Td(if(calendar.sunday) "OK" else "N/A")
+          )
         )
       )
-    )
+    }
   }
 
-  def toJson(calendar: Calendar): Json = {
-    val json = JsonBuffer.empty
-    json.monday = calendar.monday
-    json.tuesday = calendar.tuesday
-    json.wednesday = calendar.wednesday
-    json.thursday = calendar.thursday
-    json.friday = calendar.friday
-    json.saturday = calendar.saturday
-    json.sunday = calendar.sunday
-    json.as[Json]
+  object json {
+
+    def reads(json: Json): Calendar = {
+      Calendar(
+        json.monday.as[Boolean],
+        json.tuesday.as[Boolean],
+        json.wednesday.as[Boolean],
+        json.thursday.as[Boolean],
+        json.friday.as[Boolean],
+        json.saturday.as[Boolean],
+        json.sunday.as[Boolean]
+      )
+    }
+
+    def writes(calendar: Calendar): Json = {
+      val json = JsonBuffer.empty
+      json.monday = calendar.monday
+      json.tuesday = calendar.tuesday
+      json.wednesday = calendar.wednesday
+      json.thursday = calendar.thursday
+      json.friday = calendar.friday
+      json.saturday = calendar.saturday
+      json.sunday = calendar.sunday
+      json.as[Json]
+    }
   }
 }
 
@@ -135,7 +154,7 @@ case class Trip(id: String, serviceid: String, stopTimes: List[StopTime], calend
 
 object Trip {
 
-  def apply(trip: storage.models.Trip, at: DateTime): Trip = {
+  def apply(trip: storage.models.Trip): Trip = {
     val (goesTo, _) = trip.stopTimes.unzip
     val stopTimes = trip.stopTimes.zipWithIndex.map {
       case ((to, stop), index) =>
@@ -153,22 +172,58 @@ object Trip {
     Trip(trip.tripid, trip.serviceid, stopTimes, Calendar(trip.calendar))
   }
 
-  def toJson(trip: Trip): Json = {
-    val json = JsonBuffer.empty
-    json.id = trip.id
-    json.serviceid = trip.serviceid
-    json.stopTimes = trip.stopTimes.map(StopTime.toJson)
-    json.calendar = Calendar.toJson(trip.calendar)
-    json.as[Json]
+  object json {
+
+    def writes(trip: Trip): Json = {
+      val json = JsonBuffer.empty
+      json.id = trip.id
+      json.serviceid = trip.serviceid
+      json.stopTimes = trip.stopTimes.map(StopTime.json.writes)
+      json.calendar = Calendar.json.writes(trip.calendar)
+      json.as[Json]
+    }
+
+    def writesSeq(trips: Seq[Trip]): Json =
+      Json(trips.map(writes))
+
+    def reads(json: Json): Trip = {
+      val stopTimes = json.stopTimes.as[List[Json]].map(StopTime.json.reads)
+      val calendar = Calendar.json.reads(json.calendar.as[Json])
+      Trip(json.id.as[String], json.serviceid.as[String], stopTimes, calendar)
+    }
   }
 
-  def toJsonSeq(trips: Seq[Trip]): Json = {
-    Json(trips.map(toJson))
-  }
+  object html {
 
-  def fromJson(json: Json): Trip = {
-    val stopTimes = json.stopTimes.as[List[Json]].map(StopTime.fromJson)
-    Trip(json.id.as[String], json.serviceid.as[String], stopTimes, ???) // For tests purpose
+    def writesSeq(trips: Seq[Trip]) =
+      trips.map(writesHtml)
+
+    def writesHtml(trip: Trip) = {
+      Section(
+        Hr,
+        H2(s"Trajet ${trip.id}"),
+        Table(
+          Thead(
+            Tr(Td("id"), Td("name"), Td("lat"), Td("lng"), Td("arrival"), Td("departure"))
+          ),
+          Tbody(
+            Tr,
+            trip.stopTimes.map { stopTime =>
+              Tr(
+                Td(stopTime.id),
+                Td(stopTime.name),
+                Td(stopTime.lat.toString),
+                Td(stopTime.lng.toString),
+                Td(misc.DateTime.format(stopTime.arrival)),
+                stopTime.departure.map(misc.DateTime.format).map(Td(_)).getOrElse(Td("N/A"))
+              )
+            }:_*
+          )
+        ),
+        H3(s"Service ${trip.serviceid}"),
+        Calendar.html.writes(trip.calendar)
+      )
+    }
   }
 }
 
@@ -190,14 +245,16 @@ object DepartureTime {
     formatter.print(minutes.toStandardDuration.toPeriod)
   }
 
-  def toJson(departureTime: DepartureTime): Json = {
-    val json = JsonBuffer.empty
-    json.at = departureTime.at.getMinutes
-    json.calendar = Calendar.toJson(departureTime.calendar)
-    json.as[Json]
-  }
+  object json {
 
-  def toJsonSeq(departureTimes: Seq[DepartureTime]): Json = {
-    Json(departureTimes.map(toJson))
+    def writes(departureTime: DepartureTime): Json = {
+      val json = JsonBuffer.empty
+      json.at = departureTime.at.getMinutes
+      json.calendar = Calendar.json.writes(departureTime.calendar)
+      json.as[Json]
+    }
+
+    def writesSeq(departureTimes: Seq[DepartureTime]): Json =
+      Json(departureTimes.map(writes))
   }
 }

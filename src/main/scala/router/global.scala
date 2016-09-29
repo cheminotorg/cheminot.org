@@ -7,14 +7,19 @@ import org.cheminot.web.{Logger, Config, pages}
 
 object Global {
 
-  def notFound: PartialFunction[HttpRequest, Response] = {
-    case _ =>
-      pages.NotFound()
+  def badRequest(message: String = "") =
+    ErrorResponse(400, Nil, "Bad Request", message) //TODO
+
+  def notFound(message: String = "") = 
+    ErrorResponse(404, Nil, "Error 404 - Not found", message)
+
+  private def notFoundHandler: PartialFunction[HttpRequest, Response] = {
+    case _ => notFound()
   }
 
   def catchError(route: PartialFunction[HttpRequest, Response])(implicit config: Config): PartialFunction[HttpRequest, Response] = {
     case request =>
-      Try(route.orElse(notFound)(request)) match {
+      Try(route.orElse(notFoundHandler)(request)) match {
         case Success(response) =>
           response
         case Failure(e) =>

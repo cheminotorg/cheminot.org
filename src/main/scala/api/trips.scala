@@ -7,7 +7,7 @@ import rapture.net.HttpQuery
 import org.cheminot.misc
 import org.cheminot.web.{ router, Params, Config }
 
-object Trips {
+object SearchTrips {
 
   def renderJson(params: Params.SearchTrips, trips: List[models.Trip])(implicit config: Config): Json = {
 
@@ -19,7 +19,7 @@ object Trips {
       Json(buildNextLink(params, trips).toString)
     }
 
-    val results = models.Trip.toJsonSeq(trips)
+    val results = models.Trip.json.writesSeq(trips)
     val json = JsonBuffer.empty
 
     json.previous = previousLink
@@ -51,32 +51,7 @@ object Trips {
         ),
         Body(
           H1("Trips"),
-          (trips.map { trip =>
-            Section(
-              Hr,
-              H2(s"Trajet ${trip.id}"),
-              Table(
-                Thead(
-                  Tr(Td("id"), Td("name"), Td("lat"), Td("lng"), Td("arrival"), Td("departure"))
-                ),
-                Tbody(
-                  Tr,
-                  trip.stopTimes.map { stopTime =>
-                    Tr(
-                      Td(stopTime.id),
-                      Td(stopTime.name),
-                      Td(stopTime.lat.toString),
-                      Td(stopTime.lng.toString),
-                      Td(misc.DateTime.format(stopTime.arrival)),
-                      stopTime.departure.map(misc.DateTime.format).map(Td(_)).getOrElse(Td("N/A"))
-                    )
-                  }:_*
-                )
-              ),
-              H3(s"Service ${trip.serviceid}"),
-              models.Calendar.toHtml(trip.calendar)
-            )
-          } :+ navigation):_*
+          (models.Trip.html.writesSeq(trips) :+ navigation):_*
         )
       )
     }
@@ -101,5 +76,37 @@ object Trips {
   private def buildNextLink(params: Params.SearchTrips, trips: List[models.Trip])(implicit config: Config): HttpQuery = {
     val at = trips.lastOption.flatMap(_.departure)
     link(params, at, previous = false)
+  }
+}
+
+object FetchTrips {
+
+  def renderJson(params: Params.FetchTrips, trips: List[models.Trip])(implicit config: Config): Json = {
+    val results = models.Trip.json.writesSeq(trips)
+    val json = JsonBuffer.empty
+    json.results = results
+    json.as[Json]
+  }
+
+
+  def renderHtml(params: Params.FetchTrips, trips: List[models.Trip])(implicit config: Config): HtmlDoc = {
+    HtmlDoc {
+      Html(
+        Head(
+          Style(
+            """
+            table td {
+              padding: 10px;
+              border: 1px solid;
+            }
+          """
+          )
+        ),
+        Body(
+          H1("Trips"),
+          models.Trip.html.writesSeq(trips)
+        )
+      )
+    }
   }
 }

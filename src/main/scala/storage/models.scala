@@ -9,11 +9,14 @@ case class Meta(metaid: String, bundledate: DateTime, subsets: Seq[MetaSubset])
 
 object MetaSubset {
 
-  def fromJson(json: Json): MetaSubset =
-    MetaSubset(
-      json.metasubsetid.as[String],
-      misc.DateTime.fromSecs(json.timestamp.as[Long])
-    )
+  object json {
+
+    def reads(json: Json): MetaSubset =
+      MetaSubset(
+        json.metasubsetid.as[String],
+        misc.DateTime.fromSecs(json.timestamp.as[Long])
+      )
+  }
 }
 
 case class MetaSubset(metasubsetid: String, timestamp: DateTime)
@@ -32,11 +35,17 @@ object GoesTo {
     at.withTimeAtStartOfDay.plusMinutes(time)
   }
 
-  def fromJson(json: Json, date: DateTime): GoesTo = {
-    GoesTo(
-      withTime(date, json.arrival.as[Int]),
-      json.departure.as[Option[Int]].map(withTime(date, _))
-    )
+  object json {
+
+    def readsAsTuple(json: Json): (Int, Option[Int]) =
+      (json.arrival.as[Int], json.departure.as[Option[Int]])
+
+    def reads(json: Json, date: DateTime): GoesTo = {
+      readsAsTuple(json) match {
+        case (arrival, departure) =>
+          GoesTo(withTime(date, arrival), departure.map(withTime(date, _)))
+      }
+    }
   }
 }
 
@@ -51,6 +60,21 @@ case class Calendar(
   startdate: DateTime,
   enddate: DateTime
 ) {
+
+  lazy val toMap: Map[String, Boolean] =
+    Map(
+      "monday" -> monday,
+      "tuesday" -> tuesday,
+      "wednesday" -> wednesday,
+      "thursday" -> thursday,
+      "friday" -> friday,
+      "saturday" -> saturday,
+      "sunday" -> sunday
+    )
+
+  def isRunningOn(datetime: DateTime): Boolean =
+    Calendar.isRunningOn(datetime, toMap) 
+
   def merge(calendarB: Calendar) =
     Calendar.merge(this, calendarB)
 }
@@ -79,18 +103,31 @@ object Calendar {
     )
   }
 
-  def fromJson(json: Json): Calendar = {
-    Calendar(
-      json.monday.as[Boolean],
-      json.tuesday.as[Boolean],
-      json.wednesday.as[Boolean],
-      json.thursday.as[Boolean],
-      json.friday.as[Boolean],
-      json.saturday.as[Boolean],
-      json.sunday.as[Boolean],
-      new DateTime(json.startdate.as[Long]),
-      new DateTime(json.enddate.as[Long])
-    )
+  def isRunningOn(datetime: DateTime, calendar: Map[String, Boolean]): Boolean = {
+    val day = misc.DateTime.forPattern("EEEE").print(datetime).toLowerCase
+    calendar.get(day).getOrElse {
+      sys.error(s"Unexpected value ${day}")
+    }
+  }
+
+  def formatDay(datetime: DateTime) =
+    misc.DateTime.forPattern("EEEE").print(datetime).toLowerCase
+
+  object json {
+
+    def reads(json: Json): Calendar = {
+      Calendar(
+        json.monday.as[Boolean],
+        json.tuesday.as[Boolean],
+        json.wednesday.as[Boolean],
+        json.thursday.as[Boolean],
+        json.friday.as[Boolean],
+        json.saturday.as[Boolean],
+        json.sunday.as[Boolean],
+        new DateTime(json.startdate.as[Long]),
+        new DateTime(json.enddate.as[Long])
+      )
+    }
   }
 }
 
@@ -108,7 +145,6 @@ case class Trip(
           firstStopTime <- stopTimes.headOption
           otherFirstStopTime <- r.stopTimes.headOption
           if firstStopTime == otherFirstStopTime
-
           lastStopTime <- stopTimes.lastOption
           otherLastStopTime <- r.stopTimes.lastOption
           if lastStopTime == otherLastStopTime

@@ -9,7 +9,7 @@ object DepartureTimes {
 
   def renderJson(departureTimes: List[models.DepartureTime])(implicit config: Config): Json = {
     val json = JsonBuffer.empty
-    json.results = models.DepartureTime.toJsonSeq(departureTimes)
+    json.results = models.DepartureTime.json.writesSeq(departureTimes)
     json.as[Json]
   }
 
@@ -38,7 +38,7 @@ object DepartureTimes {
                 Dt("horaire"),
                 Dd(at)
               ),
-              models.Calendar.toHtml(departureTime.calendar),
+              models.Calendar.html.writes(departureTime.calendar),
               Hr
             )
           }

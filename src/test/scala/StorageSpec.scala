@@ -11,7 +11,6 @@ import rapture.uri._
 import rapture.codec._, encodings.`UTF-8`._
 import org.cheminot.misc
 import org.cheminot.web.{storage, api, Params, Config}
-import org.cheminot.web.storage.Storage
 
 abstract class CheminotSpec extends FlatSpec
 
@@ -25,18 +24,18 @@ class StorageSpec extends CheminotSpec {
 
   implicit val config = Config.default
 
-  behavior of "fetchNextTrips"
+  behavior of "searchNextTrips"
 
   it should "find next 20 trips from Chartres to Paris Montparnasse" in {
     val at = misc.DateTime.parseOrFail("2016-07-25T04:00:00.000+02:00")
-    val params = Params.FetchTrips(
+    val params = Params.SearchTrips(
       vs = Stations.chartres,
       ve = Stations.paris,
       at = at,
       limit = Option(20),
       previous = false
     )
-    val trips = Storage.fetchNextTrips(params).map(api.Trip.apply(_, at))
+    val trips = storage.Trips.searchNext(params).map(api.models.Trip.apply)
     val testTrips = Trips.fromData("test1.json")
     assert(trips.size === testTrips.size)
     trips.zip(testTrips).foreach {
@@ -52,10 +51,10 @@ object Trips {
   lazy val dir =
     org.cheminot.misc.File.currentDir / "data" / "test"
 
-  def fromData(name: String): List[api.Trip] = {
+  def fromData(name: String): List[api.models.Trip] = {
     val file = dir / name
     val json = Json.parse(file.slurp[Char])
-    json.results.as[List[Json]].map(api.Trip.fromJson)
+    json.results.as[List[Json]].map(api.models.Trip.json.reads)
   }
 }
 
@@ -79,7 +78,7 @@ object CaptainTrain {
     }
   }
 
-  def matches(vs: String, ve: String, date: DateTime)(trips: List[api.Trip]): Boolean = {
+  def matches(vs: String, ve: String, date: DateTime)(trips: List[api.models.Trip]): Boolean = {
     val tripsFromCapitaineTrain = {
       val upperBound = date.withTime(23, 59, 59, 999)
       val lowerBound = date.withTimeAtStartOfDay

@@ -10,7 +10,7 @@ object Meta {
   def fetch()(implicit config: Config): models.Meta = {
     val query = "match p=(s:Meta)-[:HAS]->(m:MetaSubset) return s as Meta, m as MetaSubset;"
     Storage.fetch(Statement(query)) { row =>
-      val subset = models.MetaSubset.fromJson(row(1))
+      val subset = models.MetaSubset.json.reads(row(1))
       val id = row(0).metaid.as[String]
       val bundleDate = misc.DateTime.fromSecs(row(0).bundledate.as[Long])
       models.Meta(id, bundleDate, Seq(subset))

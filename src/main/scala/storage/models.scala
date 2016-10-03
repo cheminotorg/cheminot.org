@@ -73,7 +73,7 @@ case class Calendar(
     )
 
   def isRunningOn(datetime: DateTime): Boolean =
-    Calendar.isRunningOn(datetime, toMap) 
+    Calendar.isRunningOn(datetime, toMap, startdate, enddate)
 
   def merge(calendarB: Calendar) =
     Calendar.merge(this, calendarB)
@@ -103,11 +103,13 @@ object Calendar {
     )
   }
 
-  def isRunningOn(datetime: DateTime, calendar: Map[String, Boolean]): Boolean = {
-    val day = misc.DateTime.forPattern("EEEE").print(datetime).toLowerCase
-    calendar.get(day).getOrElse {
-      sys.error(s"Unexpected value ${day}")
-    }
+  def isRunningOn(datetime: DateTime, calendar: Map[String, Boolean], startdate: DateTime, enddate: DateTime): Boolean = {
+    if((startdate.isBefore(datetime) || startdate.isEqual(datetime)) && (enddate.isAfter(datetime) || enddate.isEqual(datetime))) {
+      val day = misc.DateTime.forPattern("EEEE").print(datetime).toLowerCase
+      calendar.get(day).getOrElse {
+        sys.error(s"Unexpected value ${day}")
+      }
+    } else false
   }
 
   def formatDay(datetime: DateTime) =
@@ -124,8 +126,8 @@ object Calendar {
         json.friday.as[Boolean],
         json.saturday.as[Boolean],
         json.sunday.as[Boolean],
-        new DateTime(json.startdate.as[Long]),
-        new DateTime(json.enddate.as[Long])
+        new DateTime(json.startdate.as[Long] * 1000),
+        new DateTime(json.enddate.as[Long] * 1000)
       )
     }
   }

@@ -69,12 +69,16 @@ object SearchTrips {
   }
 
   private def buildPreviousLink(params: Params.SearchTrips, trips: List[models.Trip])(implicit config: Config): HttpQuery = {
-    val at = trips.headOption.flatMap(_.departure)
+    val at = trips.headOption.toList.flatMap(_.stopTimes).collectFirst {
+      case stopTime if stopTime.id == params.vs => stopTime.departure
+    }.headOption.flatten
     link(params, at, previous = true)
   }
 
   private def buildNextLink(params: Params.SearchTrips, trips: List[models.Trip])(implicit config: Config): HttpQuery = {
-    val at = trips.lastOption.flatMap(_.departure)
+    val at = trips.lastOption.toList.flatMap(_.stopTimes).collectFirst {
+      case stopTime if stopTime.id == params.vs => stopTime.departure
+    }.headOption.flatten
     link(params, at, previous = false)
   }
 }

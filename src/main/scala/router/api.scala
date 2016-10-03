@@ -26,7 +26,7 @@ object Api {
       } else {
         storage.Trips.searchNext(params)
       }
-      trips.map(api.models.Trip.apply).sortBy(_.stopTimes.head.arrival.getMillis)
+      trips.map(api.models.Trip.apply)
     } orElse
     handleSearchDepartureTimes { params =>
       storage.DepartureTimes.search(params).map(api.models.DepartureTime.apply)
@@ -53,27 +53,26 @@ object Api {
       formatJson(api.Entry.renderJson(apiEntry))
   }
 
+  private def fetchTripsParams(vs: String, ve: String, request: HttpRequest): Params.FetchTrips = {
+    val departureTimes = request.param('departureTimes).toList
+      .flatMap(_.split(",")).flatMap(misc.DateTime.parse)
+    Params.FetchTrips(vs, ve, departureTimes)
+  }
+
   private def handleFetchTrips(fetch: Params.FetchTrips => List[api.models.Trip])(implicit config: Config): PartialFunction[HttpRequest, Response] = {
     case req@Path(^ / "api" / "trips.json") ~ vsParam(vs) ~ veParam(ve) =>
-      val params = Params.FetchTrips(vs, ve, Nil)
+      val params = fetchTripsParams(vs, ve, req)
       formatJson(api.FetchTrips.renderJson(params, fetch(params)))
 
-    case req@Path(^ / "api" / "trips") ~ vsParam(vs) ~ veParam(ve) =>
+    case req@Path(^ / "api" / "trips") ~ vsParam(vs) ~ veParam(ve) => {
+      val params = fetchTripsParams(vs, ve, req)
       ContentNegotiation(req) {
         case MimeTypes.`application/json` =>
-          val params = Params.FetchTrips(vs, ve, Nil)
           formatJson(api.FetchTrips.renderJson(params, fetch(params)))
         case _ =>
-          val departureTimes = req.param('departureTimes).toList
-            .flatMap(_.split(",")).flatMap(misc.DateTime.parse)
-
-          if (departureTimes.isEmpty) {
-            Global.badRequest("Please specify at least one departure time")
-          } else {
-            val params = Params.FetchTrips(vs, ve, departureTimes)
-            api.FetchTrips.renderHtml(params, fetch(params))
-          }
+          api.FetchTrips.renderHtml(params, fetch(params))
       }
+    }
   }
 
   private def handleSearchTrips(fetch: Params.SearchTrips => List[api.models.Trip])(implicit config: Config): PartialFunction[HttpRequest, Response] = {

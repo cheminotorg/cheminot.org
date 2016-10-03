@@ -52,14 +52,14 @@ object Trips {
       val vsfield = if (Stations.isParent(params.vs)) "parentid" else "stationid"
       val vefield = if (Stations.isParent(params.ve)) "parentid" else "stationid"
       val query = s"""
-      MATCH path=(calendar:Calendar)<-[:SCHEDULED_AT*1..]-(trip:Trip)-[:GOES_TO*1..]->(a:Stop { ${vsfield}: '${params.vs}' })-[stoptimes:GOES_TO*1..]->(b:Stop { ${vefield}: '${params.ve}' })
-      WITH calendar, trip, tail(tail(nodes(path))) AS stops, tail(relationships(path)) AS allstoptimes, head(stoptimes) AS vs
-      WHERE ${filter(at)}
+        MATCH path=(calendar:Calendar)<-[:SCHEDULED_AT*1..]-(trip:Trip)-[:GOES_TO*1..]->(a:Stop { ${vsfield}: '${params.vs}' })-[stoptimes:GOES_TO*1..]->(b:Stop { ${vefield}: '${params.ve}' })
+        WITH calendar, trip, tail(tail(nodes(path))) AS stops, tail(relationships(path)) AS allstoptimes, head(stoptimes) AS vs
+        WHERE ${filter(at)}
         AND ((calendar.${day} = true AND calendar.startdate <= ${start} AND calendar.enddate > ${end} AND NOT (trip)-[:OFF]->(:CalendarDate { date: ${start} }))
         OR (trip)-[:ON]->(:CalendarDate { date: ${start} }))
-      RETURN distinct(trip), stops, allstoptimes, vs, calendar
-      ORDER BY $sortBy
-      LIMIT ${max * 2};
+        RETURN distinct(trip), stops, allstoptimes, vs, calendar
+        ORDER BY $sortBy
+        LIMIT ${max * 2};
       """
       executeTripsQuery(query) {
         case (goesTo, _) =>
@@ -89,12 +89,15 @@ object Trips {
       val distinctTrips = trips.distinct
       val e = trips.size - distinctTrips.size
       if(e > 0) {
-        (for {
-          lastTrip <- trips.lastOption
-          departure <- lastTrip.stopTimes.lift(1).flatMap(_._1.departure)
-        } yield {
-          departure.minusMinutes(1)
-        }) getOrElse sys.error("Unable to compute nextAt")
+        val departure = trips.lastOption.flatMap { lastTrip =>
+          lastTrip.stopTimes.dropWhile {
+            case (_, station) => station.stationid == params.vs
+          }.drop(1).headOption.map {
+            case (goesTo, _) =>
+              goesTo.departure
+          }.flatten
+        } getOrElse sys.error("Unable to compute nextAt")
+        departure.minusMinutes(1)
       } else {
         params.at.minusDays(1).withTime(23, 59, 59, 999)
       }
@@ -110,12 +113,15 @@ object Trips {
       val distinctTrips = trips.distinct
       val e = trips.size - distinctTrips.size
       if(e > 0) {
-        (for {
-          lastTrip <- trips.lastOption
-          departure <- lastTrip.stopTimes.lift(1).flatMap(_._1.departure)
-        } yield {
-          departure.plusMinutes(1)
-        }) getOrElse sys.error("Unable to compute nextAt")
+        val departure = trips.lastOption.flatMap { lastTrip =>
+          lastTrip.stopTimes.dropWhile {
+            case (_, station) => station.stationid == params.vs
+          }.drop(1).headOption.map {
+            case (goesTo, _) =>
+              goesTo.departure
+          }.flatten
+        } getOrElse sys.error("Unable to compute nextAt")
+        departure.plusMinutes(1)
       } else {
         params.at.plusDays(1).withTimeAtStartOfDay
       }
@@ -124,56 +130,55 @@ object Trips {
   }
 
   def fetch(params: Params.FetchTrips)(implicit config: Config): List[models.Trip] = {
-    val whereClause = params.departureTimes.map { departureTime =>
-      val day = models.Calendar.formatDay(departureTime)
-      val calendarEq = s"calendar.${day} = true"
-      val departureEq = s"vs.departure = ${departureTime.getMinuteOfDay}"
-      val periodEq = {
-        val start = departureTime.withTimeAtStartOfDay.getMillis / 1000
-        val end = departureTime.withTimeAtStartOfDay.plusDays(1).getMillis / 1000
-        s"(calendar.startdate <= ${start} AND calendar.enddate > ${end} AND NOT (trip)-[:OFF]->(:CalendarDate { date: ${start} }))"
-      }
-      s"(${departureEq} AND ${calendarEq} AND ${periodEq})"
-    }.mkString(" OR ")
+    if(!params.departureTimes.isEmpty) {
+      val whereClause = params.departureTimes.map { departureTime =>
+        val day = models.Calendar.formatDay(departureTime)
+        val calendarEq = s"calendar.${day} = true"
+        val departureEq = s"vs.departure = ${departureTime.getMinuteOfDay}"
+        val periodEq = {
+          val start = departureTime.withTimeAtStartOfDay.getMillis / 1000
+          val end = departureTime.withTimeAtStartOfDay.plusDays(1).getMillis / 1000
+          s"(calendar.startdate <= ${start} AND calendar.enddate > ${end} AND NOT (trip)-[:OFF]->(:CalendarDate { date: ${start} }))"
+        }
+        s"(${departureEq} AND ${calendarEq} AND ${periodEq})"
+      }.mkString(" OR ")
 
-    val vsfield = if (Stations.isParent(params.vs)) "parentid" else "stationid"
-    val vefield = if (Stations.isParent(params.ve)) "parentid" else "stationid"
+      val vsfield = if (Stations.isParent(params.vs)) "parentid" else "stationid"
+      val vefield = if (Stations.isParent(params.ve)) "parentid" else "stationid"
 
-    val query = s"""
-    MATCH path=(calendar:Calendar)<-[:SCHEDULED_AT*1..]-(trip:Trip)-[:GOES_TO*1..]->(a:Stop { ${vsfield}: '${params.vs}' })-[stoptimes:GOES_TO*1..]->(b:Stop { ${vefield}: '${params.ve}' })
-    WITH calendar, trip, tail(tail(nodes(path))) AS stops, tail(relationships(path)) AS allstoptimes, head(stoptimes) AS vs
-    WHERE ${whereClause}
-    RETURN distinct(trip), stops, allstoptimes, vs, calendar
-    ORDER BY vs.departure
-    LIMIT ${params.departureTimes.size};
-    """
+      val query = s"""
+        MATCH path=(calendar:Calendar)<-[:SCHEDULED_AT*1..]-(trip:Trip)-[:GOES_TO*1..]->(a:Stop { ${vsfield}: '${params.vs}' })-[stoptimes:GOES_TO*1..]->(b:Stop { ${vefield}: '${params.ve}' })
+        WITH calendar, trip, tail(tail(nodes(path))) AS stops, tail(relationships(path)) AS allstoptimes, head(stoptimes) AS vs
+        WHERE ${whereClause}
+        RETURN distinct(trip), stops, allstoptimes, vs, calendar
+        LIMIT ${params.departureTimes.size};
+      """
 
-    val trips = executeTripsQuery(query) {
-      case (goesToSeq, calendar) =>
-        goesToSeq.lift(1).toList.flatMap { goesTo =>
-          models.GoesTo.json.readsAsTuple(goesTo) match {
-            case (_, Some(departure)) =>
-              params.departureTimes.find { departureTime =>
-                departureTime.getMinuteOfDay == departure && calendar.isRunningOn(departureTime)
-              } match {
-                case Some(departureTime) =>
-                  goesToSeq.map(models.GoesTo.json.reads(_, departureTime))
-                case None =>
-                  sys.error(s"Unable to match departure ${goesTo}")
-              }
-            case _ =>
-              sys.error(s"Unable to match departure ${goesTo}")
+      val trips = executeTripsQuery(query) {
+        case (goesToSeq, calendar) =>
+          val departureTimes = params.departureTimes.map(_.getMinuteOfDay)
+          goesToSeq.lift(1).toList.flatMap { goesTo =>
+            models.GoesTo.json.readsAsTuple(goesTo) match {
+              case (_, Some(minuteOfDay)) =>
+                params.departureTimes.find { departureTime =>
+                  departureTime.getMinuteOfDay == minuteOfDay && calendar.isRunningOn(departureTime)
+                } match {
+                  case Some(departureTime) =>
+                    goesToSeq.map(models.GoesTo.json.reads(_, departureTime))
+                  case None =>
+                    sys.error(s"""Unable to match departure ${goesTo} with ${departureTimes.mkString(" ")}""")
+                }
+              case _ =>
+                sys.error(s"""Unable to match departure ${goesTo} with ${departureTimes.mkString(" ")}""")
+            }
           }
-        }
-    }
-
-    params.departureTimes.flatMap { departureTime =>
-      trips.find { trip =>
-        val time = trip.stopTimes.lift(1).flatMap(_._1.departure).getOrElse {
-          sys.error(s"Unable to have departure value from ${trip}")
-        }
-        departureTime.equals(time)
       }
-    }
+
+      params.departureTimes.flatMap { departureTime =>
+        trips.find { trip =>
+          trip.stopTimes.lift(1).flatMap(_._1.departure).exists(_.isEqual(departureTime))
+        }
+      }
+    } else Nil
   }
 }

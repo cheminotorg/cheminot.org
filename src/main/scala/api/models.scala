@@ -79,7 +79,9 @@ case class Calendar(
   thursday: Boolean,
   friday: Boolean,
   saturday: Boolean,
-  sunday: Boolean
+  sunday: Boolean,
+  startdate: DateTime,
+  enddate: DateTime
 )
 
 object Calendar {
@@ -92,26 +94,36 @@ object Calendar {
       calendar.thursday,
       calendar.friday,
       calendar.saturday,
-      calendar.sunday
+      calendar.sunday,
+      calendar.startdate,
+      calendar.enddate
     )
 
   object html {
 
     def writes(calendar: Calendar) = {
-      Table(
-        Thead(
-          Tr(Td("Lundi"), Td("Mardi"), Td("Mercredi"), Td("Jeudi"), Td("Vendredi"), Td("Samedi"), Td("Dimanche"))
+      Section(
+        Dl(
+          Dt("Start date"),
+          Dd(misc.DateTime.format(calendar.startdate)),
+          Dt("End date"),
+          Dd(misc.DateTime.format(calendar.enddate))
         ),
-        Tbody(
-          Tr,
-          Tr(
-            Td(if(calendar.monday) "OK" else "N/A"),
-            Td(if(calendar.tuesday) "OK" else "N/A"),
-            Td(if(calendar.wednesday) "OK" else "N/A"),
-            Td(if(calendar.thursday) "OK" else "N/A"),
-            Td(if(calendar.friday) "OK" else "N/A"),
-            Td(if(calendar.saturday) "OK" else "N/A"),
-            Td(if(calendar.sunday) "OK" else "N/A")
+        Table(
+          Thead(
+            Tr(Td("Lundi"), Td("Mardi"), Td("Mercredi"), Td("Jeudi"), Td("Vendredi"), Td("Samedi"), Td("Dimanche"))
+          ),
+          Tbody(
+            Tr,
+            Tr(
+              Td(if(calendar.monday) "OK" else "N/A"),
+              Td(if(calendar.tuesday) "OK" else "N/A"),
+              Td(if(calendar.wednesday) "OK" else "N/A"),
+              Td(if(calendar.thursday) "OK" else "N/A"),
+              Td(if(calendar.friday) "OK" else "N/A"),
+              Td(if(calendar.saturday) "OK" else "N/A"),
+              Td(if(calendar.sunday) "OK" else "N/A")
+            )
           )
         )
       )
@@ -128,7 +140,9 @@ object Calendar {
         json.thursday.as[Boolean],
         json.friday.as[Boolean],
         json.saturday.as[Boolean],
-        json.sunday.as[Boolean]
+        json.sunday.as[Boolean],
+        misc.DateTime.parseOrFail(json.startdate.as[String]),
+        misc.DateTime.parseOrFail(json.enddate.as[String])
       )
     }
 
@@ -141,6 +155,8 @@ object Calendar {
       json.friday = calendar.friday
       json.saturday = calendar.saturday
       json.sunday = calendar.sunday
+      json.startdate = misc.DateTime.format(calendar.startdate)
+      json.enddate = misc.DateTime.format(calendar.enddate)
       json.as[Json]
     }
   }

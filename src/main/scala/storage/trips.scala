@@ -59,7 +59,7 @@ object Trips {
         OR (trip)-[:ON]->(:CalendarDate { date: ${start} }))
         RETURN distinct(trip), stops, allstoptimes, vs, calendar
         ORDER BY $sortBy
-        LIMIT ${max * 2};
+        LIMIT ${math.min(max * 2, SEARCH_TRIPS_MAX_LIMIT * 2)};
       """
       executeTripsQuery(query) {
         case (goesTo, _) =>

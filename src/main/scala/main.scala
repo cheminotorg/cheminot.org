@@ -18,6 +18,8 @@ object Main {
         Logger.error(s"Unable to send email: ${e.getMessage}", e)
     })
 
+    storage.Stations.initCache()
+
     HttpServer.listen(config.port) {
       router.Global.catchError {
         router.Api.handle orElse

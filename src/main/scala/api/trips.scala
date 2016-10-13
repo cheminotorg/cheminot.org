@@ -58,7 +58,7 @@ object SearchTrips {
   }
 
   private def link(params: Params.SearchTrips, at: Option[DateTime], previous: Boolean)(implicit config: Config): HttpQuery = {
-    router.Reverse.Api.search(
+    router.Reverse.Api.searchTrips(
       vs = Option(params.vs),
       ve = Option(params.ve),
       at = at,

@@ -26,25 +26,28 @@ object Entry {
         ),
         Body(
           H1("cheminot.org - Api"),
-          (Div("Build date: ", misc.DateTime.format(apiEntry.buildDate)) +:
-            H2("Subsets") +:
+          Section(
+            P("Date de build: ", misc.DateTime.format(apiEntry.buildDate)),
+            H2("Subsets"),
             apiEntry.subsets.map { subset =>
-              Section(
+              Div(
                 H3(subset.id),
                 P(
-                  Label(`for`='timestamp)("timestamp: "),
+                  Label("timestamp: "),
                   Span(misc.DateTime.format(subset.timestamp))
                 )
               )
-            } :+
-            H2("Search") :+
+            }
+          ),
+          Section(
+            H2("Rechercher des trajets"),
             Form(
               name = 'trips,
               method = "GET",
-              action = router.Reverse.Api.search()
+              action = router.Reverse.Api.searchTrips()
             )(
               Fieldset(
-                Legend("Trips"),
+                Legend("Trajet de:"),
                 P(
                   Label(`for` = 'departure)("departure"),
                   Input(typ = "text", name='vs, required=true)
@@ -64,7 +67,56 @@ object Entry {
                 Button(typ = "submit")("Submit")
               )
             )
-          ):_*
+          ),
+          Section(
+            H2("Rechercher des horaires de départ"),
+            Form(
+              name = 'departures,
+              method = "GET",
+              action = router.Reverse.Api.searchDepartureTimes()
+            )(
+              Fieldset(
+                Legend("Horaires de départ pour:"),
+                P(
+                  Label(`for` = 'departure)("departure"),
+                  Input(typ = "text", name='vs, required=true)
+                ),
+                P(
+                  Label(`for` = 'arrival)("arrival"),
+                  Input(typ="text", name='ve, required=true)
+                ),
+                P(
+                  Label(`for` = 'monday)("Lundi"),
+                  Input(typ = "checkbox", name='monday, value="true")
+                ),
+                P(
+                  Label(`for` = 'tuesday)("Mardi"),
+                  Input(typ = "checkbox", name='tuesday, value="true")
+                ),
+                P(
+                  Label(`for` = 'wednesday)("Mercredi"),
+                  Input(typ = "checkbox", name='wednesday, value="true")
+                ),
+                P(
+                  Label(`for` = 'thursday)("Jeudi"),
+                  Input(typ = "checkbox", name='thursday, value="true")
+                ),
+                P(
+                  Label(`for` = 'friday)("Vendredi"),
+                  Input(typ = "checkbox", name='friday, value="true")
+                ),
+                P(
+                  Label(`for` = 'saturday)("Samedi"),
+                  Input(typ = "checkbox", name='saturday, value="true")
+                ),
+                P(
+                  Label(`for` = 'sunday)("Dimanche"),
+                  Input(typ = "checkbox", name='sunday, value="true")
+                ),
+                Button(typ = "submit")("Submit")
+              )
+            )
+          )
         )
       )
     }

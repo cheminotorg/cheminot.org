@@ -54,7 +54,7 @@ object Api {
   }
 
   private def fetchTripsParams(vs: String, ve: String, request: HttpRequest): Params.FetchTrips = {
-    val departureTimes = request.param('departureTimes).toList
+    val departureTimes = request.param('departuretimes).toList
       .flatMap(_.split(",")).flatMap(misc.DateTime.parse)
     Params.FetchTrips(vs, ve, departureTimes)
   }

@@ -42,7 +42,7 @@ object Entry {
           Section(
             H2("Rechercher des trajets"),
             Form(
-              name = 'trips,
+              name = 'searchtrips,
               method = "GET",
               action = router.Reverse.Api.searchTrips()
             )(
@@ -63,6 +63,31 @@ object Entry {
                 P(
                   Label(`for` = 'limit)("limit"),
                   Input(typ = "number", name='limit, value="10")
+                ),
+                Button(typ = "submit")("Submit")
+              )
+            )
+          ),
+          Section(
+            H2("Récupérer des trajets"),
+            Form(
+              name = 'fetchtrips,
+              method = "GET",
+              action = router.Reverse.Api.fetchTrips()
+            )(
+              Fieldset(
+                Legend("Trajet de:"),
+                P(
+                  Label(`for` = 'departure)("departure"),
+                  Input(typ = "text", name='vs, required=true)
+                ),
+                P(
+                  Label(`for` = 'arrival)("arrival"),
+                  Input(typ="text", name='ve, required=true)
+                ),
+                P(
+                  Label(`for` = 'departuretimes)("Heures de départ"),
+                  Input(typ = "text", name='departuretimes, required=true)
                 ),
                 Button(typ = "submit")("Submit")
               )

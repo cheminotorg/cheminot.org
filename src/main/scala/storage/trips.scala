@@ -30,11 +30,16 @@ object Trips {
       station.stationid -> station
     }.toMap
 
+    val serviceIds = trips.map { case (_, serviceId, _, _, _) => serviceId }.distinct
+
+    val calendardatesByServiceId = org.cheminot.misc.Debug.measure(CalendarDate.fetchByServiceIds(serviceIds))(x => println(s"byServiceId $x"))
+
     trips.map {
       case (tripId, serviceId, goesTo, stops, calendar) =>
         val tripStations = stops.flatMap(s => stations.get(s.stationid).toList)
         val stopTimes = goesTo.zip(tripStations)
-        models.Trip(tripId, serviceId, stopTimes, calendar)
+        val calendarDates = calendardatesByServiceId.get(serviceId) getOrElse Nil
+        models.Trip(tripId, serviceId, stopTimes, calendar, calendarDates)
     }
   }
 
@@ -61,6 +66,7 @@ object Trips {
         ORDER BY $sortBy
         LIMIT ${math.min(max * 2, SEARCH_TRIPS_MAX_LIMIT * 2)};
       """
+println(query)
       executeTripsQuery(query) {
         case (goesTo, _) =>
           goesTo.map(models.GoesTo.json.reads(_, at))
@@ -72,11 +78,10 @@ object Trips {
         if(todo <= 0 || counter <= 0) {
           None
         } else {
-          val trips = more(at, todo)
-          val distinctTrips = trips.distinct
-          val remaining = todo - distinctTrips.size
+          val trips = org.cheminot.misc.Debug.measure(more(at, todo))(x => println(s"result $x"))
+          val remaining = todo - trips.size
           val retries = if(trips.isEmpty) counter - 1 else counter
-          Option((distinctTrips, (nextAt(trips, at), remaining, retries)))
+          Option((trips, (nextAt(trips, at), remaining, retries)))
         }
     }.toList.flatten.take(limit)
   }

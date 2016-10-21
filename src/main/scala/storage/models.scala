@@ -49,6 +49,27 @@ object GoesTo {
   }
 }
 
+case class CalendarDate(
+  calendardateid: String,
+  `type`: Int,
+  date: DateTime,
+  serviceid: String
+)
+
+object CalendarDate {
+
+  object json {
+
+    def reads(json: Json): CalendarDate =
+      CalendarDate(
+        json.calendardateid.as[String],
+        json.`type`.as[Int],
+        new DateTime(json.date.as[Long] * 1000),
+        json.`serviceid`.as[String]
+      )
+  }
+}
+
 case class Calendar(
   monday: Boolean,
   tuesday: Boolean,
@@ -137,29 +158,6 @@ case class Trip(
   tripid: String,
   serviceid: String,
   stopTimes: List[(GoesTo, Station)],
-  calendar: Calendar
-) {
-  override def equals(o: Any): Boolean =
-    o match {
-      case r: Trip if r.tripid == tripid => true
-      case r: Trip =>
-        (for {
-          firstStopTime <- stopTimes.headOption
-          otherFirstStopTime <- r.stopTimes.headOption
-          if firstStopTime == otherFirstStopTime
-          lastStopTime <- stopTimes.lastOption
-          otherLastStopTime <- r.stopTimes.lastOption
-          if lastStopTime == otherLastStopTime
-        } yield true).isDefined
-      case _ => false
-    }
-
-  override def hashCode =
-    (for {
-      firstStopTime <- stopTimes.headOption
-      lastStopTime <- stopTimes.lastOption
-      if firstStopTime != lastStopTime
-    } yield {
-      List(firstStopTime, lastStopTime).map(_.hashCode).mkString("#").hashCode
-    }) getOrElse tripid.hashCode
-}
+  calendar: Calendar,
+  calendarDates: List[CalendarDate]
+)

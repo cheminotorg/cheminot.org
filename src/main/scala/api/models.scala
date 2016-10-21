@@ -162,7 +162,76 @@ object Calendar {
   }
 }
 
-case class Trip(id: String, serviceid: String, stopTimes: List[StopTime], calendar: Calendar) {
+case class CalendarDate(
+  id: String,
+  `type`: Int,
+  date: DateTime,
+  serviceid: String
+)
+
+object CalendarDate {
+
+  def apply(calendarDate: storage.models.CalendarDate): CalendarDate =
+    CalendarDate(
+      calendarDate.calendardateid,
+      calendarDate.`type`,
+      calendarDate.date,
+      calendarDate.serviceid
+    )
+
+  object json {
+
+    def reads(json: Json): CalendarDate = {
+      CalendarDate(
+        json.id.as[String],
+        json.`type`.as[Int],
+        misc.DateTime.parseOrFail(json.date.as[String]),
+        json.serviceid.as[String]
+      )
+    }
+
+    def writesSeq(calendarDates: Seq[CalendarDate]): Json =
+      Json(calendarDates.map(writes))
+
+    def writes(calendarDate: CalendarDate): Json = {
+      val json = JsonBuffer.empty
+      json.id = calendarDate.id
+      json.`type` = calendarDate.`type`
+      json.date = misc.DateTime.format(calendarDate.date)
+      json.serviceid = calendarDate.serviceid
+      json.as[Json]
+    }
+  }
+
+  object html {
+
+    def writesSeq(calendarDates: Seq[CalendarDate]) = {
+      calendarDates.map { calendarDate =>
+        Table(
+          Thead(
+            Tr(Td("id"), Td("status"), Td("date"))
+          ),
+          Tbody(
+            Tr,
+            Tr(
+              Td(calendarDate.id),
+              Td(if(calendarDate.`type` == 1) "ON" else "OFF"),
+              Td(misc.DateTime.format(calendarDate.date))
+            )
+          )
+        )
+      }
+    }
+  }
+}
+
+case class Trip(
+  id: String,
+  serviceid: String,
+  stopTimes: List[StopTime],
+  calendar: Calendar,
+  calendarDates: List[CalendarDate]
+) {
 
   lazy val departure: Option[DateTime] =
     stopTimes.headOption.flatMap(_.departure)
@@ -185,7 +254,7 @@ object Trip {
         )
     }
 
-    Trip(trip.tripid, trip.serviceid, stopTimes, Calendar(trip.calendar))
+    Trip(trip.tripid, trip.serviceid, stopTimes, Calendar(trip.calendar), trip.calendarDates.map(CalendarDate.apply))
   }
 
   object json {
@@ -196,6 +265,7 @@ object Trip {
       json.serviceid = trip.serviceid
       json.stopTimes = trip.stopTimes.map(StopTime.json.writes)
       json.calendar = Calendar.json.writes(trip.calendar)
+      json.calendarDates = CalendarDate.json.writesSeq(trip.calendarDates)
       json.as[Json]
     }
 
@@ -205,16 +275,17 @@ object Trip {
     def reads(json: Json): Trip = {
       val stopTimes = json.stopTimes.as[List[Json]].map(StopTime.json.reads)
       val calendar = Calendar.json.reads(json.calendar.as[Json])
-      Trip(json.id.as[String], json.serviceid.as[String], stopTimes, calendar)
+      val calendarDates = json.calendar.as[List[Json]].map(CalendarDate.json.reads)
+      Trip(json.id.as[String], json.serviceid.as[String], stopTimes, calendar, calendarDates)
     }
   }
 
   object html {
 
     def writesSeq(trips: Seq[Trip]) =
-      trips.map(writesHtml)
+      trips.map(writes)
 
-    def writesHtml(trip: Trip) = {
+    def writes(trip: Trip) = {
       Section(
         Hr,
         H2(s"Trajet ${trip.id}"),
@@ -237,7 +308,8 @@ object Trip {
           )
         ),
         H3(s"Service ${trip.serviceid}"),
-        Calendar.html.writes(trip.calendar)
+        Calendar.html.writes(trip.calendar),
+        CalendarDate.html.writesSeq(trip.calendarDates)
       )
     }
   }

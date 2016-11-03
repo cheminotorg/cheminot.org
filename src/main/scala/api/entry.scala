@@ -12,6 +12,7 @@ object Entry {
   def renderJson(apiEntry: models.ApiEntry)(implicit config: Config): Json = {
     val json = JsonBuffer.empty
     json.ref = apiEntry.ref
+    json.toto = 1.233341341341413413414D
     json.buildAt = misc.DateTime.format(apiEntry.buildDate)
     json.subsets = apiEntry.subsets.map(models.Subset.toJson)
     json.as[Json]
@@ -71,34 +72,9 @@ object Entry {
           Section(
             H2("Récupérer des trajets"),
             Form(
-              name = 'fetchtrips,
-              method = "GET",
-              action = router.Reverse.Api.fetchTrips()
-            )(
-              Fieldset(
-                Legend("Trajet de:"),
-                P(
-                  Label(`for` = 'departure)("departure"),
-                  Input(typ = "text", name='vs, required=true)
-                ),
-                P(
-                  Label(`for` = 'arrival)("arrival"),
-                  Input(typ="text", name='ve, required=true)
-                ),
-                P(
-                  Label(`for` = 'departuretimes)("Heures de départ"),
-                  Input(typ = "text", name='departuretimes, required=true)
-                ),
-                Button(typ = "submit")("Submit")
-              )
-            )
-          ),
-          Section(
-            H2("Rechercher des horaires de départ"),
-            Form(
               name = 'departures,
               method = "GET",
-              action = router.Reverse.Api.searchDepartureTimes()
+              action = router.Reverse.Api.fetchTrips()
             )(
               Fieldset(
                 Legend("Horaires de départ pour:"),

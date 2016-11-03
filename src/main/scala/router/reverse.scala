@@ -35,25 +35,6 @@ object Reverse {
     def fetchTrips(
       vs: Option[String] = None,
       ve: Option[String] = None,
-      departureTimes: List[DateTime] = Nil,
-      json: Boolean = false
-    )(implicit config: Config): HttpQuery = {
-      val params = Map(
-        "vs" -> vs,
-        "ve" -> ve,
-        "departuretimes" -> listParam(departureTimes)(misc.DateTime.format)
-      ).collect {
-        case (name, Some(value)) =>
-          name -> value
-      }
-      val format = if (json) ".json" else ""
-      val url = Http.parse(s"http://${config.domain}/api/trips${format}")
-      url.query(params)
-    }
-
-    def searchDepartureTimes(
-      vs: Option[String] = None,
-      ve: Option[String] = None,
       monday: Boolean = false,
       tuesday: Boolean = false,
       wednesday: Boolean = false,
@@ -78,7 +59,7 @@ object Reverse {
           name -> value
       }
       val format = if (json) ".json" else ""
-      val url = Http.parse(s"http://${config.domain}/api/departures/search${format}")
+      val url = Http.parse(s"http://${config.domain}/api/trips${format}")
       url.query(params)
     }
   }

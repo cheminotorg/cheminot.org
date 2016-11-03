@@ -19,7 +19,7 @@ object SearchTrips {
       Json(buildNextLink(params, trips).toString)
     }
 
-    val results = models.Trip.json.writesSeq(trips)
+    val results = models.Trip.json.writesSeq(trips)(models.StopTime.json.DateTimeFormat)
     val json = JsonBuffer.empty
 
     json.previous = previousLink
@@ -86,7 +86,7 @@ object SearchTrips {
 object FetchTrips {
 
   def renderJson(params: Params.FetchTrips, trips: List[models.Trip])(implicit config: Config): Json = {
-    val results = models.Trip.json.writesSeq(trips)
+    val results = models.Trip.json.writesSeq(trips)(models.StopTime.json.MinutesFormat)
     val json = JsonBuffer.empty
     json.results = results
     json.as[Json]

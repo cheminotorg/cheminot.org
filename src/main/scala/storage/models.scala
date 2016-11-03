@@ -25,9 +25,10 @@ case class Station(stationid: String, name: String, lat: Double, lng: Double)
 
 case class Stop(stopid: String, stationid: String, parentid: Option[String])
 
-case class GoesTo(arrival: DateTime, departure: Option[DateTime])
-
-case class DepartureTime(at: Minutes, calendar: Calendar)
+case class GoesTo(
+  arrival: DateTime,
+  departure: Option[DateTime]
+)
 
 object GoesTo {
 
@@ -71,6 +72,7 @@ object CalendarDate {
 }
 
 case class Calendar(
+  serviceid: String,
   monday: Boolean,
   tuesday: Boolean,
   wednesday: Boolean,
@@ -95,34 +97,9 @@ case class Calendar(
 
   def isRunningOn(datetime: DateTime): Boolean =
     Calendar.isRunningOn(datetime, toMap, startdate, enddate)
-
-  def merge(calendarB: Calendar) =
-    Calendar.merge(this, calendarB)
 }
 
 object Calendar {
-
-  def merge(calendarA: Calendar, calendarB: Calendar): Calendar = {
-    val startdate = if(calendarB.startdate.isAfter(calendarA.startdate)) {
-      calendarA.startdate
-    } else calendarB.startdate
-
-    val enddate = if(calendarB.enddate.isBefore(calendarA.enddate)) {
-      calendarA.enddate
-    } else calendarB.enddate
-
-    Calendar(
-      calendarA.monday || calendarB.monday,
-      calendarA.tuesday || calendarB.tuesday,
-      calendarA.wednesday || calendarB.wednesday,
-      calendarA.thursday || calendarB.thursday,
-      calendarA.friday || calendarB.friday,
-      calendarA.saturday || calendarB.saturday,
-      calendarA.sunday || calendarB.sunday,
-      startdate,
-      enddate
-    )
-  }
 
   def isRunningOn(datetime: DateTime, calendar: Map[String, Boolean], startdate: DateTime, enddate: DateTime): Boolean = {
     if((startdate.isBefore(datetime) || startdate.isEqual(datetime)) && (enddate.isAfter(datetime) || enddate.isEqual(datetime))) {
@@ -140,6 +117,7 @@ object Calendar {
 
     def reads(json: Json): Calendar = {
       Calendar(
+        json.serviceid.as[String],
         json.monday.as[Boolean],
         json.tuesday.as[Boolean],
         json.wednesday.as[Boolean],

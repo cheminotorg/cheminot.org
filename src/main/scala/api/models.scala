@@ -1,6 +1,6 @@
 package org.cheminot.web.api.models
 
-import org.joda.time.{ DateTime, Minutes }
+import org.joda.time.{ DateTime, Minutes, Duration }
 import org.joda.time.format.{PeriodFormat, PeriodFormatterBuilder}
 import rapture.html._, htmlSyntax.{ Option => HOption, _ }
 import rapture.json._, jsonBackends.jawn._
@@ -46,26 +46,47 @@ object StopTime {
 
   object json {
 
-    def reads(json: Json): StopTime = {
+    sealed trait TimeFormat {
+      def reads(json: Json): DateTime =
+        misc.DateTime.parseOrFail(json.as[String])
+
+      def writes(dateTime: DateTime): Json
+    }
+
+    object DateTimeFormat extends TimeFormat {
+
+      def writes(datetime: DateTime): Json =
+        Json(misc.DateTime.format(datetime))
+
+    }
+
+    object MinutesFormat extends TimeFormat {
+
+      def writes(datetime: DateTime): Json =
+        Json(datetime.getMinuteOfDay)
+    }
+
+
+    def reads(json: Json)(formatTime: TimeFormat): StopTime = {
       StopTime(
         json.id.as[String],
         json.name.as[String],
         json.lat.as[Double],
         json.lng.as[Double],
-        misc.DateTime.parseOrFail(json.arrival.as[String]),
-        json.departure.as[Option[String]].map(misc.DateTime.parseOrFail)
+        formatTime.reads(json.arrival),
+        json.departure.as[Option[Json]].map(formatTime.reads)
       )
     }
 
-    def writes(stopTime: StopTime): Json = {
+    def writes(stopTime: StopTime)(formatTime: TimeFormat): Json = {
       val json = JsonBuffer.empty
       json.id = stopTime.id
       json.name = stopTime.name
       json.lat = stopTime.lat
       json.lng = stopTime.lng
-      json.arrival = misc.DateTime.format(stopTime.arrival)
+      json.arrival = formatTime.writes(stopTime.arrival)
       stopTime.departure.foreach { departure =>
-        json.departure = misc.DateTime.format(departure)
+        json.departure = formatTime.writes(departure)
       }
       json.as[Json]
     }
@@ -231,11 +252,7 @@ case class Trip(
   stopTimes: List[StopTime],
   calendar: Calendar,
   calendarDates: List[CalendarDate]
-) {
-
-  lazy val departure: Option[DateTime] =
-    stopTimes.headOption.flatMap(_.departure)
-}
+)
 
 object Trip {
 
@@ -259,21 +276,21 @@ object Trip {
 
   object json {
 
-    def writes(trip: Trip): Json = {
+    def writes(trip: Trip)(timeFormat: StopTime.json.TimeFormat): Json = {
       val json = JsonBuffer.empty
       json.id = trip.id
       json.serviceid = trip.serviceid
-      json.stopTimes = trip.stopTimes.map(StopTime.json.writes)
+      json.stopTimes = trip.stopTimes.map(StopTime.json.writes(_)(timeFormat))
       json.calendar = Calendar.json.writes(trip.calendar)
       json.calendarDates = CalendarDate.json.writesSeq(trip.calendarDates)
       json.as[Json]
     }
 
-    def writesSeq(trips: Seq[Trip]): Json =
-      Json(trips.map(writes))
+    def writesSeq(trips: Seq[Trip])(formatTime: StopTime.json.TimeFormat): Json =
+      Json(trips.map(writes(_)(formatTime)))
 
-    def reads(json: Json): Trip = {
-      val stopTimes = json.stopTimes.as[List[Json]].map(StopTime.json.reads)
+    def reads(json: Json)(timeFormat: StopTime.json.TimeFormat): Trip = {
+      val stopTimes = json.stopTimes.as[List[Json]].map(StopTime.json.reads(_)(timeFormat))
       val calendar = Calendar.json.reads(json.calendar.as[Json])
       val calendarDates = json.calendar.as[List[Json]].map(CalendarDate.json.reads)
       Trip(json.id.as[String], json.serviceid.as[String], stopTimes, calendar, calendarDates)
@@ -312,37 +329,5 @@ object Trip {
         CalendarDate.html.writesSeq(trip.calendarDates)
       )
     }
-  }
-}
-
-case class DepartureTime(at: Minutes, calendar: Calendar)
-
-object DepartureTime {
-
-  def apply(departureTime: storage.models.DepartureTime): DepartureTime = {
-    DepartureTime(departureTime.at, Calendar(departureTime.calendar))
-  }
-
-  def formatMinutes(minutes: Minutes): String = {
-    val formatter = new PeriodFormatterBuilder()
-      .printZeroAlways()
-      .appendHours()
-      .appendSeparator(":")
-      .appendMinutes()
-      .toFormatter();
-    formatter.print(minutes.toStandardDuration.toPeriod)
-  }
-
-  object json {
-
-    def writes(departureTime: DepartureTime): Json = {
-      val json = JsonBuffer.empty
-      json.at = departureTime.at.getMinutes
-      json.calendar = Calendar.json.writes(departureTime.calendar)
-      json.as[Json]
-    }
-
-    def writesSeq(departureTimes: Seq[DepartureTime]): Json =
-      Json(departureTimes.map(writes))
   }
 }

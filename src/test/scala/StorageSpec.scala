@@ -27,12 +27,12 @@ class StorageSpec extends CheminotSpec {
   behavior of "searchNextTrips"
 
   it should "find next 20 trips from Chartres to Paris Montparnasse" in {
-    val at = misc.DateTime.parseOrFail("2016-07-25T04:00:00.000+02:00")
+    val at = misc.DateTime.parseOrFail("2016-09-30T07:50:00.000+02:00")
     val params = Params.SearchTrips(
       vs = Stations.chartres,
-      ve = Stations.paris,
+      ve = Stations.parisMont,
       at = at,
-      limit = Option(20),
+      limit = Option(10),
       previous = false
     )
     val trips = storage.Trips.searchNext(params).map(api.models.Trip.apply)
@@ -40,6 +40,7 @@ class StorageSpec extends CheminotSpec {
     assert(trips.size === testTrips.size)
     trips.zip(testTrips).foreach {
       case (a, b) =>
+        println("-------------- " + a.id + " " + b.id)
         assert(a === b)
     }
     //assert(CaptainTrain.matches("chartres", "paris", at)(trips) === true)
@@ -54,7 +55,9 @@ object Trips {
   def fromData(name: String): List[api.models.Trip] = {
     val file = dir / name
     val json = Json.parse(file.slurp[Char])
-    json.results.as[List[Json]].map(api.models.Trip.json.reads)
+    json.results.as[List[Json]].map { json =>
+      api.models.Trip.json.reads(json)(org.cheminot.web.api.models.StopTime.json.MinutesFormat)
+    }
   }
 }
 

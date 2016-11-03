@@ -1,24 +1,51 @@
 package org.cheminot.web
 
 import org.joda.time.DateTime
+import rapture.codec._
+import rapture.uri.RootedPath
+import rapture.html.HtmlDoc
+import rapture.json._, jsonBackends.jawn._
 import rapture.http._
 import rapture.mime.MimeTypes
 import rapture.mime.MimeTypes.MimeType
+import encodings.`UTF-8`._
 import org.cheminot.misc
 
 package object router {
 
-  object AsDateTime {
-    import org.joda.time.DateTime
-    def unapply(s: String): Option[DateTime] =
-      misc.DateTime.parse(s)
-  }
+  def htmlJsonHandler[A <: Params](path: RootedPath)(getParams: HttpRequest => Option[A])(htmlHandler: A => HtmlDoc)(jsonHandler: A => Json): PartialFunction[HttpRequest, Response] = {
+    import rapture.json.formatters.compact._
+    import rapture.core.decimalFormats.exact._
 
-  def getBooleanParam(request: HttpRequest)(param: Symbol) =
-    request.param(param) map {
-      case "true" | "1" => true
-      case _ => false
+    val jsonPath = {
+      val jsonElement = s"${path.elements.last}.json"
+      RootedPath(path.elements.init :+ jsonElement)
     }
+
+    def withParams(req: HttpRequest)(handler: A => Response): Response = {
+      getParams(req) match {
+        case Some(params) =>
+          handler(params)
+        case None =>
+          Global.badRequest()
+      }
+    }
+
+    val handler: PartialFunction[HttpRequest, Response] = {
+      case req if req.path == jsonPath =>
+        withParams(req)(params => Json.format(jsonHandler(params)))
+
+      case req if req.path == path =>
+        ContentNegotiation(req) {
+          case MimeTypes.`application/json` =>
+            withParams(req)(params => Json.format(jsonHandler(params)))
+          case _ =>
+            withParams(req)(htmlHandler(_))
+        }
+    }
+
+    handler
+  }
 
   def ContentNegotiation[A](request: HttpRequest)(f: MimeType => A): A = {
     val mime = request.headers.get("Accept")

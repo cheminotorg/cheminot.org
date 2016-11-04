@@ -2,7 +2,7 @@ enablePlugins(GitVersioning, GitBranchPrompt)
 
 lazy val buildSettings = Seq(
   organization := "org.cheminot",
-  scalaVersion := "2.11.7",
+  scalaVersion := "2.11.8",
   crossPaths := false
 )
 

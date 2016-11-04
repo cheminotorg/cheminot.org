@@ -1,9 +1,8 @@
 package org.cheminot.web.storage
 
-import org.joda.time.{DateTime, Duration}
+import org.joda.time.DateTime
 import rapture.json._, jsonBackends.jawn._
 import org.cheminot.web.Params
-import org.cheminot.misc
 import org.cheminot.web.Config
 
 object Trips {

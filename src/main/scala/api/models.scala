@@ -1,8 +1,7 @@
 package org.cheminot.web.api.models
 
-import org.joda.time.{ DateTime, Minutes, Duration }
-import org.joda.time.format.{PeriodFormat, PeriodFormatterBuilder}
-import rapture.html._, htmlSyntax.{ Option => HOption, _ }
+import org.joda.time.{DateTime}
+import rapture.html._, htmlSyntax._
 import rapture.json._, jsonBackends.jawn._
 import org.cheminot.misc
 import org.cheminot.web.storage

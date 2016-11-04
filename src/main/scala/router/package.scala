@@ -1,6 +1,5 @@
 package org.cheminot.web
 
-import org.joda.time.DateTime
 import rapture.codec._
 import rapture.uri.RootedPath
 import rapture.html.HtmlDoc
@@ -9,7 +8,6 @@ import rapture.http._
 import rapture.mime.MimeTypes
 import rapture.mime.MimeTypes.MimeType
 import encodings.`UTF-8`._
-import org.cheminot.misc
 
 package object router {
 

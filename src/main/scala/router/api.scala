@@ -2,9 +2,7 @@ package org.cheminot.web.router
 
 import rapture.uri._
 import rapture.http._
-import rapture.html.HtmlDoc
 import org.cheminot.web.{ api, storage, Config, Params }
-import org.cheminot.misc
 
 object Api {
 

@@ -4,7 +4,6 @@ import org.joda.time.DateTime
 import rapture.json._, jsonBackends.jawn._
 import rapture.html._, htmlSyntax.{ Option => HOption, _ }
 import rapture.net.HttpQuery
-import org.cheminot.misc
 import org.cheminot.web.{ router, Params, Config }
 
 object SearchTrips {

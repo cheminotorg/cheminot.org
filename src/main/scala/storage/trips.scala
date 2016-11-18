@@ -56,7 +56,7 @@ object Trips {
       val vsfield = if (Stations.isParent(params.vs)) "parentid" else "stationid"
       val vefield = if (Stations.isParent(params.ve)) "parentid" else "stationid"
       val query = s"""
-        MATCH path=(calendar:Calendar)<-[:SCHEDULED_AT*1..]-(trip:Trip)-[:GOES_TO*1..]->(a:Stop { ${vsfield}: '${params.vs}' })-[stoptimes:GOES_TO*1..]->(b:Stop { ${vefield}: '${params.ve}' })
+        MATCH path=(calendar:Calendar)<-[:SCHEDULED_AT*1..]-(trip:Trip)-[:GOES_TO*1..]->(a:Stop { ${vsfield}: '${params.vs}' })-[stoptimes:GOES_TO*1..]->(b:Stop { ${vefield}: '${params.ve}' })-[:GOES_TO*0..]->(:Stop { terminus: true })
         WITH calendar, trip, tail(tail(nodes(path))) AS stops, tail(relationships(path)) AS allstoptimes, head(stoptimes) AS vs
         WHERE ${filter(at)}
         AND ((calendar.${day} = true AND calendar.startdate <= ${start} AND calendar.enddate > ${end} AND NOT (trip)-[:OFF]->(:CalendarDate { date: ${start} }))
@@ -127,6 +127,16 @@ object Trips {
   }
 
   def fetch(params: Params.FetchTrips)(implicit config: Config): List[models.Trip] = {
+    val everyday = Seq(
+      params.monday,
+      params.tuesday,
+      params.wednesday,
+      params.thursday,
+      params.friday,
+      params.saturday,
+      params.sunday
+    ).forall(!_.exists(identity))
+
     val whereClause = Seq(
       "monday" -> params.monday,
       "tuesday" -> params.tuesday,
@@ -137,6 +147,9 @@ object Trips {
       "saturday" -> params.saturday,
       "sunday" -> params.sunday
     ).collect {
+      case (day, _) if everyday =>
+        s"calendar.${day}=true"
+
       case (day, Some(value)) if value =>
         s"calendar.${day}=${value}"
     }.mkString(" OR ")
@@ -145,12 +158,12 @@ object Trips {
     val vefield = if (Stations.isParent(params.ve)) "parentid" else "stationid"
 
     val query = s"""
-        MATCH path=(calendar:Calendar)<-[:SCHEDULED_AT*1..]-(trip:Trip)-[:GOES_TO*1..]->(:Stop { ${vsfield}: '${params.vs}' })-[stoptimes:GOES_TO*1..]->(:Stop { ${vefield}: '${params.ve}' })
+        MATCH path=(calendar:Calendar)<-[:SCHEDULED_AT*1..]-(trip:Trip)-[:GOES_TO*1..]->(:Stop { ${vsfield}: '${params.vs}' })-[stoptimes:GOES_TO*1..]->(ve:Stop { ${vefield}: '${params.ve}' })-[:GOES_TO*0..]->(:Stop { terminus: true })
         WITH calendar, trip, tail(tail(nodes(path))) AS stops, tail(relationships(path)) AS allstoptimes, head(stoptimes) AS vs
         WHERE ${whereClause}
         RETURN distinct(trip), stops, allstoptimes, vs, calendar
       """
-
+println(query)
     executeTripsQuery(query) { goesTo =>
       goesTo.map(models.GoesTo.json.reads(_, DateTime.now))
     }

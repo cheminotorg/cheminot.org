@@ -31,7 +31,6 @@ lazy val root = (project in file(".")).
   settings(libraryDependencies += "org.joda" % "joda-convert" % "1.8").
   settings(libraryDependencies += "org.jsoup" % "jsoup" % "1.8.3").
   settings(libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.4").
-  settings(libraryDependencies += "org.scala-stm" %% "scala-stm" % "0.7").
   settings(libraryDependencies += "org.cheminot" % "misc" % "0.1-SNAPSHOT").
   settings(com.github.retronym.SbtOneJar.oneJarSettings: _*)
 
